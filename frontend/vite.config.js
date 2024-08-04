@@ -14,5 +14,9 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
+  },
+  build: {
+    outDir: './', // Set the output directory to the project root
+    emptyOutDir: true, // Clear the output directory before building
   }
 })
