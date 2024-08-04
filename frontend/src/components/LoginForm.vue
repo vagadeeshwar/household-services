@@ -1,71 +1,53 @@
 <template>
-  <div class="login-form">
-    <h2>Login</h2>
-    <form @submit.prevent="login">
-      <div class="form-group">
-        <label for="username">Username:</label>
-        <input type="text" id="username" v-model="username" required>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-4">
+        <div class="card mt-5">
+          <div class="card-body">
+            <h2 class="card-title text-center">User Login</h2>
+            <form @submit.prevent="handleSubmit">
+              <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" v-model="username" class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" v-model="password" class="form-control" required />
+              </div>
+              <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">Login</button>
+                <button @click="goToRegister" type="button" class="btn btn-secondary">Register</button>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="password">Password:</label>
-        <input type="password" id="password" v-model="password" required>
-      </div>
-      <button type="submit">Login</button>
-    </form>
+    </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
-
 export default {
-  name: 'LoginForm',
   data() {
     return {
       username: '',
-      password: ''
-    }
+      password: '',
+    };
   },
   methods: {
-    async login() {
-      try {
-        const response = await axios.post('http://localhost:5000/auth/login', {
-          username: this.username,
-          password: this.password
-        });
-        localStorage.setItem('token', response.data.access_token);
-        this.$router.push('/dashboard');
-      } catch (error) {
-        console.error('Login failed:', error);
-        // Handle error (e.g., show error message to user)
-      }
-    }
-  }
-}
+    handleSubmit() {
+      // Add login logic here
+      alert('Login submitted');
+    },
+    goToRegister() {
+      this.$router.push('/register');
+    },
+  },
+};
 </script>
 
 <style scoped>
-.login-form {
-  max-width: 300px;
-  margin: 0 auto;
-}
-.form-group {
-  margin-bottom: 15px;
-}
-label {
-  display: block;
-  margin-bottom: 5px;
-}
-input {
-  width: 100%;
-  padding: 5px;
-}
-button {
-  width: 100%;
-  padding: 10px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
+.card-title {
+  margin-bottom: 1rem;
 }
 </style>
