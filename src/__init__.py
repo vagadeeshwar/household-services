@@ -1,5 +1,5 @@
 import os
-from flask import Flask, send_from_directory, render_template
+from flask import Flask, send_from_directory
 from ..config import LocalDevelopmentConfig, ProductionConfig
 from .database import db, create_tables
 from .api.api import api_bp
