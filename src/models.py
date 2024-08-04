@@ -1,4 +1,4 @@
-from application.database import db
+from src.database import db
 from datetime import datetime, timezone, date
 
 

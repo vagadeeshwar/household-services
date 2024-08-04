@@ -2,7 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
  
-import application.models # Is needed for tables to be created!
+import src.models # Is needed for tables to be created!
 
 def create_tables():
     db.drop_all()
