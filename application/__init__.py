@@ -1,6 +1,6 @@
 import os
 from flask import Flask, send_from_directory, render_template
-from .config import LocalDevelopmentConfig, ProductionConfig
+from ..config import LocalDevelopmentConfig, ProductionConfig
 from .database import db, create_tables
 from .api.api import api_bp
 from .utils import create_dummy_data

@@ -45,20 +45,20 @@ frontend/public/js
 frontend/public/css
 
 # Backend (Flask) specific ignores
-backend/*.pyc
-backend/*.pyo
-backend/*.pyd
-backend/__pycache__/
-backend/*.sqlite3
-backend/env/
-backend/venv/
-backend/ENV/
-backend/venv.bak/
-backend/env.bak/
-backend/instance/
-backend/*.log
-backend/*.pot
-backend/*.py[cod]
-backend/*.db
-backend/.webassets-cache
-backend/dump.rdb
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.sqlite3
+env/
+venv/
+ENV/
+venv.bak/
+env.bak/
+instance/
+*.log
+*.pot
+*.py[cod]
+*.db
+.webassets-cache
+dump.rdb
