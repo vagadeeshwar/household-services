@@ -62,3 +62,5 @@ instance/
 *.db
 .webassets-cache
 dump.rdb
+
+build/
