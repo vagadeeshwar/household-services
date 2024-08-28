@@ -1,6 +1,6 @@
 # **Influencer-Nexus**
 
-Welcome to the Influencer-Nexus - a comprehensive web application designed to connect sponsors and influencers for seamless campaign management. This guide will walk you through the installation process and how to get the application up and running.
+Welcome to the Influencer-Nexus - a comprehensive web application designed to connect sponsors and influencers for seamless campaign management.
 
 ## **Table of Contents**
 
@@ -37,91 +37,44 @@ The project is divided into two main parts:
 
 Ensure you have the following installed:
 
-- Python (version 3.7 or newer)
-- pip (Python Package Installer)
-- Node.js and npm (for the frontend)
-- Redis
+- python >3
+- poetry
+- npm
 
 ## **5. Installation**
 
 ### Step 1: Clone the Repository
 
 ```bash
-git clone [repository-url]
-cd [repository-folder]
+git clone https://github.com/vagadeeshwar/influencer-nexus.git
+cd influencer-nexus
 ```
 
-### Step 2: Set Up the Backend
-Navigate to the backend folder:
+### Step 2: Build the Frontend
 
 ```bash
-cd backend
-```
-**Create a Virtual Environment (Optional but Recommended)**
-```bash
-python -m venv venv
-```
-
-**Activate the Virtual Environment**
-- On macOS and Linux:
-
-```bash
-source venv/bin/activate
-```
-
-- On Windows:
-```bash
-.\venv\Scripts\activate
-```
-
-**Install Required Libraries**
-The `requirements.txt` file contains a list of all the necessary Python libraries that you'll need. Install them with:
-
-```bash
-pip install -r requirements.txt
-```
-
-### Step 3: Set Up the Frontend
-Navigate to the frontend folder:
-
-```bash
-cd ../frontend
-```
-
-**Install Required Packages**
-The `package.json` file contains a list of all the necessary Node.js packages that you'll need. Install them with:
-
-```bash
-npm install
-```
-
-**Build the Frontend**
-After installing the packages, build the Vue.js project with:
-```bash
+cd frontend
+npm i
 npm run build
 ```
 
-This will create a `dist` folder with the bundled static files that will be served by Flask.
-
-### Step 4: Set Up Redis
-Ensure Redis is running on your machine. You can start Redis with:
+### Step 2: Set Up the Backend
 
 ```bash
-redis-server
+cd ..
+poetry shell
+poetry install
 ```
 
 ## **6. Running the Application**
-### Step 1: Start the Backend Server
-Navigate back to the backend folder and run the Flask application:
 
 ```bash
-cd ../backend
 flask run
 ```
 
 By default, the application will be accessible at `http://localhost:5000/`.
 
-## ***7. Acknowledgements
+## **7. Acknowledgements**
 Special thanks to the contributors, libraries, and frameworks that made this project possible.
 
 
