@@ -1,8 +1,10 @@
-# backend/app/models/user.py
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+import enum
 
 db = SQLAlchemy()
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -10,6 +12,20 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
     role = db.Column(db.String(20), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+    # Relationships
+    sponsor_profile = db.relationship(
+        "Sponsor", backref="user", uselist=False, lazy="joined"
+    )
+    influencer_profile = db.relationship(
+        "Influencer", backref="user", uselist=False, lazy="joined"
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -17,20 +33,24 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+
 class Sponsor(db.Model):
-    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
     company_name = db.Column(db.String(100), nullable=False)
     industry = db.Column(db.String(50))
     budget = db.Column(db.Float)
+    campaigns = db.relationship("Campaign", backref="sponsor", lazy=True)
+
 
 class Influencer(db.Model):
-    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     category = db.Column(db.String(50))
     niche = db.Column(db.String(50))
     reach = db.Column(db.Integer)
+    ad_requests = db.relationship("AdRequest", backref="influencer", lazy=True)
 
-# backend/app/models/campaign.py
+
 class Campaign(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -40,14 +60,35 @@ class Campaign(db.Model):
     budget = db.Column(db.Float)
     visibility = db.Column(db.String(10))
     goals = db.Column(db.Text)
-    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'), nullable=False)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey("sponsor.id"), nullable=False)
+    ad_requests = db.relationship("AdRequest", backref="campaign", lazy=True)
 
-# backend/app/models/ad_request.py
+    __table_args__ = (
+        db.CheckConstraint("start_date <= end_date", name="check_start_date_end_date"),
+    )
+
+
+class AdRequestStatus(enum.Enum):
+    PENDING = "Pending"
+    ACCEPTED = "Accepted"
+    REJECTED = "Rejected"
+
+
 class AdRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.id'), nullable=False)
-    influencer_id = db.Column(db.Integer, db.ForeignKey('influencer.id'), nullable=False)
+    campaign_id = db.Column(db.Integer, db.ForeignKey("campaign.id"), nullable=False)
+    influencer_id = db.Column(
+        db.Integer, db.ForeignKey("influencer.id"), nullable=False
+    )
     messages = db.Column(db.Text)
     requirements = db.Column(db.Text)
     payment_amount = db.Column(db.Float)
-    status = db.Column(db.String(20))
+    status = db.Column(
+        db.Enum(AdRequestStatus), default=AdRequestStatus.PENDING, nullable=False
+    )
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )

@@ -9,11 +9,11 @@ Thumbs.db
 *.sln
 
 # Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# .env
+# .env.local
+# .env.development.local
+# .env.test.local
+# .env.production.local
 
 # Logs
 logs/
@@ -49,7 +49,7 @@ frontend/public/css
 *.pyo
 *.pyd
 __pycache__/
-*.sqlite3
+# *.sqlite3
 env/
 venv/
 ENV/
