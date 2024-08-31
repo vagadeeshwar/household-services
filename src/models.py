@@ -8,8 +8,8 @@ db = SQLAlchemy()
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    username = db.Column(db.String(80), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128))
     role = db.Column(db.String(20), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -21,10 +21,18 @@ class User(db.Model):
 
     # Relationships
     sponsor_profile = db.relationship(
-        "Sponsor", backref="user", uselist=False, lazy="joined"
+        "Sponsor",
+        backref="user",
+        uselist=False,
+        lazy="joined",
+        cascade="all, delete-orphan",
     )
     influencer_profile = db.relationship(
-        "Influencer", backref="user", uselist=False, lazy="joined"
+        "Influencer",
+        backref="user",
+        uselist=False,
+        lazy="joined",
+        cascade="all, delete-orphan",
     )
 
     def set_password(self, password):
@@ -36,10 +44,12 @@ class User(db.Model):
 
 class Sponsor(db.Model):
     id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
-    company_name = db.Column(db.String(100), nullable=False)
+    company_name = db.Column(db.String(100), nullable=False, unique=True)
     industry = db.Column(db.String(50))
     budget = db.Column(db.Float)
-    campaigns = db.relationship("Campaign", backref="sponsor", lazy=True)
+    campaigns = db.relationship(
+        "Campaign", backref="sponsor", lazy=True, cascade="all, delete-orphan"
+    )
 
 
 class Influencer(db.Model):
@@ -48,7 +58,9 @@ class Influencer(db.Model):
     category = db.Column(db.String(50))
     niche = db.Column(db.String(50))
     reach = db.Column(db.Integer)
-    ad_requests = db.relationship("AdRequest", backref="influencer", lazy=True)
+    ad_requests = db.relationship(
+        "AdRequest", backref="influencer", lazy=True, cascade="all, delete-orphan"
+    )
 
 
 class Campaign(db.Model):
@@ -61,10 +73,15 @@ class Campaign(db.Model):
     visibility = db.Column(db.String(10))
     goals = db.Column(db.Text)
     sponsor_id = db.Column(db.Integer, db.ForeignKey("sponsor.id"), nullable=False)
-    ad_requests = db.relationship("AdRequest", backref="campaign", lazy=True)
+    ad_requests = db.relationship(
+        "AdRequest", backref="campaign", lazy=True, cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         db.CheckConstraint("start_date <= end_date", name="check_start_date_end_date"),
+        db.UniqueConstraint(
+            "name", "sponsor_id", name="unique_campaign_name_per_sponsor"
+        ),
     )
 
 
