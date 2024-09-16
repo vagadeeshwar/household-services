@@ -2,8 +2,8 @@ import os
 from flask import send_from_directory
 from flask import Flask
 from dotenv import load_dotenv
-import src.models  # Import models so tables are created
-from src.setup_db import setup_database  # Import setup_database to handle table creation and dummy data
+import src.models  # noqa Import models so tables are created
+# from src.setup_db import setup_database  # Import setup_database to handle table creation and dummy data
 from . import db
 
 
@@ -18,9 +18,9 @@ def create_app():
 
     db.init_app(app)
 
-    with app.app_context():
-        # Drop all tables and recreate them
-        setup_database()
+    # with app.app_context():
+    #     # Drop all tables and recreate them
+    #     setup_database()
 
     return app
 
