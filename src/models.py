@@ -1,10 +1,7 @@
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import enum
-
-db = SQLAlchemy()
-
+from . import db  # Import db from the centralized init file
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -19,7 +16,6 @@ class User(db.Model):
         onupdate=datetime.utcnow,
     )
 
-    # Relationships
     sponsor_profile = db.relationship(
         "Sponsor",
         backref="user",

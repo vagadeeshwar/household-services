@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "A web application designed to connect sponsors and influencers for seamless campaign management."
 authors = ["Vagadeeshwar G <21f1005494@ds.study.iitm.ac.in>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"

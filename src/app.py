@@ -1,43 +1,40 @@
 import os
-import logging
-from flask import Flask, send_from_directory
-from flask_sqlalchemy import SQLAlchemy
+from flask import send_from_directory
+from flask import Flask
 from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Initialize Flask-SQLAlchemy
-db = SQLAlchemy()
+import src.models  # Import models so tables are created
+from src.setup_db import setup_database  # Import setup_database to handle table creation and dummy data
+from . import db
 
 
 def create_app():
-    app = Flask(__name__, static_folder="../build", static_url_path="/")
+    app = Flask(__name__)
+    load_dotenv()
+
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
         "SQLALCHEMY_DATABASE_URI", "sqlite:///database.sqlite3"
     )
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # Initialize the database with the Flask app context
     db.init_app(app)
 
-    @app.route("/")
-    def serve_vue_app():
-        index_path = os.path.join(app.static_folder, "index.html")
-        if not os.path.exists(index_path):
-            logger.error(f"index.html not found at {index_path}")
-            return "index.html not found", 404
-        logger.info(f"Serving index.html from {index_path}")
-        return send_from_directory(app.static_folder, "index.html")
-
-    # Add more routes and configurations as needed
+    with app.app_context():
+        # Drop all tables and recreate them
+        setup_database()
 
     return app
 
 
+app = create_app()
+
+
+@app.route("/")
+def serve_vue_app():
+    index_path = os.path.join(app.static_folder, "index.html")
+    if not os.path.exists(index_path):
+        return "index.html not found", 404
+    return send_from_directory(app.static_folder, "index.html")
+
+
 if __name__ == "__main__":
-    app = create_app()
     app.run(host="0.0.0.0", port=8080, debug=True)

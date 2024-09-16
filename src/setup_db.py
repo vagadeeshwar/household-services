@@ -1,53 +1,32 @@
-import os
 import logging
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from dotenv import load_dotenv
-from models import (
-    User,
-    Sponsor,
-    Influencer,
-    Campaign,
-    AdRequest,
-    AdRequestStatus,
-)  # Import your models
 from faker import Faker
 from datetime import timedelta
-
-# Load environment variables
-load_dotenv()
+from . import db  # Import the shared db instance
+from src.models import User, Sponsor, Influencer, Campaign, AdRequest, AdRequestStatus
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Initialize Flask and Flask-SQLAlchemy
-app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-    "SQLALCHEMY_DATABASE_URI", "sqlite:///database.sqlite3"
-)
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = (
-    False  # Suppress a warning from Flask-SQLAlchemy
-)
-db = SQLAlchemy(app)
 
 # Initialize Faker
 fake = Faker()
 
 
 def setup_database():
-    with app.app_context():  # Ensure the app context is active
-        # Drop all tables
-        db.drop_all()
-        logger.info("All tables dropped successfully.")
+    """
+    Drops all tables, recreates them, and populates the database with dummy data.
+    """
+    # Drop all tables
+    db.drop_all()
+    logger.info("Dropped all tables.")
 
-        # Create all tables
-        db.create_all()
-        logger.info("All tables created successfully.")
+    # Create all tables
+    db.create_all()
+    logger.info("Created all tables.")
 
-        # Insert dummy data
-        create_dummy_data()
-        logger.info("Dummy data inserted successfully.")
+    # Insert dummy data into the database
+    create_dummy_data()
+    logger.info("Populated database with dummy data.")
 
 
 def create_dummy_data():
@@ -159,7 +138,3 @@ def create_dummy_ad_requests(campaigns, influencers):
     db.session.commit()
     logger.info(f"{len(ad_requests)} dummy ad requests created.")
     return ad_requests
-
-
-if __name__ == "__main__":
-    setup_database()
