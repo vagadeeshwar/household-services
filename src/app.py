@@ -3,12 +3,15 @@ from flask import send_from_directory
 from flask import Flask
 from dotenv import load_dotenv
 import src.models  # noqa Import models so tables are created
-# from src.setup_db import setup_database  # Import setup_database to handle table creation and dummy data
-from . import db
+from src.setup_db import (
+    setup_database,
+)  # Import setup_database to handle table creation and dummy data
+from . import db, ma
 
 
 def create_app():
     app = Flask(__name__)
+    # ma = Marshmallow(app)
     load_dotenv()
 
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
@@ -17,10 +20,11 @@ def create_app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
+    ma.init_app(app)
 
-    # with app.app_context():
-    #     # Drop all tables and recreate them
-    #     setup_database()
+    with app.app_context():
+        # Drop all tables and recreate them
+        setup_database()
 
     return app
 

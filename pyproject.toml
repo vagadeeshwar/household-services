@@ -1,10 +1,11 @@
 [tool.poetry]
-name = "influencer-nexus"
+
+name = "household-services"
 version = "0.1.0"
-description = "A web application designed to connect sponsors and influencers for seamless campaign management."
+description = ""
 authors = ["Vagadeeshwar G <21f1005494@ds.study.iitm.ac.in>"]
 readme = "README.md"
-package-mode = false
+# package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -12,10 +13,11 @@ flask = "^3.0.3"
 python-dotenv = "^1.0.1"
 flask-sqlalchemy = "^3.1.1"
 flask-restful = "^0.3.10"
-
+flask-cors = "^5.0.0"
+flask-marshmallow = "^1.2.1"
 
 [tool.poetry.group.dev.dependencies]
-faker = "^28.1.0"
+faker = "^33.0.0"
 
 [build-system]
 requires = ["poetry-core"]

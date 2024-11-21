@@ -1,91 +1,130 @@
-from marshmallow import Schema, fields, validate, ValidationError, validates, validates_schema
-from .models import AdRequestStatus, Sponsor, Influencer, Campaign
-from datetime import datetime
+from marshmallow import fields, validate, validates, ValidationError
+from models import User, ProfessionalProfile, CustomerProfile, Service, ServiceRequest, Review
+from . import ma
 
-# User Schema
-class UserSchema(Schema):
-    id = fields.Int(dump_only=True)
-    username = fields.Str(required=True, validate=[validate.Length(min=3, max=80)])
-    email = fields.Email(required=True)
-    password = fields.Str(load_only=True, required=True, validate=[validate.Length(min=6)])
-    role = fields.Str(required=True, validate=validate.OneOf(["admin", "sponsor", "influencer"]))
-    created_at = fields.DateTime(dump_only=True, default=datetime.utcnow)
-    updated_at = fields.DateTime(dump_only=True, default=datetime.utcnow)
+class UserSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = User
+        load_instance = True
 
-# Sponsor Schema
-class SponsorSchema(Schema):
-    id = fields.Int(dump_only=True)
-    company_name = fields.Str(required=True, validate=[validate.Length(min=3, max=100)])
-    industry = fields.Str(validate=validate.Length(max=50))
-    budget = fields.Float()
+    id = ma.auto_field(dump_only=True)
+    username = ma.auto_field(required=True, validate=validate.Length(min=3, max=80))
+    email = ma.Email(required=True)
+    role = ma.String(required=True, validate=validate.OneOf(['admin', 'professional', 'customer']))
+    password = ma.String(load_only=True, required=True, validate=validate.Length(min=6))
+    is_active = ma.Boolean(dump_only=True)
+    created_at = ma.DateTime(dump_only=True)
+    updated_at = ma.DateTime(dump_only=True)
+    last_login = ma.DateTime(dump_only=True)
 
-    # Nested field to include user data
-    user = fields.Nested(UserSchema, dump_only=True)
+class ProfessionalProfileSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = ProfessionalProfile
+        load_instance = True
+        include_fk = True
 
-# Influencer Schema
-class InfluencerSchema(Schema):
-    id = fields.Int(dump_only=True)
-    name = fields.Str(required=True, validate=[validate.Length(min=3, max=100)])
-    category = fields.Str(validate=[validate.Length(max=50)])
-    niche = fields.Str(validate=[validate.Length(max=50)])
-    reach = fields.Int()
+    id = ma.auto_field(dump_only=True)
+    user_id = ma.auto_field(dump_only=True)
+    full_name = ma.String(required=True, validate=validate.Length(min=2, max=100))
+    phone = ma.String(required=True, validate=validate.Length(equal=10))
+    experience_years = ma.Integer(required=True, validate=validate.Range(min=0, max=50))
+    description = ma.String()
+    is_verified = ma.Boolean(dump_only=True)
+    verification_documents = ma.String()
+    service_type_id = ma.Integer(required=True)
+    average_rating = ma.Float(dump_only=True)
+    created_at = ma.DateTime(dump_only=True)
+    
+    # Nested relationships
+    user = fields.Nested('UserSchema', only=('id', 'username', 'email'), dump_only=True)
+    service_type = fields.Nested('ServiceSchema', only=('id', 'name'), dump_only=True)
 
-    # Nested field to include user data
-    user = fields.Nested(UserSchema, dump_only=True)
+class CustomerProfileSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = CustomerProfile
+        load_instance = True
+        include_fk = True
 
-# Campaign Schema
-class CampaignSchema(Schema):
-    id = fields.Int(dump_only=True)
-    name = fields.Str(required=True, validate=[validate.Length(min=3, max=100)])
-    description = fields.Str()
-    start_date = fields.Date(required=True)
-    end_date = fields.Date(required=True)
-    budget = fields.Float()
-    visibility = fields.Str(validate=validate.OneOf(["public", "private"]))
-    goals = fields.Str()
-    sponsor_id = fields.Int(required=True)
+    id = ma.auto_field(dump_only=True)
+    user_id = ma.auto_field(dump_only=True)
+    full_name = ma.String(required=True, validate=validate.Length(min=2, max=100))
+    phone = ma.String(required=True, validate=validate.Length(equal=10))
+    address = ma.String(required=True)
+    pin_code = ma.String(required=True, validate=validate.Length(equal=6))
+    created_at = ma.DateTime(dump_only=True)
 
-    # Foreign key validation: Ensure sponsor_id exists
-    @validates('sponsor_id')
-    def validate_sponsor_id(self, value):
-        sponsor = Sponsor.query.get(value)
-        if sponsor is None:
-            raise ValidationError(f"Sponsor with id {value} does not exist.")
+    # Nested relationships
+    user = fields.Nested('UserSchema', only=('id', 'username', 'email'), dump_only=True)
 
-    # Custom validation for dates
-    @validates_schema
-    def validate_dates(self, data, **kwargs):
-        if data["start_date"] > data["end_date"]:
-            raise ValidationError("start_date must be before or equal to end_date")
+class ServiceSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = Service
+        load_instance = True
 
-    # Nested field to include sponsor data
-    sponsor = fields.Nested(SponsorSchema, dump_only=True)
+    id = ma.auto_field(dump_only=True)
+    name = ma.String(required=True, validate=validate.Length(min=2, max=100))
+    description = ma.String(required=True)
+    base_price = ma.Float(required=True, validate=validate.Range(min=0))
+    time_required = ma.String(required=True)
+    is_active = ma.Boolean()
+    created_at = ma.DateTime(dump_only=True)
 
-# AdRequest Schema
-class AdRequestSchema(Schema):
-    id = fields.Int(dump_only=True)
-    messages = fields.Str()
-    requirements = fields.Str()
-    payment_amount = fields.Float()
-    status = fields.Str(required=True, validate=validate.OneOf([status.value for status in AdRequestStatus]))
-    campaign_id = fields.Int(required=True)
-    influencer_id = fields.Int(required=True)
+    professionals = fields.Nested('ProfessionalProfileSchema', many=True, only=('id', 'full_name', 'average_rating'), dump_only=True)
 
-    # Foreign key validation: Ensure campaign_id exists
-    @validates('campaign_id')
-    def validate_campaign_id(self, value):
-        if not Campaign.query.get(value):
-            raise ValidationError(f"Campaign with id {value} does not exist.")
+class ServiceRequestSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = ServiceRequest
+        load_instance = True
+        include_fk = True
 
-    # Foreign key validation: Ensure influencer_id exists
-    @validates('influencer_id')
-    def validate_influencer_id(self, value):
-        if not Influencer.query.get(value):
-            raise ValidationError(f"Influencer with id {value} does not exist.")
+    id = ma.auto_field(dump_only=True)
+    service_id = ma.Integer(required=True)
+    customer_id = ma.Integer(required=True)
+    professional_id = ma.Integer()
+    date_of_request = ma.DateTime(required=True)
+    preferred_time = ma.String()
+    address = ma.String(required=True)
+    pin_code = ma.String(required=True, validate=validate.Length(equal=6))
+    description = ma.String()
+    status = ma.String(validate=validate.OneOf(['requested', 'assigned', 'in_progress', 'completed', 'closed']))
+    date_of_assignment = ma.DateTime(dump_only=True)
+    date_of_completion = ma.DateTime(dump_only=True)
+    remarks = ma.String()
+    created_at = ma.DateTime(dump_only=True)
 
-    created_at = fields.DateTime(dump_only=True, default=datetime.utcnow)
-    updated_at = fields.DateTime(dump_only=True, default=datetime.utcnow)
+    # Nested relationships
+    service = fields.Nested('ServiceSchema', only=('id', 'name', 'base_price'), dump_only=True)
+    customer = fields.Nested('CustomerProfileSchema', only=('id', 'full_name', 'phone'), dump_only=True)
+    professional = fields.Nested('ProfessionalProfileSchema', only=('id', 'full_name', 'phone'), dump_only=True)
+    review = fields.Nested('ReviewSchema', exclude=('service_request',), dump_only=True)
 
-    # Nested fields to include campaign and influencer data
-    campaign = fields.Nested(CampaignSchema, dump_only=True)
-    influencer = fields.Nested(InfluencerSchema, dump_only=True)
+class ReviewSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = Review
+        load_instance = True
+        include_fk = True
+
+    id = ma.auto_field(dump_only=True)
+    service_request_id = ma.Integer(required=True)
+    rating = ma.Integer(required=True, validate=validate.Range(min=1, max=5))
+    comment = ma.String()
+    is_reported = ma.Boolean(dump_only=True)
+    report_reason = ma.String(dump_only=True)
+    created_at = ma.DateTime(dump_only=True)
+
+    # Nested relationship
+    service_request = fields.Nested('ServiceRequestSchema', exclude=('review',), dump_only=True)
+
+# Initialize schema instances
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
+professional_profile_schema = ProfessionalProfileSchema()
+professional_profiles_schema = ProfessionalProfileSchema(many=True)
+customer_profile_schema = CustomerProfileSchema()
+customer_profiles_schema = CustomerProfileSchema(many=True)
+service_schema = ServiceSchema()
+services_schema = ServiceSchema(many=True)
+service_request_schema = ServiceRequestSchema()
+service_requests_schema = ServiceRequestSchema(many=True)
+review_schema = ReviewSchema()
+reviews_schema = ReviewSchema(many=True)

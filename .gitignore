@@ -59,8 +59,9 @@ instance/
 *.log
 *.pot
 *.py[cod]
-*.db
+# *.db
 .webassets-cache
 dump.rdb
 
 build/
+repopack-output.txt

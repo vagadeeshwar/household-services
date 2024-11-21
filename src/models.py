@@ -1,38 +1,37 @@
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
-import enum
+from sqlalchemy.orm import relationship
+from werkzeug.security import generate_password_hash, check_password_hash
+from . import db
 
-db = SQLAlchemy()
+
+class TimestampMixin:
+    """Mixin for created and updated timestamps"""
+
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
 
 
-class User(db.Model):
+class User(db.Model, TimestampMixin):
+    """Base User Model for all types of users"""
+
+    __tablename__ = "users"
+
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False, required=True)
-    email = db.Column(db.String(120), unique=True, nullable=False, required=True)
-    password_hash = db.Column(db.String(128), required=True, nullable=False)
-    role = db.Column(db.String(20), required=True, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(
-        db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
-    )
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    role = db.Column(
+        db.String(20), nullable=False
+    )  # 'admin', 'professional', 'customer'
+    is_active = db.Column(db.Boolean, default=True)
+    last_login = db.Column(db.DateTime)
 
-    # Relationships
-    sponsor_profile = db.relationship(
-        "Sponsor",
-        backref="user",
-        uselist=False,
-        lazy="joined",
-        cascade="all, delete-orphan",
+    # Relationships based on role
+    professional_profile = relationship(
+        "ProfessionalProfile", back_populates="user", uselist=False
     )
-    influencer_profile = db.relationship(
-        "Influencer",
-        backref="user",
-        uselist=False,
-        lazy="joined",
-        cascade="all, delete-orphan",
+    customer_profile = relationship(
+        "CustomerProfile", back_populates="user", uselist=False
     )
 
     def set_password(self, password):
@@ -41,71 +40,136 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-
-class Sponsor(db.Model):
-    id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
-    company_name = db.Column(db.String(100), nullable=False, unique=True)
-    industry = db.Column(db.String(50))
-    budget = db.Column(db.Float)
-    campaigns = db.relationship(
-        "Campaign", backref="sponsor", lazy=True, cascade="all, delete-orphan"
-    )
+    def __repr__(self):
+        return f"<User {self.username} ({self.role})>"
 
 
-class Influencer(db.Model):
-    id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    category = db.Column(db.String(50))
-    niche = db.Column(db.String(50))
-    reach = db.Column(db.Integer)
-    ad_requests = db.relationship(
-        "AdRequest", backref="influencer", lazy=True, cascade="all, delete-orphan"
-    )
+class ProfessionalProfile(db.Model, TimestampMixin):
+    """Profile for service professionals"""
 
+    __tablename__ = "professional_profiles"
 
-class Campaign(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id"), unique=True, nullable=False
+    )
+    full_name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    experience_years = db.Column(db.Integer, nullable=False)
     description = db.Column(db.Text)
-    start_date = db.Column(db.Date)
-    end_date = db.Column(db.Date)
-    budget = db.Column(db.Float)
-    visibility = db.Column(db.String(10))
-    goals = db.Column(db.Text)
-    sponsor_id = db.Column(db.Integer, db.ForeignKey("sponsor.id"), nullable=False)
-    ad_requests = db.relationship(
-        "AdRequest", backref="campaign", lazy=True, cascade="all, delete-orphan"
+    is_verified = db.Column(db.Boolean, default=False)
+    verification_documents = db.Column(db.String(500))  # URLs to documents
+    service_type_id = db.Column(
+        db.Integer, db.ForeignKey("services.id"), nullable=False
     )
+    average_rating = db.Column(db.Float, default=0.0)
 
-    __table_args__ = (
-        db.CheckConstraint("start_date <= end_date", name="check_start_date_end_date"),
-        db.UniqueConstraint(
-            "name", "sponsor_id", name="unique_campaign_name_per_sponsor"
-        ),
-    )
-
-
-class AdRequestStatus(enum.Enum):
-    PENDING = "Pending"
-    ACCEPTED = "Accepted"
-    REJECTED = "Rejected"
+    # Relationships
+    user = relationship("User", back_populates="professional_profile")
+    service_type = relationship("Service", back_populates="professionals")
+    service_requests = relationship("ServiceRequest", back_populates="professional")
 
 
-class AdRequest(db.Model):
+class CustomerProfile(db.Model, TimestampMixin):
+    """Profile for customers"""
+
+    __tablename__ = "customer_profiles"
+
     id = db.Column(db.Integer, primary_key=True)
-    campaign_id = db.Column(db.Integer, db.ForeignKey("campaign.id"), nullable=False)
-    influencer_id = db.Column(
-        db.Integer, db.ForeignKey("influencer.id"), nullable=False
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id"), unique=True, nullable=False
     )
-    messages = db.Column(db.Text)
-    requirements = db.Column(db.Text)
-    payment_amount = db.Column(db.Float)
+    full_name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    address = db.Column(db.Text, nullable=False)
+    pin_code = db.Column(db.String(10), nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="customer_profile")
+    service_requests = relationship("ServiceRequest", back_populates="customer")
+
+
+class Service(db.Model, TimestampMixin):
+    """Service types available on the platform"""
+
+    __tablename__ = "services"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=False)
+    base_price = db.Column(db.Float, nullable=False)
+    time_required = db.Column(db.String(50), nullable=False)  # e.g., "2 hours", "1 day"
+    is_active = db.Column(db.Boolean, default=True)
+
+    # Relationships
+    professionals = relationship("ProfessionalProfile", back_populates="service_type")
+    service_requests = relationship("ServiceRequest", back_populates="service")
+
+
+class ServiceRequest(db.Model, TimestampMixin):
+    """Service requests from customers"""
+
+    __tablename__ = "service_requests"
+
+    id = db.Column(db.Integer, primary_key=True)
+    service_id = db.Column(db.Integer, db.ForeignKey("services.id"), nullable=False)
+    customer_id = db.Column(
+        db.Integer, db.ForeignKey("customer_profiles.id"), nullable=False
+    )
+    professional_id = db.Column(db.Integer, db.ForeignKey("professional_profiles.id"))
+
+    # Request details
+    date_of_request = db.Column(db.DateTime, nullable=False)
+    preferred_time = db.Column(db.String(50))
+    address = db.Column(db.Text, nullable=False)
+    pin_code = db.Column(db.String(10), nullable=False)
+    description = db.Column(db.Text)
+
+    # Status tracking
     status = db.Column(
-        db.Enum(AdRequestStatus), default=AdRequestStatus.PENDING, nullable=False
+        db.String(20), nullable=False, default="requested"
+    )  # requested, assigned, in_progress, completed, closed
+    date_of_assignment = db.Column(db.DateTime)
+    date_of_completion = db.Column(db.DateTime)
+    remarks = db.Column(db.Text)
+
+    # Relationships
+    service = relationship("Service", back_populates="service_requests")
+    customer = relationship("CustomerProfile", back_populates="service_requests")
+    professional = relationship(
+        "ProfessionalProfile", back_populates="service_requests"
     )
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(
-        db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+    review = relationship("Review", back_populates="service_request", uselist=False)
+
+
+class Review(db.Model, TimestampMixin):
+    """Reviews for completed services"""
+
+    __tablename__ = "reviews"
+
+    id = db.Column(db.Integer, primary_key=True)
+    service_request_id = db.Column(
+        db.Integer, db.ForeignKey("service_requests.id"), unique=True, nullable=False
     )
+    rating = db.Column(db.Integer, nullable=False)  # 1-5 stars
+    comment = db.Column(db.Text)
+    is_reported = db.Column(db.Boolean, default=False)
+    report_reason = db.Column(db.Text)
+
+    # Relationships
+    service_request = relationship("ServiceRequest", back_populates="review")
+
+
+class ActivityLog(db.Model, TimestampMixin):
+    """Audit trail for important activities"""
+
+    __tablename__ = "activity_logs"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    action = db.Column(db.String(50), nullable=False)
+    entity_type = db.Column(
+        db.String(50), nullable=False
+    )  # e.g., 'service_request', 'review'
+    entity_id = db.Column(db.Integer, nullable=False)
+    description = db.Column(db.Text, nullable=False)
