@@ -1,4 +1,5 @@
-from marshmallow import fields, validate
+from marshmallow import fields, validate, ValidationError
+import re
 from .models import (
     User,
     ProfessionalProfile,
@@ -12,20 +13,92 @@ from .models import (
 from . import ma
 
 
+def validate_phone(value):
+    """Validate phone number format."""
+    if not re.match(r"^[1-9]\d{9}$", value):
+        raise ValidationError(
+            "Invalid phone number. Must be 10-digit and can't start with a 0."
+        )
+
+
+def validate_password(value):
+    """
+    Validate password strength.
+    Must contain:
+    - At least 8 characters
+    - At least one uppercase letter
+    - At least one lowercase letter
+    - At least one number
+    - At least one special character
+    """
+    if len(value) < 8:
+        raise ValidationError("Password must be at least 8 characters long.")
+    if not re.search(r"[A-Z]", value):
+        raise ValidationError("Password must contain at least one uppercase letter.")
+    if not re.search(r"[a-z]", value):
+        raise ValidationError("Password must contain at least one lowercase letter.")
+    if not re.search(r"\d", value):
+        raise ValidationError("Password must contain at least one number.")
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', value):
+        raise ValidationError("Password must contain at least one special character.")
+
+
+def validate_pincode(value):
+    """Validate Indian PIN code format."""
+    if not re.match(r"^[1-9][0-9]{5}$", value):
+        raise ValidationError(
+            "Invalid PIN code. Must be a 6-digit postal code not starting with 0."
+        )
+
+
 class UserSchema(ma.SQLAlchemySchema):
     class Meta:
         model = User
         load_instance = True
 
     id = ma.auto_field(dump_only=True)
-    username = ma.auto_field(required=True, validate=validate.Length(min=3, max=80))
-    email = ma.Email(required=True)
-    full_name = ma.String(required=True, validate=validate.Length(min=2, max=100))
-    phone = ma.String(required=True, validate=validate.Length(equal=10))
-    address = ma.String(required=True)
-    pin_code = ma.String(required=True, validate=validate.Length(equal=6))
+
+    username = ma.String(
+        required=True,
+        validate=[
+            validate.Length(
+                min=4, max=80, error="Username must be between 4 and 80 characters."
+            ),
+            validate.Regexp(
+                r"^[a-zA-Z0-9_.-]+$",
+                error="Username can only contain letters, numbers, and the characters _ . -",
+            ),
+        ],
+    )
+    email = ma.Email(
+        required=True,
+        validate=validate.Length(
+            max=120, error="Email must not exceed 120 characters."
+        ),
+    )
+    full_name = ma.String(
+        required=True,
+        validate=[
+            validate.Length(
+                min=4, max=100, error="Full name must be between 4 and 100 characters."
+            ),
+            validate.Regexp(
+                r"^[a-zA-Z\s.-]+$",
+                error="Full name can only contain letters, spaces, dots, and hyphens.",
+            ),
+        ],
+    )
+
+    phone = ma.String(required=True, validate=validate_phone)
+    address = ma.String(
+        required=True,
+        validate=validate.Length(
+            min=1, max=500, error="Address must be between 1 and 500 characters."
+        ),
+    )
+    pin_code = ma.String(required=True, validate=validate_pincode)
     role = ma.Enum(UserRole, required=True)
-    password = ma.String(load_only=True, required=True, validate=validate.Length(min=6))
+    password = ma.String(load_only=True, required=True, validate=validate_password)
     is_active = ma.Boolean(dump_only=True)
     created_at = ma.DateTime(dump_only=True)
     updated_at = ma.DateTime(dump_only=True)
@@ -40,10 +113,29 @@ class ProfessionalProfileSchema(ma.SQLAlchemySchema):
 
     id = ma.auto_field(dump_only=True)
     user_id = ma.auto_field(dump_only=True)
-    experience_years = ma.Integer(required=True, validate=validate.Range(min=0, max=50))
-    description = ma.String()
+
+    experience_years = ma.Integer(
+        required=True,
+        validate=validate.Range(
+            min=0, max=50, error="Experience must be between 0 and 50 years."
+        ),
+    )
+    description = ma.String(
+        validate=validate.Length(
+            min=1,
+            max=1000,
+            error="Description must be between 1 and 1000 characters.",
+        )
+    )
+
     is_verified = ma.Boolean(dump_only=True)
-    verification_documents = ma.String()
+    verification_documents = ma.String(
+        validate=validate.Regexp(
+            r"^[\w\-. ]+\.(pdf|jpg|jpeg|png)$",
+            error="Invalid document format. Allowed formats: pdf, jpg, jpeg, png",
+        )
+    )
+
     service_type_id = ma.Integer(required=True)
     average_rating = ma.Float(dump_only=True)
     created_at = ma.DateTime(dump_only=True)
@@ -73,10 +165,40 @@ class ServiceSchema(ma.SQLAlchemySchema):
         load_instance = True
 
     id = ma.auto_field(dump_only=True)
-    name = ma.String(required=True, validate=validate.Length(min=2, max=100))
-    description = ma.String(required=True)
-    base_price = ma.Float(required=True, validate=validate.Range(min=0))
-    time_required = ma.String(required=True)
+
+    name = ma.String(
+        required=True,
+        validate=[
+            validate.Length(min=2, max=100),
+            validate.Regexp(
+                r"^[a-zA-Z0-9\s&-]+$",
+                error="Service name can only contain letters, numbers, spaces, &, and hyphens.",
+            ),
+        ],
+    )
+    description = ma.String(
+        validate=validate.Length(
+            min=1,
+            max=2000,
+            error="Description must be between 1 and 2000 characters.",
+        ),
+    )
+    base_price = ma.Float(
+        required=True,
+        validate=validate.Range(
+            min=100, max=50000, error="Base price must be between ₹100 and ₹50,000."
+        ),
+    )
+
+    time_required = ma.Integer(
+        required=True,
+        validate=validate.Range(
+            min=15,
+            max=480,  # 15 minutes to 8 hours
+            error="Service duration must be between 15 and 480 minutes",
+        ),
+    )
+
     is_active = ma.Boolean()
     created_at = ma.DateTime(dump_only=True)
 
@@ -132,8 +254,21 @@ class ReviewSchema(ma.SQLAlchemySchema):
 
     id = ma.auto_field(dump_only=True)
     service_request_id = ma.Integer(required=True)
-    rating = ma.Integer(required=True, validate=validate.Range(min=1, max=5))
-    comment = ma.String()
+
+    rating = ma.Integer(
+        required=True,
+        validate=validate.Range(
+            min=1, max=5, error="Rating must be between 1 and 5 stars."
+        ),
+    )
+    comment = ma.String(
+        validate=validate.Length(
+            min=1,
+            max=500,
+            error="Review comment must be between 1 and 500 characters.",
+        )
+    )
+
     is_reported = ma.Boolean(dump_only=True)
     report_reason = ma.String(dump_only=True)
     created_at = ma.DateTime(dump_only=True)

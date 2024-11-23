@@ -1,13 +1,12 @@
 from flask import Blueprint, request, jsonify
-from werkzeug.security import check_password_hash
 from datetime import datetime
-from src.models import User, ProfessionalProfile, CustomerProfile
+from src.models import User, ProfessionalProfile, CustomerProfile, UserRole
 from src.schemas import (
     user_schema,
     professional_profile_schema,
     customer_profile_schema,
 )
-from src.utils.auth import generate_token, token_required, role_required, APIError
+from src.utils.auth import generate_token, token_required, APIError
 from src import db
 
 auth_bp = Blueprint("auth", __name__)
@@ -34,7 +33,9 @@ def login():
     db.session.commit()
 
     # Generate token
-    token = generate_token(user.id, user.role)
+    token = generate_token(
+        user.id, user.role.value
+    )  # Use role.value since it's an enum
 
     return jsonify({"token": token, "user": user_schema.dump(user)}), 200
 
@@ -44,12 +45,18 @@ def register_customer():
     """Register a new customer"""
     data = request.get_json()
 
-    # Validate and create user
+    # Prepare user data with all required fields from updated model
     user_data = {
         "username": data.get("username"),
         "email": data.get("email"),
         "password": data.get("password"),
-        "role": "customer",
+        "full_name": data.get(
+            "full_name", data.get("username")
+        ),  # Default to username if not provided
+        "phone": data.get("phone"),
+        "address": data.get("address"),
+        "pin_code": data.get("pin_code"),
+        "role": UserRole.CUSTOMER,
     }
 
     errors = user_schema.validate(user_data)
@@ -69,20 +76,7 @@ def register_customer():
     db.session.flush()  # Get user.id without committing
 
     # Create customer profile
-    profile_data = {
-        "user_id": user.id,
-        "full_name": data.get("full_name"),
-        "phone": data.get("phone"),
-        "address": data.get("address"),
-        "pin_code": data.get("pin_code"),
-    }
-
-    errors = customer_profile_schema.validate(profile_data)
-    if errors:
-        db.session.rollback()
-        raise APIError(f"Validation error: {errors}", 400)
-
-    profile = CustomerProfile(**profile_data)
+    profile = CustomerProfile(user_id=user.id)
     db.session.add(profile)
     db.session.commit()
 
@@ -100,12 +94,18 @@ def register_professional():
     """Register a new service professional"""
     data = request.get_json()
 
-    # Validate and create user
+    # Prepare user data with all required fields from updated model
     user_data = {
         "username": data.get("username"),
         "email": data.get("email"),
         "password": data.get("password"),
-        "role": "professional",
+        "full_name": data.get(
+            "full_name", data.get("username")
+        ),  # Default to username if not provided
+        "phone": data.get("phone"),
+        "address": data.get("address"),
+        "pin_code": data.get("pin_code"),
+        "role": UserRole.PROFESSIONAL,
     }
 
     errors = user_schema.validate(user_data)
@@ -121,18 +121,18 @@ def register_professional():
     # Create user
     user = User(**user_data)
     user.set_password(user_data["password"])
+    user.is_active = False  # Professional needs verification
     db.session.add(user)
     db.session.flush()  # Get user.id without committing
 
-    # Create professional profile
+    # Create professional profile with updated fields
     profile_data = {
         "user_id": user.id,
-        "full_name": data.get("full_name"),
-        "phone": data.get("phone"),
-        "experience_years": data.get("experience_years"),
         "description": data.get("description"),
         "service_type_id": data.get("service_type_id"),
+        "experience_years": data.get("experience_years"),
         "verification_documents": data.get("verification_documents"),
+        "is_verified": False,
     }
 
     errors = professional_profile_schema.validate(profile_data)
@@ -157,7 +157,7 @@ def register_professional():
 @token_required
 def get_profile(current_user):
     """Get current user's profile"""
-    if current_user.role == "professional":
+    if current_user.role == UserRole.PROFESSIONAL:
         profile = ProfessionalProfile.query.filter_by(user_id=current_user.id).first()
         return jsonify(
             {
@@ -165,7 +165,7 @@ def get_profile(current_user):
                 "profile": professional_profile_schema.dump(profile),
             }
         ), 200
-    elif current_user.role == "customer":
+    elif current_user.role == UserRole.CUSTOMER:
         profile = CustomerProfile.query.filter_by(user_id=current_user.id).first()
         return jsonify(
             {
@@ -184,7 +184,7 @@ def update_profile(current_user):
     data = request.get_json()
 
     # Update user fields
-    user_fields = ["email"]
+    user_fields = ["email", "full_name", "phone", "address", "pin_code"]
     user_updates = {k: v for k, v in data.items() if k in user_fields}
 
     if user_updates:
@@ -195,14 +195,14 @@ def update_profile(current_user):
         for key, value in user_updates.items():
             setattr(current_user, key, value)
 
-    # Update profile fields
-    if current_user.role == "professional":
+    # Update profile-specific fields
+    if current_user.role == UserRole.PROFESSIONAL:
         profile = ProfessionalProfile.query.filter_by(user_id=current_user.id).first()
-        profile_fields = ["full_name", "phone", "experience_years", "description"]
+        profile_fields = ["experience_years", "description"]
         schema = professional_profile_schema
     else:  # customer
         profile = CustomerProfile.query.filter_by(user_id=current_user.id).first()
-        profile_fields = ["full_name", "phone", "address", "pin_code"]
+        profile_fields = []  # No additional fields in customer profile
         schema = customer_profile_schema
 
     profile_updates = {k: v for k, v in data.items() if k in profile_fields}

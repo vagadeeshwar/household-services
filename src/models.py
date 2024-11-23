@@ -125,7 +125,7 @@ class Service(db.Model, TimestampMixin):
     name = db.Column(db.String(100), nullable=False, unique=True)
     description = db.Column(db.Text, nullable=False)
     base_price = db.Column(db.Float, nullable=False)
-    time_required = db.Column(db.String(50), nullable=False)  # e.g., "2 hours", "1 day"
+    time_required = db.Column(db.Integer, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
 
     # Relationships
