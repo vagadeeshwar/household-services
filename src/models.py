@@ -2,6 +2,8 @@ from datetime import datetime
 from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db
+from enum import Enum
+from sqlalchemy.schema import CheckConstraint
 
 
 class TimestampMixin:
@@ -9,6 +11,18 @@ class TimestampMixin:
 
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+
+
+class RequestStatus(Enum):
+    REQUESTED = "requested"
+    ASSIGNED = "assigned"
+    COMPLETED = "completed"
+
+
+class UserRole(Enum):
+    ADMIN = "admin"
+    PROFESSIONAL = "professional"
+    CUSTOMER = "customer"
 
 
 class User(db.Model, TimestampMixin):
@@ -19,10 +33,21 @@ class User(db.Model, TimestampMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    full_name = db.Column(db.String(100), nullable=False)
+    address = db.Column(db.Text, nullable=False)
+    phone = db.Column(
+        db.String(10),
+        CheckConstraint("length(phone) = 10"),
+        nullable=False,
+    )
+    pin_code = db.Column(
+        db.String(6),
+        CheckConstraint("length(pin_code) = 6"),
+        nullable=False,
+    )
+
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(
-        db.String(20), nullable=False
-    )  # 'admin', 'professional', 'customer'
+    role = db.Column(db.Enum(UserRole), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     last_login = db.Column(db.DateTime)
 
@@ -53,17 +78,23 @@ class ProfessionalProfile(db.Model, TimestampMixin):
     user_id = db.Column(
         db.Integer, db.ForeignKey("users.id"), unique=True, nullable=False
     )
-    full_name = db.Column(db.String(100), nullable=False)
-    phone = db.Column(db.String(20), nullable=False)
-    experience_years = db.Column(db.Integer, nullable=False)
+
     description = db.Column(db.Text)
     is_verified = db.Column(db.Boolean, default=False)
     verification_documents = db.Column(db.String(500))  # URLs to documents
     service_type_id = db.Column(
         db.Integer, db.ForeignKey("services.id"), nullable=False
     )
-    average_rating = db.Column(db.Float, default=0.0)
-
+    experience_years = db.Column(
+        db.Integer,
+        CheckConstraint("experience_years >= 0"),
+        nullable=False,
+    )
+    average_rating = db.Column(
+        db.Float,
+        CheckConstraint("average_rating >= 0 AND average_rating <= 5"),
+        default=0.0,
+    )
     # Relationships
     user = relationship("User", back_populates="professional_profile")
     service_type = relationship("Service", back_populates="professionals")
@@ -79,10 +110,6 @@ class CustomerProfile(db.Model, TimestampMixin):
     user_id = db.Column(
         db.Integer, db.ForeignKey("users.id"), unique=True, nullable=False
     )
-    full_name = db.Column(db.String(100), nullable=False)
-    phone = db.Column(db.String(20), nullable=False)
-    address = db.Column(db.Text, nullable=False)
-    pin_code = db.Column(db.String(10), nullable=False)
 
     # Relationships
     user = relationship("User", back_populates="customer_profile")
@@ -121,14 +148,13 @@ class ServiceRequest(db.Model, TimestampMixin):
     # Request details
     date_of_request = db.Column(db.DateTime, nullable=False)
     preferred_time = db.Column(db.String(50))
-    address = db.Column(db.Text, nullable=False)
-    pin_code = db.Column(db.String(10), nullable=False)
+
     description = db.Column(db.Text)
 
     # Status tracking
     status = db.Column(
-        db.String(20), nullable=False, default="requested"
-    )  # requested, assigned, in_progress, completed, closed
+        db.Enum(RequestStatus), nullable=False, default=RequestStatus.REQUESTED
+    )
     date_of_assignment = db.Column(db.DateTime)
     date_of_completion = db.Column(db.DateTime)
     remarks = db.Column(db.Text)
@@ -151,7 +177,11 @@ class Review(db.Model, TimestampMixin):
     service_request_id = db.Column(
         db.Integer, db.ForeignKey("service_requests.id"), unique=True, nullable=False
     )
-    rating = db.Column(db.Integer, nullable=False)  # 1-5 stars
+    rating = db.Column(
+        db.Integer,
+        CheckConstraint("rating >= 1 AND rating <= 5"),
+        nullable=False,
+    )
     comment = db.Column(db.Text)
     is_reported = db.Column(db.Boolean, default=False)
     report_reason = db.Column(db.Text)
