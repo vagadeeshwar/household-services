@@ -55,7 +55,7 @@ venv/
 ENV/
 venv.bak/
 env.bak/
-instance/
+# instance/
 *.log
 *.pot
 *.py[cod]

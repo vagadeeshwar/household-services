@@ -19,5 +19,6 @@ export default defineConfig({
   build: {
     outDir: '../build', // Set the output directory to the project root
     emptyOutDir: true, // Clear the output directory before building
+    assetsDir: 'static'
   }
 })

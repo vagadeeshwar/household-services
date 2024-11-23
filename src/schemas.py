@@ -1,5 +1,5 @@
 from marshmallow import fields, validate, validates, ValidationError
-from models import User, ProfessionalProfile, CustomerProfile, Service, ServiceRequest, Review
+from .models import User, ProfessionalProfile, CustomerProfile, Service, ServiceRequest, Review
 from . import ma
 
 class UserSchema(ma.SQLAlchemySchema):
