@@ -55,19 +55,20 @@ def login():
 
 @auth_bp.route("/register/customer", methods=["POST"])
 def register_customer():
-    """Register a new customer"""
+    """Register a new customer with flattened data structure"""
     data = request.get_json()
 
     try:
-        user_data = {
+        # All data comes in a single object
+        userData = {
             "username": data["username"],
             "email": data["email"],
             "password": data["password"],
-            "full_name": data["full_name"] if data["full_name"] else data["username"],
+            "full_name": data.get("full_name", data["username"]),
             "phone": data["phone"],
             "address": data["address"],
             "pin_code": data["pin_code"],
-            "role": UserRole.CUSTOMER.value,
+            "role": UserRole.CUSTOMER,
         }
     except KeyError as e:
         return APIResponse.error(
@@ -76,7 +77,7 @@ def register_customer():
             error_type="MissingField",
         )
 
-    errors = user_schema.validate(user_data)
+    errors = user_schema.validate(userData)
     if errors:
         return APIResponse.error(
             message=f"Validation error: {errors}",
@@ -84,34 +85,40 @@ def register_customer():
             error_type="ValidationError",
         )
 
-    if User.query.filter_by(username=user_data["username"]).first():
+    if User.query.filter_by(username=userData["username"]).first():
         return APIResponse.error(
             message="Username already exists",
             status_code=HTTPStatus.CONFLICT,
             error_type="DuplicateUsername",
         )
 
-    if User.query.filter_by(email=user_data["email"]).first():
+    if User.query.filter_by(email=userData["email"]).first():
         return APIResponse.error(
             message="Email already exists",
             status_code=HTTPStatus.CONFLICT,
             error_type="DuplicateEmail",
         )
 
-    user = User(**user_data)
-    user.set_password(user_data["password"])
+    # Create user and profile in a transaction
+    user = User(**userData)
+    user.set_password(userData["password"])
     db.session.add(user)
-    db.session.flush()
+    db.session.flush()  # Flush to get user.id
 
     profile = CustomerProfile(user_id=user.id)
     db.session.add(profile)
     db.session.commit()
 
+    # Query to get joined data for response
+    customer_data = (
+        db.session.query(CustomerProfile)
+        .join(User)
+        .filter(CustomerProfile.id == profile.id)
+        .first()
+    )
+
     return APIResponse.success(
-        data={
-            "user": user_schema.dump(user),
-            "profile": customer_profile_schema.dump(profile),
-        },
+        data=customer_profile_schema.dump(customer_data),
         message="Customer registered successfully",
         status_code=HTTPStatus.CREATED,
     )
@@ -119,19 +126,25 @@ def register_customer():
 
 @auth_bp.route("/register/professional", methods=["POST"])
 def register_professional():
-    """Register a new service professional"""
+    """Register a new professional with flattened data structure"""
     data = request.get_json()
 
     try:
-        user_data = {
+        # All data comes in a single object
+        userData = {
             "username": data["username"],
             "email": data["email"],
             "password": data["password"],
-            "full_name": data["full_name"],
+            "full_name": data.get("full_name", data["username"]),
             "phone": data["phone"],
             "address": data["address"],
             "pin_code": data["pin_code"],
-            "role": UserRole.PROFESSIONAL.value,
+            "role": UserRole.PROFESSIONAL,
+            # Professional specific fields
+            "description": data["description"],
+            "service_type_id": data["service_type_id"],
+            "experience_years": data["experience_years"],
+            "verification_documents": data.get("verification_documents"),
         }
     except KeyError as e:
         return APIResponse.error(
@@ -140,7 +153,21 @@ def register_professional():
             error_type="MissingField",
         )
 
-    errors = user_schema.validate(user_data)
+    # Validate user fields
+    user_fields = {
+        k: userData[k]
+        for k in [
+            "username",
+            "email",
+            "password",
+            "full_name",
+            "phone",
+            "address",
+            "pin_code",
+            "role",
+        ]
+    }
+    errors = user_schema.validate(user_fields)
     if errors:
         return APIResponse.error(
             message=f"Validation error: {errors}",
@@ -148,42 +175,33 @@ def register_professional():
             error_type="ValidationError",
         )
 
-    if User.query.filter_by(username=user_data["username"]).first():
+    if User.query.filter_by(username=userData["username"]).first():
         return APIResponse.error(
             message="Username already exists",
             status_code=HTTPStatus.CONFLICT,
             error_type="DuplicateUsername",
         )
 
-    if User.query.filter_by(email=user_data["email"]).first():
+    if User.query.filter_by(email=userData["email"]).first():
         return APIResponse.error(
             message="Email already exists",
             status_code=HTTPStatus.CONFLICT,
             error_type="DuplicateEmail",
         )
 
-    # Validate professional-specific fields
-    required_prof_fields = ["description", "service_type_id", "experience_years"]
-    missing_fields = [field for field in required_prof_fields if not data.get(field)]
-    if missing_fields:
-        return APIResponse.error(
-            message=f"Missing professional fields: {', '.join(missing_fields)}",
-            status_code=HTTPStatus.BAD_REQUEST,
-            error_type="MissingProfessionalFields",
-        )
-
-    user = User(**user_data)
-    user.set_password(user_data["password"])
+    # Create user and profile in a transaction
+    user = User(**user_fields)
+    user.set_password(userData["password"])
     user.is_active = False  # Professional needs verification
     db.session.add(user)
-    db.session.flush()
+    db.session.flush()  # Flush to get user.id
 
     profile_data = {
         "user_id": user.id,
-        "description": data["description"],
-        "service_type_id": data["service_type_id"],
-        "experience_years": data["experience_years"],
-        "verification_documents": data.get("verification_documents"),
+        "description": userData["description"],
+        "service_type_id": userData["service_type_id"],
+        "experience_years": userData["experience_years"],
+        "verification_documents": userData.get("verification_documents"),
         "is_verified": False,
     }
 
@@ -200,11 +218,16 @@ def register_professional():
     db.session.add(profile)
     db.session.commit()
 
+    # Query to get joined data for response
+    professional_data = (
+        db.session.query(ProfessionalProfile)
+        .join(User)
+        .filter(ProfessionalProfile.id == profile.id)
+        .first()
+    )
+
     return APIResponse.success(
-        data={
-            "user": user_schema.dump(user),
-            "profile": professional_profile_schema.dump(profile),
-        },
+        data=professional_profile_schema.dump(professional_data),
         message="Professional registered successfully. Account will be activated after verification.",
         status_code=HTTPStatus.CREATED,
     )
@@ -213,28 +236,32 @@ def register_professional():
 @auth_bp.route("/profile", methods=["GET"])
 @token_required
 def get_profile(current_user):
-    """Get current user's profile"""
+    """Get current user's complete profile"""
     if current_user.role == UserRole.PROFESSIONAL:
-        profile = ProfessionalProfile.query.filter_by(user_id=current_user.id).first()
+        profile = (
+            db.session.query(ProfessionalProfile)
+            .join(User)
+            .filter(ProfessionalProfile.user_id == current_user.id)
+            .first()
+        )
         return APIResponse.success(
-            data={
-                "user": user_schema.dump(current_user),
-                "profile": professional_profile_schema.dump(profile),
-            },
+            data=professional_profile_schema.dump(profile),
             message="Professional profile retrieved successfully",
         )
     elif current_user.role == UserRole.CUSTOMER:
-        profile = CustomerProfile.query.filter_by(user_id=current_user.id).first()
+        profile = (
+            db.session.query(CustomerProfile)
+            .join(User)
+            .filter(CustomerProfile.user_id == current_user.id)
+            .first()
+        )
         return APIResponse.success(
-            data={
-                "user": user_schema.dump(current_user),
-                "profile": customer_profile_schema.dump(profile),
-            },
+            data=customer_profile_schema.dump(profile),
             message="Customer profile retrieved successfully",
         )
     else:  # admin
         return APIResponse.success(
-            data={"user": user_schema.dump(current_user)},
+            data=user_schema.dump(current_user),
             message="Admin profile retrieved successfully",
         )
 

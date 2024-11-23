@@ -104,58 +104,149 @@ class UserSchema(ma.SQLAlchemySchema):
     last_login = ma.DateTime(dump_only=True)
 
 
+class CustomerProfileSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = CustomerProfile
+        include_fk = True
+
+    # Profile fields
+    id = ma.auto_field(dump_only=True)
+    created_at = ma.DateTime(dump_only=True)
+
+    # User fields with all validations preserved
+    username = fields.String(
+        attribute="user.username",
+        required=True,
+        validate=[
+            validate.Length(
+                min=4, max=80, error="Username must be between 4 and 80 characters."
+            ),
+            validate.Regexp(
+                r"^[a-zA-Z0-9_.-]+$",
+                error="Username can only contain letters, numbers, and the characters _ . -",
+            ),
+        ],
+    )
+    email = fields.Email(
+        attribute="user.email",
+        required=True,
+        validate=validate.Length(
+            max=120, error="Email must not exceed 120 characters."
+        ),
+    )
+    full_name = fields.String(
+        attribute="user.full_name",
+        validate=[
+            validate.Length(
+                min=4, max=100, error="Full name must be between 4 and 100 characters."
+            ),
+            validate.Regexp(
+                r"^[a-zA-Z\s.-]+$",
+                error="Full name can only contain letters, spaces, dots, and hyphens.",
+            ),
+        ],
+    )
+    phone = fields.String(
+        attribute="user.phone", required=True, validate=validate_phone
+    )
+    address = fields.String(
+        attribute="user.address",
+        required=True,
+        validate=validate.Length(
+            min=1, max=500, error="Address must be between 1 and 500 characters."
+        ),
+    )
+    pin_code = fields.String(
+        attribute="user.pin_code", required=True, validate=validate_pincode
+    )
+    password = fields.String(load_only=True, required=True, validate=validate_password)
+    role = fields.Function(lambda obj: obj.user.role.value)
+    is_active = fields.Boolean(attribute="user.is_active", dump_only=True)
+
+
 class ProfessionalProfileSchema(ma.SQLAlchemySchema):
     class Meta:
         model = ProfessionalProfile
-        load_instance = True
         include_fk = True
 
+    # Profile specific fields with validations
     id = ma.auto_field(dump_only=True)
-    user_id = ma.auto_field(dump_only=True)
-
-    experience_years = ma.Integer(
+    experience_years = fields.Integer(
         required=True,
         validate=validate.Range(
             min=0, max=50, error="Experience must be between 0 and 50 years."
         ),
     )
-    description = ma.String(
+    description = fields.String(
         validate=validate.Length(
             min=1,
             max=1000,
             error="Description must be between 1 and 1000 characters.",
         )
     )
-
-    is_verified = ma.Boolean(dump_only=True)
-    verification_documents = ma.String(
+    is_verified = fields.Boolean(dump_only=True)
+    verification_documents = fields.String(
         validate=validate.Regexp(
             r"^[\w\-. ]+\.(pdf|jpg|jpeg|png)$",
             error="Invalid document format. Allowed formats: pdf, jpg, jpeg, png",
         )
     )
+    service_type_id = fields.Integer(required=True)
+    average_rating = fields.Float(dump_only=True)
+    created_at = fields.DateTime(dump_only=True)
 
-    service_type_id = ma.Integer(required=True)
-    average_rating = ma.Float(dump_only=True)
-    created_at = ma.DateTime(dump_only=True)
+    # User fields with all validations preserved
+    username = fields.String(
+        attribute="user.username",
+        required=True,
+        validate=[
+            validate.Length(
+                min=4, max=80, error="Username must be between 4 and 80 characters."
+            ),
+            validate.Regexp(
+                r"^[a-zA-Z0-9_.-]+$",
+                error="Username can only contain letters, numbers, and the characters _ . -",
+            ),
+        ],
+    )
+    email = fields.Email(
+        attribute="user.email",
+        required=True,
+        validate=validate.Length(
+            max=120, error="Email must not exceed 120 characters."
+        ),
+    )
+    full_name = fields.String(
+        attribute="user.full_name",
+        validate=[
+            validate.Length(
+                min=4, max=100, error="Full name must be between 4 and 100 characters."
+            ),
+            validate.Regexp(
+                r"^[a-zA-Z\s.-]+$",
+                error="Full name can only contain letters, spaces, dots, and hyphens.",
+            ),
+        ],
+    )
+    phone = fields.String(
+        attribute="user.phone", required=True, validate=validate_phone
+    )
+    address = fields.String(
+        attribute="user.address",
+        required=True,
+        validate=validate.Length(
+            min=1, max=500, error="Address must be between 1 and 500 characters."
+        ),
+    )
+    pin_code = fields.String(
+        attribute="user.pin_code", required=True, validate=validate_pincode
+    )
+    password = fields.String(load_only=True, required=True, validate=validate_password)
+    role = fields.Function(lambda obj: obj.user.role.value)
+    is_active = fields.Boolean(attribute="user.is_active", dump_only=True)
 
-    # Nested relationships
-    user = fields.Nested(UserSchema, exclude=("password",), dump_only=True)
+    # Include service relationship
     service_type = fields.Nested("ServiceSchema", only=("id", "name"), dump_only=True)
-
-
-class CustomerProfileSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = CustomerProfile
-        load_instance = True
-        include_fk = True
-
-    id = ma.auto_field(dump_only=True)
-    user_id = ma.auto_field(dump_only=True)
-    created_at = ma.DateTime(dump_only=True)
-
-    # Nested relationships
-    user = fields.Nested(UserSchema, exclude=("password",), dump_only=True)
 
 
 class ServiceSchema(ma.SQLAlchemySchema):
@@ -202,7 +293,7 @@ class ServiceSchema(ma.SQLAlchemySchema):
     created_at = ma.DateTime(dump_only=True)
 
     professionals = fields.Nested(
-        ProfessionalProfileSchema,
+        "ProfessionalProfileSchema",
         many=True,
         only=("id", "user.full_name", "average_rating"),
         dump_only=True,
