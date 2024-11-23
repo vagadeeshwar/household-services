@@ -2,7 +2,7 @@ import os
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
-from src.utils.auth import handle_api_error, APIError
+from src.utils.auth import register_error_handlers
 from src import db, ma
 from src.setup_db import setup_database  # noqa
 
@@ -29,17 +29,17 @@ def create_app():
 
     # Register blueprints
     from src.routes.auth import auth_bp
-    from src.routes.service import service_bp
-    from src.routes.admin import admin_bp
-    from src.routes.request import request_bp
+    # from src.routes.service import service_bp
+    # from src.routes.admin import admin_bp
+    # from src.routes.request import request_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
-    app.register_blueprint(service_bp, url_prefix="/api/services")
-    app.register_blueprint(admin_bp, url_prefix="/api/admin")
-    app.register_blueprint(request_bp, url_prefix="/api/requests")
+    # app.register_blueprint(service_bp, url_prefix="/api/services")
+    # app.register_blueprint(admin_bp, url_prefix="/api/admin")
+    # app.register_blueprint(request_bp, url_prefix="/api/requests")
 
     # Register error handler
-    app.register_error_handler(APIError, handle_api_error)
+    register_error_handlers(app)
 
     # Serve SPA
     @app.route("/", defaults={"path": ""})

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request
 from datetime import datetime
 from src.models import User, ProfessionalProfile, CustomerProfile, UserRole
 from src.schemas import (
@@ -6,8 +6,9 @@ from src.schemas import (
     professional_profile_schema,
     customer_profile_schema,
 )
-from src.utils.auth import generate_token, token_required, APIError
+from src.utils.auth import generate_token, token_required, APIResponse
 from src import db
+from http import HTTPStatus
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -18,26 +19,38 @@ def login():
     data = request.get_json()
 
     if not data or not data.get("username") or not data.get("password"):
-        raise APIError("Missing username or password", 400)
+        return APIResponse.error(
+            message="Missing username or password",
+            status_code=HTTPStatus.BAD_REQUEST,
+            error_type="ValidationError",
+        )
 
     user = User.query.filter_by(username=data["username"]).first()
 
     if not user or not user.check_password(data["password"]):
-        raise APIError("Invalid credentials", 401)
+        return APIResponse.error(
+            message="Invalid credentials",
+            status_code=HTTPStatus.UNAUTHORIZED,
+            error_type="InvalidCredentials",
+        )
 
     if not user.is_active:
-        raise APIError("Account is deactivated", 403)
+        return APIResponse.error(
+            message="Account is deactivated",
+            status_code=HTTPStatus.FORBIDDEN,
+            error_type="InactiveAccount",
+        )
 
-    # Update last login
     user.last_login = datetime.utcnow()
     db.session.commit()
 
-    # Generate token
-    token = generate_token(
-        user.id, user.role.value
-    )  # Use role.value since it's an enum
+    token = generate_token(user.id, user.role.value)
 
-    return jsonify({"token": token, "user": user_schema.dump(user)}), 200
+    return APIResponse.success(
+        data={"token": token, "user": user_schema.dump(user)},
+        message="Login successful",
+        status_code=HTTPStatus.OK,
+    )
 
 
 @auth_bp.route("/register/customer", methods=["POST"])
@@ -45,48 +58,63 @@ def register_customer():
     """Register a new customer"""
     data = request.get_json()
 
-    # Prepare user data with all required fields from updated model
-    user_data = {
-        "username": data.get("username"),
-        "email": data.get("email"),
-        "password": data.get("password"),
-        "full_name": data.get(
-            "full_name", data.get("username")
-        ),  # Default to username if not provided
-        "phone": data.get("phone"),
-        "address": data.get("address"),
-        "pin_code": data.get("pin_code"),
-        "role": UserRole.CUSTOMER,
-    }
+    try:
+        user_data = {
+            "username": data["username"],
+            "email": data["email"],
+            "password": data["password"],
+            "full_name": data["full_name"] if data["full_name"] else data["username"],
+            "phone": data["phone"],
+            "address": data["address"],
+            "pin_code": data["pin_code"],
+            "role": UserRole.CUSTOMER.value,
+        }
+    except KeyError as e:
+        return APIResponse.error(
+            message=f"Missing required field: {str(e)}",
+            status_code=HTTPStatus.BAD_REQUEST,
+            error_type="MissingField",
+        )
 
     errors = user_schema.validate(user_data)
     if errors:
-        raise APIError(f"Validation error: {errors}", 400)
+        return APIResponse.error(
+            message=f"Validation error: {errors}",
+            status_code=HTTPStatus.BAD_REQUEST,
+            error_type="ValidationError",
+        )
 
-    # Check if username or email already exists
     if User.query.filter_by(username=user_data["username"]).first():
-        raise APIError("Username already exists", 400)
-    if User.query.filter_by(email=user_data["email"]).first():
-        raise APIError("Email already exists", 400)
+        return APIResponse.error(
+            message="Username already exists",
+            status_code=HTTPStatus.CONFLICT,
+            error_type="DuplicateUsername",
+        )
 
-    # Create user
+    if User.query.filter_by(email=user_data["email"]).first():
+        return APIResponse.error(
+            message="Email already exists",
+            status_code=HTTPStatus.CONFLICT,
+            error_type="DuplicateEmail",
+        )
+
     user = User(**user_data)
     user.set_password(user_data["password"])
     db.session.add(user)
-    db.session.flush()  # Get user.id without committing
+    db.session.flush()
 
-    # Create customer profile
     profile = CustomerProfile(user_id=user.id)
     db.session.add(profile)
     db.session.commit()
 
-    return jsonify(
-        {
-            "message": "Customer registered successfully",
+    return APIResponse.success(
+        data={
             "user": user_schema.dump(user),
             "profile": customer_profile_schema.dump(profile),
-        }
-    ), 201
+        },
+        message="Customer registered successfully",
+        status_code=HTTPStatus.CREATED,
+    )
 
 
 @auth_bp.route("/register/professional", methods=["POST"])
@@ -94,43 +122,67 @@ def register_professional():
     """Register a new service professional"""
     data = request.get_json()
 
-    # Prepare user data with all required fields from updated model
-    user_data = {
-        "username": data.get("username"),
-        "email": data.get("email"),
-        "password": data.get("password"),
-        "full_name": data.get(
-            "full_name", data.get("username")
-        ),  # Default to username if not provided
-        "phone": data.get("phone"),
-        "address": data.get("address"),
-        "pin_code": data.get("pin_code"),
-        "role": UserRole.PROFESSIONAL,
-    }
+    try:
+        user_data = {
+            "username": data["username"],
+            "email": data["email"],
+            "password": data["password"],
+            "full_name": data["full_name"],
+            "phone": data["phone"],
+            "address": data["address"],
+            "pin_code": data["pin_code"],
+            "role": UserRole.PROFESSIONAL.value,
+        }
+    except KeyError as e:
+        return APIResponse.error(
+            message=f"Missing required field: {str(e)}",
+            status_code=HTTPStatus.BAD_REQUEST,
+            error_type="MissingField",
+        )
 
     errors = user_schema.validate(user_data)
     if errors:
-        raise APIError(f"Validation error: {errors}", 400)
+        return APIResponse.error(
+            message=f"Validation error: {errors}",
+            status_code=HTTPStatus.BAD_REQUEST,
+            error_type="ValidationError",
+        )
 
-    # Check if username or email already exists
     if User.query.filter_by(username=user_data["username"]).first():
-        raise APIError("Username already exists", 400)
-    if User.query.filter_by(email=user_data["email"]).first():
-        raise APIError("Email already exists", 400)
+        return APIResponse.error(
+            message="Username already exists",
+            status_code=HTTPStatus.CONFLICT,
+            error_type="DuplicateUsername",
+        )
 
-    # Create user
+    if User.query.filter_by(email=user_data["email"]).first():
+        return APIResponse.error(
+            message="Email already exists",
+            status_code=HTTPStatus.CONFLICT,
+            error_type="DuplicateEmail",
+        )
+
+    # Validate professional-specific fields
+    required_prof_fields = ["description", "service_type_id", "experience_years"]
+    missing_fields = [field for field in required_prof_fields if not data.get(field)]
+    if missing_fields:
+        return APIResponse.error(
+            message=f"Missing professional fields: {', '.join(missing_fields)}",
+            status_code=HTTPStatus.BAD_REQUEST,
+            error_type="MissingProfessionalFields",
+        )
+
     user = User(**user_data)
     user.set_password(user_data["password"])
     user.is_active = False  # Professional needs verification
     db.session.add(user)
-    db.session.flush()  # Get user.id without committing
+    db.session.flush()
 
-    # Create professional profile with updated fields
     profile_data = {
         "user_id": user.id,
-        "description": data.get("description"),
-        "service_type_id": data.get("service_type_id"),
-        "experience_years": data.get("experience_years"),
+        "description": data["description"],
+        "service_type_id": data["service_type_id"],
+        "experience_years": data["experience_years"],
         "verification_documents": data.get("verification_documents"),
         "is_verified": False,
     }
@@ -138,19 +190,24 @@ def register_professional():
     errors = professional_profile_schema.validate(profile_data)
     if errors:
         db.session.rollback()
-        raise APIError(f"Validation error: {errors}", 400)
+        return APIResponse.error(
+            message=f"Validation error in professional profile: {errors}",
+            status_code=HTTPStatus.BAD_REQUEST,
+            error_type="ValidationError",
+        )
 
     profile = ProfessionalProfile(**profile_data)
     db.session.add(profile)
     db.session.commit()
 
-    return jsonify(
-        {
-            "message": "Professional registered successfully. Account will be activated after verification.",
+    return APIResponse.success(
+        data={
             "user": user_schema.dump(user),
             "profile": professional_profile_schema.dump(profile),
-        }
-    ), 201
+        },
+        message="Professional registered successfully. Account will be activated after verification.",
+        status_code=HTTPStatus.CREATED,
+    )
 
 
 @auth_bp.route("/profile", methods=["GET"])
@@ -159,22 +216,27 @@ def get_profile(current_user):
     """Get current user's profile"""
     if current_user.role == UserRole.PROFESSIONAL:
         profile = ProfessionalProfile.query.filter_by(user_id=current_user.id).first()
-        return jsonify(
-            {
+        return APIResponse.success(
+            data={
                 "user": user_schema.dump(current_user),
                 "profile": professional_profile_schema.dump(profile),
-            }
-        ), 200
+            },
+            message="Professional profile retrieved successfully",
+        )
     elif current_user.role == UserRole.CUSTOMER:
         profile = CustomerProfile.query.filter_by(user_id=current_user.id).first()
-        return jsonify(
-            {
+        return APIResponse.success(
+            data={
                 "user": user_schema.dump(current_user),
                 "profile": customer_profile_schema.dump(profile),
-            }
-        ), 200
+            },
+            message="Customer profile retrieved successfully",
+        )
     else:  # admin
-        return jsonify({"user": user_schema.dump(current_user)}), 200
+        return APIResponse.success(
+            data={"user": user_schema.dump(current_user)},
+            message="Admin profile retrieved successfully",
+        )
 
 
 @auth_bp.route("/profile", methods=["PUT"])
@@ -182,27 +244,35 @@ def get_profile(current_user):
 def update_profile(current_user):
     """Update current user's profile"""
     data = request.get_json()
+    if not data:
+        return APIResponse.error(
+            message="No update data provided",
+            status_code=HTTPStatus.BAD_REQUEST,
+            error_type="MissingData",
+        )
 
-    # Update user fields
     user_fields = ["email", "full_name", "phone", "address", "pin_code"]
     user_updates = {k: v for k, v in data.items() if k in user_fields}
 
     if user_updates:
         errors = user_schema.validate(user_updates, partial=True)
         if errors:
-            raise APIError(f"Validation error: {errors}", 400)
+            return APIResponse.error(
+                message=f"Validation error: {errors}",
+                status_code=HTTPStatus.BAD_REQUEST,
+                error_type="ValidationError",
+            )
 
         for key, value in user_updates.items():
             setattr(current_user, key, value)
 
-    # Update profile-specific fields
     if current_user.role == UserRole.PROFESSIONAL:
         profile = ProfessionalProfile.query.filter_by(user_id=current_user.id).first()
         profile_fields = ["experience_years", "description"]
         schema = professional_profile_schema
-    else:  # customer
+    else:
         profile = CustomerProfile.query.filter_by(user_id=current_user.id).first()
-        profile_fields = []  # No additional fields in customer profile
+        profile_fields = []
         schema = customer_profile_schema
 
     profile_updates = {k: v for k, v in data.items() if k in profile_fields}
@@ -210,19 +280,21 @@ def update_profile(current_user):
     if profile_updates:
         errors = schema.validate(profile_updates, partial=True)
         if errors:
-            raise APIError(f"Validation error: {errors}", 400)
+            return APIResponse.error(
+                message=f"Validation error: {errors}",
+                status_code=HTTPStatus.BAD_REQUEST,
+                error_type="ValidationError",
+            )
 
         for key, value in profile_updates.items():
             setattr(profile, key, value)
 
     db.session.commit()
 
-    return jsonify(
-        {
-            "message": "Profile updated successfully",
-            "user": user_schema.dump(current_user),
-        }
-    ), 200
+    return APIResponse.success(
+        data={"user": user_schema.dump(current_user)},
+        message="Profile updated successfully",
+    )
 
 
 @auth_bp.route("/change-password", methods=["POST"])
@@ -232,12 +304,20 @@ def change_password(current_user):
     data = request.get_json()
 
     if not data or not data.get("old_password") or not data.get("new_password"):
-        raise APIError("Missing required fields", 400)
+        return APIResponse.error(
+            message="Missing required fields",
+            status_code=HTTPStatus.BAD_REQUEST,
+            error_type="MissingFields",
+        )
 
     if not current_user.check_password(data["old_password"]):
-        raise APIError("Current password is incorrect", 400)
+        return APIResponse.error(
+            message="Current password is incorrect",
+            status_code=HTTPStatus.UNAUTHORIZED,
+            error_type="InvalidPassword",
+        )
 
     current_user.set_password(data["new_password"])
     db.session.commit()
 
-    return jsonify({"message": "Password changed successfully"}), 200
+    return APIResponse.success(message="Password changed successfully")

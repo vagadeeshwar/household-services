@@ -77,7 +77,6 @@ class UserSchema(ma.SQLAlchemySchema):
         ),
     )
     full_name = ma.String(
-        required=True,
         validate=[
             validate.Length(
                 min=4, max=100, error="Full name must be between 4 and 100 characters."
