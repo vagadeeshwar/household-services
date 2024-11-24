@@ -20,6 +20,7 @@ from src.schemas import (
     delete_account_schema,
     customer_profile_update_schema,
     professional_profile_update_schema,
+    combine_professional_data,
 )
 from src.utils.auth import generate_token, token_required
 from src.utils.file import save_verification_document, delete_verification_document
@@ -221,8 +222,11 @@ def register_professional():
         db.session.add(profile)
         db.session.commit()
 
+        # Combine user and profile data
+        response_data = combine_professional_data(user, profile)
+
         return create_success_response(
-            professional_output_schema.dump(user),
+            response_data,
             "Professional registered successfully. Account will be activated after verification.",
             HTTPStatus.CREATED,
         )

@@ -9,11 +9,11 @@ from .auth import (
     DeleteAccountInputSchema,
 )
 from .user import (
-    BaseUserOutputSchema,
     CustomerOutputSchema,
     ProfessionalOutputSchema,
-    CustomerProfileUpdateInputSchema,
-    ProfessionalProfileUpdateInputSchema,
+    CustomerProfileUpdateSchema,
+    ProfessionalProfileUpdateSchema,
+    combine_professional_data,  # noqa
 )
 from .service import (
     ServiceOutputSchema,
@@ -38,8 +38,8 @@ error_schema = ErrorOutputSchema()
 # User schemas
 customer_output_schema = CustomerOutputSchema()
 professional_output_schema = ProfessionalOutputSchema()
-customer_profile_update_schema = CustomerProfileUpdateInputSchema()
-professional_profile_update_schema = ProfessionalProfileUpdateInputSchema()
+customer_profile_update_schema = CustomerProfileUpdateSchema()
+professional_profile_update_schema = ProfessionalProfileUpdateSchema()
 
 # Service schemas
 service_schema = ServiceOutputSchema()
