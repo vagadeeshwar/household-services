@@ -3,6 +3,7 @@ from flask import Flask, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 from src.utils.auth import register_error_handlers
+from src.utils.file import UPLOAD_FOLDER
 from src import db, ma
 from src.setup_db import setup_database  # noqa
 
@@ -40,6 +41,11 @@ def create_app():
 
     # Register error handler
     register_error_handlers(app)
+
+    @app.route("/static/uploads/verification_docs/<path:filename>")
+    def serve_verification_document(filename):
+        """Serve verification documents"""
+        return send_from_directory(os.path.join(app.root_path, UPLOAD_FOLDER), filename)
 
     # Serve SPA
     @app.route("/", defaults={"path": ""})

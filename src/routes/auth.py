@@ -22,6 +22,7 @@ from src.schemas import (
     professional_profile_update_schema,
 )
 from src.utils.auth import generate_token, token_required
+from src.utils.file import save_verification_document, delete_verification_document
 from marshmallow import ValidationError
 from src import db
 from http import HTTPStatus
@@ -30,8 +31,10 @@ auth_bp = Blueprint("auth", __name__)
 
 
 def create_error_response(
-    message, status_code=HTTPStatus.BAD_REQUEST, error_type="ValidationError"
-):
+    message: str,
+    status_code: int = HTTPStatus.BAD_REQUEST,
+    error_type: str = "ValidationError",
+) -> tuple:
     return error_schema.dump(
         {
             "status": "failure",
@@ -42,24 +45,40 @@ def create_error_response(
     ), status_code
 
 
-def create_success_response(data, message=None, status_code=HTTPStatus.OK):
+def create_success_response(
+    data: dict = None, message: str = None, status_code: int = HTTPStatus.OK
+) -> tuple:
     response = {"status": "success", "status_code": status_code, "data": data}
     if message:
         response["detail"] = message
     return response, status_code
 
 
+def check_existing_user(username: str, email: str) -> tuple[bool, tuple]:
+    """Check if username or email already exists"""
+    if User.query.filter_by(username=username).first():
+        return True, create_error_response(
+            "Username already exists", HTTPStatus.CONFLICT, "DuplicateUsername"
+        )
+
+    if User.query.filter_by(email=email).first():
+        return True, create_error_response(
+            "Email already exists", HTTPStatus.CONFLICT, "DuplicateEmail"
+        )
+
+    return False, None
+
+
 @auth_bp.route("/login", methods=["POST"])
 def login():
     """Login route for all user types"""
     try:
-        # Validate input data
         data = login_schema.load(request.get_json())
     except ValidationError as err:
         return create_error_response(str(err.messages))
 
-    # Check user exists
     user = User.query.filter_by(username=data["username"]).first()
+
     if not user or not user.check_password(data["password"]):
         return create_error_response(
             "Invalid credentials", HTTPStatus.UNAUTHORIZED, "InvalidCredentials"
@@ -70,38 +89,36 @@ def login():
             "Account is deactivated", HTTPStatus.FORBIDDEN, "InactiveAccount"
         )
 
-    # Update last login and generate token
-    user.last_login = datetime.utcnow()
-    db.session.commit()
+    try:
+        user.last_login = datetime.utcnow()
+        db.session.commit()
 
-    token = generate_token(user.id, user.role)
-    return create_success_response(
-        token_schema.dump({"token": token}), "Login successful"
-    )
+        token = generate_token(user.id, user.role)
+        return create_success_response(
+            token_schema.dump({"token": token}), "Login successful"
+        )
+    except Exception as e:
+        db.session.rollback()
+        return create_error_response(
+            f"Error during login: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
 
 @auth_bp.route("/register/customer", methods=["POST"])
 def register_customer():
     """Register a new customer"""
     try:
-        # Validate input data
         data = customer_register_schema.load(request.get_json())
     except ValidationError as err:
         return create_error_response(str(err.messages))
 
-    # Check for existing username/email
-    if User.query.filter_by(username=data["username"]).first():
-        return create_error_response(
-            "Username already exists", HTTPStatus.CONFLICT, "DuplicateUsername"
-        )
-
-    if User.query.filter_by(email=data["email"]).first():
-        return create_error_response(
-            "Email already exists", HTTPStatus.CONFLICT, "DuplicateEmail"
-        )
+    exists, error_response = check_existing_user(data["username"], data["email"])
+    if exists:
+        return error_response
 
     try:
-        # Create user
         user = User(
             username=data["username"],
             email=data["email"],
@@ -110,12 +127,12 @@ def register_customer():
             address=data["address"],
             pin_code=data["pin_code"],
             role=USER_ROLE_CUSTOMER,
+            is_active=True,
         )
         user.set_password(data["password"])
         db.session.add(user)
         db.session.flush()
 
-        # Create customer profile
         profile = CustomerProfile(user_id=user.id)
         db.session.add(profile)
         db.session.commit()
@@ -125,7 +142,6 @@ def register_customer():
             "Customer registered successfully",
             HTTPStatus.CREATED,
         )
-
     except Exception as e:
         db.session.rollback()
         return create_error_response(
@@ -138,25 +154,48 @@ def register_customer():
 @auth_bp.route("/register/professional", methods=["POST"])
 def register_professional():
     """Register a new professional"""
+    if "verification_document" not in request.files:
+        return create_error_response(
+            "Verification document is required",
+            HTTPStatus.BAD_REQUEST,
+            "MissingDocument",
+        )
+
     try:
-        # Validate input data
-        data = professional_register_schema.load(request.get_json())
+        # Parse and validate form data
+        form_data = {
+            "username": request.form.get("username"),
+            "email": request.form.get("email"),
+            "password": request.form.get("password"),
+            "full_name": request.form.get("full_name"),
+            "phone": request.form.get("phone"),
+            "address": request.form.get("address"),
+            "pin_code": request.form.get("pin_code"),
+            "service_type_id": int(request.form.get("service_type_id")),
+            "experience_years": int(request.form.get("experience_years")),
+            "description": request.form.get("description"),
+        }
+    except (TypeError, ValueError):
+        return create_error_response(
+            "Invalid service_type_id or experience_years",
+            HTTPStatus.BAD_REQUEST,
+            "ValidationError",
+        )
+
+    try:
+        data = professional_register_schema.load(form_data)
     except ValidationError as err:
         return create_error_response(str(err.messages))
 
-    # Check for existing username/email
-    if User.query.filter_by(username=data["username"]).first():
-        return create_error_response(
-            "Username already exists", HTTPStatus.CONFLICT, "DuplicateUsername"
-        )
+    exists, error_response = check_existing_user(data["username"], data["email"])
+    if exists:
+        return error_response
 
-    if User.query.filter_by(email=data["email"]).first():
-        return create_error_response(
-            "Email already exists", HTTPStatus.CONFLICT, "DuplicateEmail"
-        )
+    filename, error = save_verification_document(request.files["verification_document"])
+    if error:
+        return create_error_response(error, HTTPStatus.BAD_REQUEST, "FileUploadError")
 
     try:
-        # Create user
         user = User(
             username=data["username"],
             email=data["email"],
@@ -165,19 +204,18 @@ def register_professional():
             address=data["address"],
             pin_code=data["pin_code"],
             role=USER_ROLE_PROFESSIONAL,
-            is_active=False,  # Professional needs verification
+            is_active=False,
         )
         user.set_password(data["password"])
         db.session.add(user)
         db.session.flush()
 
-        # Create professional profile
         profile = ProfessionalProfile(
             user_id=user.id,
             service_type_id=data["service_type_id"],
             experience_years=data["experience_years"],
             description=data["description"],
-            verification_documents=data.get("verification_documents"),
+            verification_documents=filename,
             is_verified=False,
         )
         db.session.add(profile)
@@ -188,8 +226,9 @@ def register_professional():
             "Professional registered successfully. Account will be activated after verification.",
             HTTPStatus.CREATED,
         )
-
     except Exception as e:
+        if filename:
+            delete_verification_document(filename)
         db.session.rollback()
         return create_error_response(
             f"Error creating professional: {str(e)}",
@@ -204,20 +243,13 @@ def get_profile(current_user):
     """Get current user's profile"""
     try:
         if current_user.role == USER_ROLE_PROFESSIONAL:
-            return create_success_response(
-                professional_output_schema.dump(current_user),
-                "Professional profile retrieved successfully",
-            )
-        elif current_user.role == USER_ROLE_CUSTOMER:
-            return create_success_response(
-                customer_output_schema.dump(current_user),
-                "Customer profile retrieved successfully",
-            )
-        else:  # admin
-            return create_success_response(
-                customer_output_schema.dump(current_user),
-                "Admin profile retrieved successfully",
-            )
+            schema = professional_output_schema
+            message = "Professional profile retrieved successfully"
+        else:
+            schema = customer_output_schema
+            message = f"{current_user.role.capitalize()} profile retrieved successfully"
+
+        return create_success_response(schema.dump(current_user), message)
     except Exception as e:
         return create_error_response(
             f"Error retrieving profile: {str(e)}",
@@ -253,24 +285,70 @@ def change_password(current_user):
         )
 
 
+@auth_bp.route("/profile", methods=["PUT"])
+@token_required
+def update_profile(current_user):
+    """Update user's profile information"""
+    try:
+        schema = (
+            professional_profile_update_schema
+            if current_user.role == USER_ROLE_PROFESSIONAL
+            else customer_profile_update_schema
+        )
+        data = schema.load(request.get_json())
+    except ValidationError as err:
+        return create_error_response(str(err.messages))
+
+    try:
+        if "email" in data and data["email"] != current_user.email:
+            if User.query.filter_by(email=data["email"]).first():
+                return create_error_response(
+                    "Email already in use", HTTPStatus.CONFLICT, "DuplicateEmail"
+                )
+            current_user.email = data["email"]
+
+        for field in ["full_name", "phone", "address", "pin_code"]:
+            if field in data:
+                setattr(current_user, field, data[field])
+
+        if current_user.role == USER_ROLE_PROFESSIONAL and "description" in data:
+            current_user.professional_profile.description = data["description"]
+
+        db.session.commit()
+
+        schema = (
+            professional_output_schema
+            if current_user.role == USER_ROLE_PROFESSIONAL
+            else customer_output_schema
+        )
+        return create_success_response(
+            schema.dump(current_user), "Profile updated successfully"
+        )
+    except Exception as e:
+        db.session.rollback()
+        return create_error_response(
+            f"Error updating profile: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
+
+
 @auth_bp.route("/delete-account", methods=["DELETE"])
 @token_required
 def delete_account(current_user):
     """Hard delete user account"""
     try:
-        # Validate input data
         data = delete_account_schema.load(request.get_json())
     except ValidationError as err:
         return create_error_response(str(err.messages))
 
-    # Verify password
     if not current_user.check_password(data["password"]):
         return create_error_response(
             "Incorrect password", HTTPStatus.UNAUTHORIZED, "InvalidPassword"
         )
 
     try:
-        # Check for ongoing service requests
+        # Check for active requests based on user role
         if current_user.role == USER_ROLE_PROFESSIONAL:
             has_active_requests = (
                 ServiceRequest.query.filter(
@@ -280,6 +358,9 @@ def delete_account(current_user):
                 ).first()
                 is not None
             )
+
+            # Store verification document filename for later deletion
+            verification_doc = current_user.professional_profile.verification_documents
         else:
             has_active_requests = (
                 ServiceRequest.query.filter(
@@ -296,71 +377,20 @@ def delete_account(current_user):
                 "ActiveRequestsExist",
             )
 
-        # Simply delete the user - all related data will be cascade deleted
+        # Delete verification document if professional
+        if current_user.role == USER_ROLE_PROFESSIONAL and verification_doc:
+            delete_verification_document(verification_doc)
+
         db.session.delete(current_user)
         db.session.commit()
 
         return create_success_response(
             None, "Account successfully deleted", HTTPStatus.OK
         )
-
     except Exception as e:
         db.session.rollback()
         return create_error_response(
             f"Error deleting account: {str(e)}",
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            "DatabaseError",
-        )
-
-
-@auth_bp.route("/profile", methods=["PUT"])
-@token_required
-def update_profile(current_user):
-    """Update user's profile information"""
-    try:
-        # Use appropriate schema based on user role
-        if current_user.role == USER_ROLE_PROFESSIONAL:
-            data = professional_profile_update_schema.load(request.get_json())
-        else:
-            data = customer_profile_update_schema.load(request.get_json())
-
-    except ValidationError as err:
-        return create_error_response(str(err.messages))
-
-    try:
-        # Check email uniqueness if being updated
-        if "email" in data and data["email"] != current_user.email:
-            if User.query.filter_by(email=data["email"]).first():
-                return create_error_response(
-                    "Email already in use", HTTPStatus.CONFLICT, "DuplicateEmail"
-                )
-            current_user.email = data["email"]
-
-        # Update base user fields if provided
-        for field in ["full_name", "phone", "address", "pin_code"]:
-            if field in data:
-                setattr(current_user, field, data[field])
-
-        # Update role-specific fields
-        if current_user.role == USER_ROLE_PROFESSIONAL:
-            profile = current_user.professional_profile
-            if "description" in data:
-                profile.description = data["description"]
-
-        db.session.commit()
-
-        # Return appropriate output schema based on role
-        if current_user.role == USER_ROLE_PROFESSIONAL:
-            output_data = professional_output_schema.dump(current_user)
-        else:
-            output_data = customer_output_schema.dump(current_user)
-
-        return create_success_response(output_data, "Profile updated successfully")
-
-    except Exception as e:
-        db.session.rollback()
-        return create_error_response(
-            f"Error updating profile: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
         )

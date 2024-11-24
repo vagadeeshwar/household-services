@@ -49,9 +49,6 @@ class ProfessionalRegisterInputSchema(BaseUserInputSchema):
     service_type_id = fields.Int(required=True)
     experience_years = fields.Int(required=True, validate=validate.Range(min=0, max=50))
     description = fields.Str(required=True, validate=validate.Length(min=10, max=1000))
-    verification_documents = fields.Str(
-        validate=validate.Regexp(r"^[\w\-. ]+\.(pdf|jpg|jpeg|png)$")
-    )
 
 
 class PasswordUpdateInputSchema(BaseSchema):
