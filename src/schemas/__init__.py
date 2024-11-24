@@ -1,5 +1,3 @@
-# File: schemas/__init__.py
-from .base import BaseSchema
 from .auth import (
     LoginInputSchema,
     CustomerRegisterInputSchema,
@@ -21,13 +19,19 @@ from .service import (
 )
 from .request import (
     ServiceRequestOutputSchema,
-    ServiceRequestInputSchema,
     ReviewOutputSchema,
-    ReviewInputSchema,
+)
+from .admin import (
+    ProfessionalsListQuerySchema,
+    CustomersListQuerySchema,
+    BlockUserSchema,
+    ReviewActionSchema,
+    DashboardStatsSchema,
 )
 from .error import ErrorOutputSchema
 
 # Initialize schemas
+# Auth schemas
 login_schema = LoginInputSchema()
 customer_register_schema = CustomerRegisterInputSchema()
 professional_register_schema = ProfessionalRegisterInputSchema()
@@ -54,3 +58,10 @@ reviews_schema = ReviewOutputSchema(many=True)
 
 # Account management schemas
 delete_account_schema = DeleteAccountInputSchema()
+
+# Admin schemas
+professionals_list_query_schema = ProfessionalsListQuerySchema()
+customers_list_query_schema = CustomersListQuerySchema()
+block_user_schema = BlockUserSchema()
+review_action_schema = ReviewActionSchema()
+dashboard_stats_schema = DashboardStatsSchema()
