@@ -5,14 +5,18 @@ import random
 from . import db
 from src.models import (
     User,
-    UserRole,
-    RequestStatus,
     ProfessionalProfile,
     CustomerProfile,
     Service,
     ServiceRequest,
     Review,
     ActivityLog,
+    USER_ROLE_ADMIN,
+    USER_ROLE_PROFESSIONAL,
+    USER_ROLE_CUSTOMER,
+    REQUEST_STATUS_REQUESTED,
+    REQUEST_STATUS_ASSIGNED,
+    REQUEST_STATUS_COMPLETED,
 )
 
 # Set up logging
@@ -73,7 +77,7 @@ def create_dummy_data():
         phone="9876543210",
         address="Admin Office, Main Street, Central District",
         pin_code="110001",
-        role=UserRole.ADMIN,
+        role=USER_ROLE_ADMIN,
         is_active=True,
     )
     admin.set_password("Admin@123")  # Strong password following validation rules
@@ -171,7 +175,7 @@ def create_professionals(services):
             phone=generate_valid_phone(),
             address=generate_valid_address(),
             pin_code=generate_valid_pincode(),
-            role=UserRole.PROFESSIONAL,
+            role=USER_ROLE_PROFESSIONAL,
             is_active=True,
         )
         user.set_password(f"Pro@{i+1}123")  # Strong password following validation
@@ -211,7 +215,7 @@ def create_customers():
             phone=generate_valid_phone(),
             address=generate_valid_address(),
             pin_code=generate_valid_pincode(),
-            role=UserRole.CUSTOMER,
+            role=USER_ROLE_CUSTOMER,
             is_active=True,
         )
         user.set_password(f"Customer@{i+1}123")  # Strong password following validation
@@ -230,9 +234,9 @@ def create_customers():
 
 def create_requests_and_reviews(services, professionals, customers):
     status_weights = [
-        (RequestStatus.COMPLETED, 0.4),
-        (RequestStatus.ASSIGNED, 0.3),
-        (RequestStatus.REQUESTED, 0.3),
+        (REQUEST_STATUS_COMPLETED, 0.4),
+        (REQUEST_STATUS_ASSIGNED, 0.3),
+        (REQUEST_STATUS_REQUESTED, 0.3),
     ]
 
     for customer in customers:
@@ -251,12 +255,12 @@ def create_requests_and_reviews(services, professionals, customers):
             request_date = base_date
             assignment_date = (
                 base_date + timedelta(hours=2)
-                if status != RequestStatus.REQUESTED
+                if status != REQUEST_STATUS_REQUESTED
                 else None
             )
             completion_date = (
                 base_date + timedelta(days=1)
-                if status == RequestStatus.COMPLETED
+                if status == REQUEST_STATUS_COMPLETED
                 else None
             )
 
@@ -264,7 +268,7 @@ def create_requests_and_reviews(services, professionals, customers):
                 service_id=service.id,
                 customer_id=customer.id,
                 professional_id=professional.id
-                if status != RequestStatus.REQUESTED
+                if status != REQUEST_STATUS_REQUESTED
                 else None,
                 date_of_request=request_date,
                 preferred_time=f"{random.randint(9, 17)}:00",  # Business hours
@@ -273,14 +277,14 @@ def create_requests_and_reviews(services, professionals, customers):
                 date_of_assignment=assignment_date,
                 date_of_completion=completion_date,
                 remarks="Service completed successfully."
-                if status == RequestStatus.COMPLETED
+                if status == REQUEST_STATUS_COMPLETED
                 else None,
             )
             db.session.add(service_request)
             db.session.flush()
 
             # Add review for completed requests
-            if status == RequestStatus.COMPLETED:
+            if status == REQUEST_STATUS_COMPLETED:
                 rating = random.randint(4, 5)  # Mostly positive reviews
                 review = Review(
                     service_request_id=service_request.id,

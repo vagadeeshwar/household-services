@@ -1,6 +1,12 @@
 from flask import Blueprint, request
 from datetime import datetime
-from src.models import User, ProfessionalProfile, CustomerProfile, UserRole
+from src.models import (
+    User,
+    ProfessionalProfile,
+    CustomerProfile,
+    USER_ROLE_CUSTOMER,
+    USER_ROLE_PROFESSIONAL,
+)
 from src.schemas import (
     user_schema,
     professional_profile_schema,
@@ -59,16 +65,18 @@ def register_customer():
     data = request.get_json()
 
     try:
+        # Separate password from user data
+        password = data.pop("password")
+
         # All data comes in a single object
         userData = {
             "username": data["username"],
             "email": data["email"],
-            "password": data["password"],
             "full_name": data.get("full_name", data["username"]),
             "phone": data["phone"],
             "address": data["address"],
             "pin_code": data["pin_code"],
-            "role": UserRole.CUSTOMER,
+            "role": USER_ROLE_CUSTOMER,
         }
     except KeyError as e:
         return APIResponse.error(
@@ -101,7 +109,7 @@ def register_customer():
 
     # Create user and profile in a transaction
     user = User(**userData)
-    user.set_password(userData["password"])
+    user.set_password(password)  # Set password using the method
     db.session.add(user)
     db.session.flush()  # Flush to get user.id
 
@@ -130,17 +138,19 @@ def register_professional():
     data = request.get_json()
 
     try:
+        # Separate password from user data
+        password = data.pop("password")
+
         # All data comes in a single object
         userData = {
             "username": data["username"],
             "email": data["email"],
-            "password": data["password"],
             "full_name": data.get("full_name", data["username"]),
             "phone": data["phone"],
             "address": data["address"],
             "pin_code": data["pin_code"],
-            "role": UserRole.PROFESSIONAL,
-            # Professional specific fields
+            "role": USER_ROLE_PROFESSIONAL,
+            # Professional specific fields are kept separate
             "description": data["description"],
             "service_type_id": data["service_type_id"],
             "experience_years": data["experience_years"],
@@ -159,7 +169,6 @@ def register_professional():
         for k in [
             "username",
             "email",
-            "password",
             "full_name",
             "phone",
             "address",
@@ -167,6 +176,7 @@ def register_professional():
             "role",
         ]
     }
+
     errors = user_schema.validate(user_fields)
     if errors:
         return APIResponse.error(
@@ -191,7 +201,7 @@ def register_professional():
 
     # Create user and profile in a transaction
     user = User(**user_fields)
-    user.set_password(userData["password"])
+    user.set_password(password)  # Set password using the method
     user.is_active = False  # Professional needs verification
     db.session.add(user)
     db.session.flush()  # Flush to get user.id
@@ -237,7 +247,7 @@ def register_professional():
 @token_required
 def get_profile(current_user):
     """Get current user's complete profile"""
-    if current_user.role == UserRole.PROFESSIONAL:
+    if current_user.role == USER_ROLE_PROFESSIONAL:
         profile = (
             db.session.query(ProfessionalProfile)
             .join(User)
@@ -248,7 +258,7 @@ def get_profile(current_user):
             data=professional_profile_schema.dump(profile),
             message="Professional profile retrieved successfully",
         )
-    elif current_user.role == UserRole.CUSTOMER:
+    elif current_user.role == USER_ROLE_CUSTOMER:
         profile = (
             db.session.query(CustomerProfile)
             .join(User)
@@ -293,7 +303,7 @@ def update_profile(current_user):
         for key, value in user_updates.items():
             setattr(current_user, key, value)
 
-    if current_user.role == UserRole.PROFESSIONAL:
+    if current_user.role == USER_ROLE_PROFESSIONAL:
         profile = ProfessionalProfile.query.filter_by(user_id=current_user.id).first()
         profile_fields = ["experience_years", "description"]
         schema = professional_profile_schema

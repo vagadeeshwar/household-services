@@ -7,8 +7,8 @@ from .models import (
     Service,
     ServiceRequest,
     Review,
-    UserRole,
-    RequestStatus,
+    USER_ROLES,
+    REQUEST_STATUSES,
 )
 from . import ma
 
@@ -96,8 +96,9 @@ class UserSchema(ma.SQLAlchemySchema):
         ),
     )
     pin_code = ma.String(required=True, validate=validate_pincode)
-    role = ma.Enum(UserRole, required=True)
-    password = ma.String(load_only=True, required=True, validate=validate_password)
+    role = fields.String(required=True, validate=validate.OneOf(USER_ROLES))
+
+    password = ma.String(load_only=True, validate=validate_password)
     is_active = ma.Boolean(dump_only=True)
     created_at = ma.DateTime(dump_only=True)
     updated_at = ma.DateTime(dump_only=True)
@@ -160,7 +161,7 @@ class CustomerProfileSchema(ma.SQLAlchemySchema):
         attribute="user.pin_code", required=True, validate=validate_pincode
     )
     password = fields.String(load_only=True, required=True, validate=validate_password)
-    role = fields.Function(lambda obj: obj.user.role.value)
+    role = fields.Function(lambda obj: obj.user.role)
     is_active = fields.Boolean(attribute="user.is_active", dump_only=True)
 
 
@@ -242,7 +243,8 @@ class ProfessionalProfileSchema(ma.SQLAlchemySchema):
         attribute="user.pin_code", required=True, validate=validate_pincode
     )
     password = fields.String(load_only=True, required=True, validate=validate_password)
-    role = fields.Function(lambda obj: obj.user.role.value)
+    role = fields.Function(lambda obj: obj.user.role)
+
     is_active = fields.Boolean(attribute="user.is_active", dump_only=True)
 
     # Include service relationship
@@ -313,7 +315,7 @@ class ServiceRequestSchema(ma.SQLAlchemySchema):
     date_of_request = ma.DateTime(required=True)
     preferred_time = ma.String()
     description = ma.String()
-    status = ma.Enum(RequestStatus)
+    status = fields.String(required=True, validate=validate.OneOf(REQUEST_STATUSES))
     date_of_assignment = ma.DateTime(dump_only=True)
     date_of_completion = ma.DateTime(dump_only=True)
     remarks = ma.String()
@@ -352,11 +354,13 @@ class ReviewSchema(ma.SQLAlchemySchema):
         ),
     )
     comment = ma.String(
+        required=False,
+        allow_none=True,
         validate=validate.Length(
             min=1,
             max=500,
             error="Review comment must be between 1 and 500 characters.",
-        )
+        ),
     )
 
     is_reported = ma.Boolean(dump_only=True)

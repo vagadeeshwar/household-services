@@ -2,8 +2,22 @@ from datetime import datetime
 from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db
-from enum import Enum
 from sqlalchemy.schema import CheckConstraint
+
+# Constants remain the same
+USER_ROLE_ADMIN = "admin"
+USER_ROLE_PROFESSIONAL = "professional"
+USER_ROLE_CUSTOMER = "customer"
+USER_ROLES = [USER_ROLE_ADMIN, USER_ROLE_PROFESSIONAL, USER_ROLE_CUSTOMER]
+
+REQUEST_STATUS_REQUESTED = "requested"
+REQUEST_STATUS_ASSIGNED = "assigned"
+REQUEST_STATUS_COMPLETED = "completed"
+REQUEST_STATUSES = [
+    REQUEST_STATUS_REQUESTED,
+    REQUEST_STATUS_ASSIGNED,
+    REQUEST_STATUS_COMPLETED,
+]
 
 
 class TimestampMixin:
@@ -11,18 +25,6 @@ class TimestampMixin:
 
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
-
-
-class RequestStatus(Enum):
-    REQUESTED = "requested"
-    ASSIGNED = "assigned"
-    COMPLETED = "completed"
-
-
-class UserRole(Enum):
-    ADMIN = "admin"
-    PROFESSIONAL = "professional"
-    CUSTOMER = "customer"
 
 
 class User(db.Model, TimestampMixin):
@@ -36,27 +38,32 @@ class User(db.Model, TimestampMixin):
     full_name = db.Column(db.String(100), nullable=False)
     address = db.Column(db.Text, nullable=False)
     phone = db.Column(
-        db.String(10),
-        CheckConstraint("length(phone) = 10"),
-        nullable=False,
+        db.String(10), CheckConstraint("length(phone) = 10"), nullable=False
     )
     pin_code = db.Column(
-        db.String(6),
-        CheckConstraint("length(pin_code) = 6"),
-        nullable=False,
+        db.String(6), CheckConstraint("length(pin_code) = 6"), nullable=False
     )
-
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.Enum(UserRole), nullable=False)
+    role = db.Column(db.String(20), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     last_login = db.Column(db.DateTime)
 
-    # Relationships based on role
+    # Relationships with cascade
     professional_profile = relationship(
-        "ProfessionalProfile", back_populates="user", uselist=False
+        "ProfessionalProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
     customer_profile = relationship(
-        "CustomerProfile", back_populates="user", uselist=False
+        "CustomerProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        CheckConstraint(f"role IN {tuple(USER_ROLES)}", name="valid_role_types"),
     )
 
     def set_password(self, password):
@@ -76,29 +83,34 @@ class ProfessionalProfile(db.Model, TimestampMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), unique=True, nullable=False
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE", onupdate="CASCADE"),
+        unique=True,
+        nullable=False,
     )
-
     description = db.Column(db.Text)
     is_verified = db.Column(db.Boolean, default=False)
-    verification_documents = db.Column(db.String(500))  # URLs to documents
+    verification_documents = db.Column(db.String(500))
     service_type_id = db.Column(
-        db.Integer, db.ForeignKey("services.id"), nullable=False
+        db.Integer,
+        db.ForeignKey("services.id", ondelete="RESTRICT", onupdate="CASCADE"),
+        nullable=False,
     )
     experience_years = db.Column(
-        db.Integer,
-        CheckConstraint("experience_years >= 0"),
-        nullable=False,
+        db.Integer, CheckConstraint("experience_years >= 0"), nullable=False
     )
     average_rating = db.Column(
         db.Float,
         CheckConstraint("average_rating >= 0 AND average_rating <= 5"),
         default=0.0,
     )
-    # Relationships
+
+    # Relationships with cascade
     user = relationship("User", back_populates="professional_profile")
     service_type = relationship("Service", back_populates="professionals")
-    service_requests = relationship("ServiceRequest", back_populates="professional")
+    service_requests = relationship(
+        "ServiceRequest", back_populates="professional", cascade="all, delete-orphan"
+    )
 
 
 class CustomerProfile(db.Model, TimestampMixin):
@@ -108,12 +120,17 @@ class CustomerProfile(db.Model, TimestampMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), unique=True, nullable=False
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE", onupdate="CASCADE"),
+        unique=True,
+        nullable=False,
     )
 
-    # Relationships
+    # Relationships with cascade
     user = relationship("User", back_populates="customer_profile")
-    service_requests = relationship("ServiceRequest", back_populates="customer")
+    service_requests = relationship(
+        "ServiceRequest", back_populates="customer", cascade="all, delete-orphan"
+    )
 
 
 class Service(db.Model, TimestampMixin):
@@ -128,9 +145,15 @@ class Service(db.Model, TimestampMixin):
     time_required = db.Column(db.Integer, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
 
-    # Relationships
-    professionals = relationship("ProfessionalProfile", back_populates="service_type")
-    service_requests = relationship("ServiceRequest", back_populates="service")
+    # Relationships with cascade
+    professionals = relationship(
+        "ProfessionalProfile",
+        back_populates="service_type",
+        cascade="all, delete-orphan",
+    )
+    service_requests = relationship(
+        "ServiceRequest", back_populates="service", cascade="all, delete-orphan"
+    )
 
 
 class ServiceRequest(db.Model, TimestampMixin):
@@ -139,33 +162,49 @@ class ServiceRequest(db.Model, TimestampMixin):
     __tablename__ = "service_requests"
 
     id = db.Column(db.Integer, primary_key=True)
-    service_id = db.Column(db.Integer, db.ForeignKey("services.id"), nullable=False)
-    customer_id = db.Column(
-        db.Integer, db.ForeignKey("customer_profiles.id"), nullable=False
+    service_id = db.Column(
+        db.Integer,
+        db.ForeignKey("services.id", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
     )
-    professional_id = db.Column(db.Integer, db.ForeignKey("professional_profiles.id"))
+    customer_id = db.Column(
+        db.Integer,
+        db.ForeignKey("customer_profiles.id", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+    )
+    professional_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "professional_profiles.id", ondelete="SET NULL", onupdate="CASCADE"
+        ),
+    )
 
-    # Request details
     date_of_request = db.Column(db.DateTime, nullable=False)
     preferred_time = db.Column(db.String(50))
-
     description = db.Column(db.Text)
-
-    # Status tracking
-    status = db.Column(
-        db.Enum(RequestStatus), nullable=False, default=RequestStatus.REQUESTED
-    )
+    status = db.Column(db.String(20), nullable=False, default=REQUEST_STATUS_REQUESTED)
     date_of_assignment = db.Column(db.DateTime)
     date_of_completion = db.Column(db.DateTime)
     remarks = db.Column(db.Text)
 
-    # Relationships
+    # Relationships with cascade
     service = relationship("Service", back_populates="service_requests")
     customer = relationship("CustomerProfile", back_populates="service_requests")
     professional = relationship(
         "ProfessionalProfile", back_populates="service_requests"
     )
-    review = relationship("Review", back_populates="service_request", uselist=False)
+    review = relationship(
+        "Review",
+        back_populates="service_request",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            f"status IN {tuple(REQUEST_STATUSES)}", name="valid_status_types"
+        ),
+    )
 
 
 class Review(db.Model, TimestampMixin):
@@ -175,18 +214,19 @@ class Review(db.Model, TimestampMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     service_request_id = db.Column(
-        db.Integer, db.ForeignKey("service_requests.id"), unique=True, nullable=False
+        db.Integer,
+        db.ForeignKey("service_requests.id", ondelete="CASCADE", onupdate="CASCADE"),
+        unique=True,
+        nullable=False,
     )
     rating = db.Column(
-        db.Integer,
-        CheckConstraint("rating >= 1 AND rating <= 5"),
-        nullable=False,
+        db.Integer, CheckConstraint("rating >= 1 AND rating <= 5"), nullable=False
     )
     comment = db.Column(db.Text)
     is_reported = db.Column(db.Boolean, default=False)
     report_reason = db.Column(db.Text)
 
-    # Relationships
+    # Relationships with cascade
     service_request = relationship("ServiceRequest", back_populates="review")
 
 
@@ -196,10 +236,10 @@ class ActivityLog(db.Model, TimestampMixin):
     __tablename__ = "activity_logs"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="SET NULL", onupdate="CASCADE")
+    )
     action = db.Column(db.String(50), nullable=False)
-    entity_type = db.Column(
-        db.String(50), nullable=False
-    )  # e.g., 'service_request', 'review'
+    entity_type = db.Column(db.String(50), nullable=False)
     entity_id = db.Column(db.Integer, nullable=False)
     description = db.Column(db.Text, nullable=False)
