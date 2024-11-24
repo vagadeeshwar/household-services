@@ -6,16 +6,20 @@ from src.models import (
     CustomerProfile,
     USER_ROLE_CUSTOMER,
     USER_ROLE_PROFESSIONAL,
+    ServiceRequest,
 )
 from src.schemas import (
-    login_input_schema,
-    customer_register_input_schema,
-    professional_register_input_schema,
-    password_update_input_schema,
-    token_output_schema,
-    error_output_schema,
+    login_schema,
+    customer_register_schema,
+    professional_register_schema,
+    password_update_schema,
+    token_schema,
+    error_schema,
     customer_output_schema,
     professional_output_schema,
+    delete_account_schema,
+    customer_profile_update_schema,
+    professional_profile_update_schema,
 )
 from src.utils.auth import generate_token, token_required
 from marshmallow import ValidationError
@@ -28,7 +32,7 @@ auth_bp = Blueprint("auth", __name__)
 def create_error_response(
     message, status_code=HTTPStatus.BAD_REQUEST, error_type="ValidationError"
 ):
-    return error_output_schema.dump(
+    return error_schema.dump(
         {
             "status": "failure",
             "status_code": status_code,
@@ -50,7 +54,7 @@ def login():
     """Login route for all user types"""
     try:
         # Validate input data
-        data = login_input_schema.load(request.get_json())
+        data = login_schema.load(request.get_json())
     except ValidationError as err:
         return create_error_response(str(err.messages))
 
@@ -72,7 +76,7 @@ def login():
 
     token = generate_token(user.id, user.role)
     return create_success_response(
-        token_output_schema.dump({"token": token}), "Login successful"
+        token_schema.dump({"token": token}), "Login successful"
     )
 
 
@@ -81,7 +85,7 @@ def register_customer():
     """Register a new customer"""
     try:
         # Validate input data
-        data = customer_register_input_schema.load(request.get_json())
+        data = customer_register_schema.load(request.get_json())
     except ValidationError as err:
         return create_error_response(str(err.messages))
 
@@ -136,7 +140,7 @@ def register_professional():
     """Register a new professional"""
     try:
         # Validate input data
-        data = professional_register_input_schema.load(request.get_json())
+        data = professional_register_schema.load(request.get_json())
     except ValidationError as err:
         return create_error_response(str(err.messages))
 
@@ -227,7 +231,7 @@ def get_profile(current_user):
 def change_password(current_user):
     """Change user's password"""
     try:
-        data = password_update_input_schema.load(request.get_json())
+        data = password_update_schema.load(request.get_json())
     except ValidationError as err:
         return create_error_response(str(err.messages))
 
@@ -244,6 +248,119 @@ def change_password(current_user):
         db.session.rollback()
         return create_error_response(
             f"Error changing password: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
+
+
+@auth_bp.route("/delete-account", methods=["DELETE"])
+@token_required
+def delete_account(current_user):
+    """Hard delete user account"""
+    try:
+        # Validate input data
+        data = delete_account_schema.load(request.get_json())
+    except ValidationError as err:
+        return create_error_response(str(err.messages))
+
+    # Verify password
+    if not current_user.check_password(data["password"]):
+        return create_error_response(
+            "Incorrect password", HTTPStatus.UNAUTHORIZED, "InvalidPassword"
+        )
+
+    try:
+        # Check for ongoing service requests
+        if current_user.role == USER_ROLE_PROFESSIONAL:
+            has_active_requests = (
+                ServiceRequest.query.filter(
+                    ServiceRequest.professional_id
+                    == current_user.professional_profile.id,
+                    ServiceRequest.status.in_(["assigned", "in_progress"]),
+                ).first()
+                is not None
+            )
+        else:
+            has_active_requests = (
+                ServiceRequest.query.filter(
+                    ServiceRequest.customer_id == current_user.customer_profile.id,
+                    ServiceRequest.status.in_(["requested", "assigned", "in_progress"]),
+                ).first()
+                is not None
+            )
+
+        if has_active_requests:
+            return create_error_response(
+                "Cannot delete account while having active service requests",
+                HTTPStatus.CONFLICT,
+                "ActiveRequestsExist",
+            )
+
+        # Simply delete the user - all related data will be cascade deleted
+        db.session.delete(current_user)
+        db.session.commit()
+
+        return create_success_response(
+            None, "Account successfully deleted", HTTPStatus.OK
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        return create_error_response(
+            f"Error deleting account: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
+
+
+@auth_bp.route("/profile", methods=["PUT"])
+@token_required
+def update_profile(current_user):
+    """Update user's profile information"""
+    try:
+        # Use appropriate schema based on user role
+        if current_user.role == USER_ROLE_PROFESSIONAL:
+            data = professional_profile_update_schema.load(request.get_json())
+        else:
+            data = customer_profile_update_schema.load(request.get_json())
+
+    except ValidationError as err:
+        return create_error_response(str(err.messages))
+
+    try:
+        # Check email uniqueness if being updated
+        if "email" in data and data["email"] != current_user.email:
+            if User.query.filter_by(email=data["email"]).first():
+                return create_error_response(
+                    "Email already in use", HTTPStatus.CONFLICT, "DuplicateEmail"
+                )
+            current_user.email = data["email"]
+
+        # Update base user fields if provided
+        for field in ["full_name", "phone", "address", "pin_code"]:
+            if field in data:
+                setattr(current_user, field, data[field])
+
+        # Update role-specific fields
+        if current_user.role == USER_ROLE_PROFESSIONAL:
+            profile = current_user.professional_profile
+            if "description" in data:
+                profile.description = data["description"]
+
+        db.session.commit()
+
+        # Return appropriate output schema based on role
+        if current_user.role == USER_ROLE_PROFESSIONAL:
+            output_data = professional_output_schema.dump(current_user)
+        else:
+            output_data = customer_output_schema.dump(current_user)
+
+        return create_success_response(output_data, "Profile updated successfully")
+
+    except Exception as e:
+        db.session.rollback()
+        return create_error_response(
+            f"Error updating profile: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
         )

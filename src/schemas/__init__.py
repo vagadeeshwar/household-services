@@ -1,0 +1,56 @@
+# File: schemas/__init__.py
+from .base import BaseSchema
+from .auth import (
+    LoginInputSchema,
+    CustomerRegisterInputSchema,
+    ProfessionalRegisterInputSchema,
+    PasswordUpdateInputSchema,
+    TokenOutputSchema,
+    DeleteAccountInputSchema,
+)
+from .user import (
+    BaseUserOutputSchema,
+    CustomerOutputSchema,
+    ProfessionalOutputSchema,
+    CustomerProfileUpdateInputSchema,
+    ProfessionalProfileUpdateInputSchema,
+)
+from .service import (
+    ServiceOutputSchema,
+    ServiceInputSchema,
+)
+from .request import (
+    ServiceRequestOutputSchema,
+    ServiceRequestInputSchema,
+    ReviewOutputSchema,
+    ReviewInputSchema,
+)
+from .error import ErrorOutputSchema
+
+# Initialize schemas
+login_schema = LoginInputSchema()
+customer_register_schema = CustomerRegisterInputSchema()
+professional_register_schema = ProfessionalRegisterInputSchema()
+password_update_schema = PasswordUpdateInputSchema()
+token_schema = TokenOutputSchema()
+error_schema = ErrorOutputSchema()
+
+# User schemas
+customer_output_schema = CustomerOutputSchema()
+professional_output_schema = ProfessionalOutputSchema()
+customer_profile_update_schema = CustomerProfileUpdateInputSchema()
+professional_profile_update_schema = ProfessionalProfileUpdateInputSchema()
+
+# Service schemas
+service_schema = ServiceOutputSchema()
+services_schema = ServiceOutputSchema(many=True)
+service_input_schema = ServiceInputSchema()
+
+# Request and review schemas
+service_request_schema = ServiceRequestOutputSchema()
+service_requests_schema = ServiceRequestOutputSchema(many=True)
+review_schema = ReviewOutputSchema()
+reviews_schema = ReviewOutputSchema(many=True)
+
+# Account management schemas
+delete_account_schema = DeleteAccountInputSchema()
