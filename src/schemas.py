@@ -1,343 +1,202 @@
-from marshmallow import fields, validate, ValidationError
+from marshmallow import Schema, fields, validate, validates, ValidationError
 import re
-from .models import (
-    User,
-    ProfessionalProfile,
-    CustomerProfile,
-    Service,
-    ServiceRequest,
-    Review,
-    USER_ROLES,
-    REQUEST_STATUSES,
-)
-from . import ma
 
 
-def validate_phone(value):
-    """Validate phone number format."""
-    if not re.match(r"^[1-9]\d{9}$", value):
-        raise ValidationError(
-            "Invalid phone number. Must be 10-digit and can't start with a 0."
-        )
+class BaseSchema(Schema):
+    """Base schema with common validation methods"""
+
+    @staticmethod
+    def validate_phone(value: str) -> None:
+        if not re.match(r"^[1-9]\d{9}$", value):
+            raise ValidationError("Phone number must be 10 digits and not start with 0")
+
+    @staticmethod
+    def validate_password(value: str) -> None:
+        if len(value) < 8:
+            raise ValidationError("Password must be at least 8 characters")
+        if not re.search(r"[A-Z]", value):
+            raise ValidationError("Password must contain an uppercase letter")
+        if not re.search(r"[a-z]", value):
+            raise ValidationError("Password must contain a lowercase letter")
+        if not re.search(r"\d", value):
+            raise ValidationError("Password must contain a number")
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', value):
+            raise ValidationError("Password must contain a special character")
+
+    @staticmethod
+    def validate_pincode(value: str) -> None:
+        if not re.match(r"^[1-9][0-9]{5}$", value):
+            raise ValidationError("PIN code must be 6 digits and not start with 0")
 
 
-def validate_password(value):
-    """
-    Validate password strength.
-    Must contain:
-    - At least 8 characters
-    - At least one uppercase letter
-    - At least one lowercase letter
-    - At least one number
-    - At least one special character
-    """
-    if len(value) < 8:
-        raise ValidationError("Password must be at least 8 characters long.")
-    if not re.search(r"[A-Z]", value):
-        raise ValidationError("Password must contain at least one uppercase letter.")
-    if not re.search(r"[a-z]", value):
-        raise ValidationError("Password must contain at least one lowercase letter.")
-    if not re.search(r"\d", value):
-        raise ValidationError("Password must contain at least one number.")
-    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', value):
-        raise ValidationError("Password must contain at least one special character.")
+# Input Schemas
+class LoginInput(Schema):
+    username = fields.Str(required=True)
+    password = fields.Str(required=True)
 
 
-def validate_pincode(value):
-    """Validate Indian PIN code format."""
-    if not re.match(r"^[1-9][0-9]{5}$", value):
-        raise ValidationError(
-            "Invalid PIN code. Must be a 6-digit postal code not starting with 0."
-        )
-
-
-class UserSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = User
-        load_instance = True
-
-    id = ma.auto_field(dump_only=True)
-
-    username = ma.String(
+class BaseUserInput(BaseSchema):
+    username = fields.Str(
         required=True,
         validate=[
             validate.Length(
-                min=4, max=80, error="Username must be between 4 and 80 characters."
+                min=4, max=20, error="Username must be between 4 and 20 characters"
             ),
             validate.Regexp(
                 r"^[a-zA-Z0-9_.-]+$",
-                error="Username can only contain letters, numbers, and the characters _ . -",
+                error="Username can only contain letters, numbers, and _ . -",
             ),
         ],
     )
-    email = ma.Email(
+    email = fields.Email(required=True)
+    password = fields.Str(required=True)
+    full_name = fields.Str(
         required=True,
-        validate=validate.Length(
-            max=120, error="Email must not exceed 120 characters."
-        ),
-    )
-    full_name = ma.String(
         validate=[
             validate.Length(
-                min=4, max=100, error="Full name must be between 4 and 100 characters."
+                min=4, max=20, error="Full name must be between 4 and 20 characters"
             ),
             validate.Regexp(
                 r"^[a-zA-Z\s.-]+$",
-                error="Full name can only contain letters, spaces, dots, and hyphens.",
+                error="Full name can only contain letters, spaces, dots, and hyphens",
             ),
         ],
     )
-
-    phone = ma.String(required=True, validate=validate_phone)
-    address = ma.String(
+    phone = fields.Str(required=True)
+    address = fields.Str(
         required=True,
         validate=validate.Length(
-            min=1, max=500, error="Address must be between 1 and 500 characters."
+            min=5, max=200, error="Address must be between 5 and 200 characters"
         ),
     )
-    pin_code = ma.String(required=True, validate=validate_pincode)
-    role = fields.String(required=True, validate=validate.OneOf(USER_ROLES))
+    pin_code = fields.Str(required=True)
 
-    password = ma.String(load_only=True, validate=validate_password)
-    is_active = ma.Boolean(dump_only=True)
-    created_at = ma.DateTime(dump_only=True)
-    updated_at = ma.DateTime(dump_only=True)
-    last_login = ma.DateTime(dump_only=True)
+    @validates("phone")
+    def validate_phone_field(self, value: str) -> None:
+        self.validate_phone(value)
 
+    @validates("password")
+    def validate_password_field(self, value: str) -> None:
+        self.validate_password(value)
 
-class CustomerProfileSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = CustomerProfile
-        include_fk = True
-
-    # Profile fields
-    id = ma.auto_field(dump_only=True)
-    created_at = ma.DateTime(dump_only=True)
-
-    # User fields with all validations preserved
-    username = fields.String(
-        attribute="user.username",
-        required=True,
-        validate=[
-            validate.Length(
-                min=4, max=80, error="Username must be between 4 and 80 characters."
-            ),
-            validate.Regexp(
-                r"^[a-zA-Z0-9_.-]+$",
-                error="Username can only contain letters, numbers, and the characters _ . -",
-            ),
-        ],
-    )
-    email = fields.Email(
-        attribute="user.email",
-        required=True,
-        validate=validate.Length(
-            max=120, error="Email must not exceed 120 characters."
-        ),
-    )
-    full_name = fields.String(
-        attribute="user.full_name",
-        validate=[
-            validate.Length(
-                min=4, max=100, error="Full name must be between 4 and 100 characters."
-            ),
-            validate.Regexp(
-                r"^[a-zA-Z\s.-]+$",
-                error="Full name can only contain letters, spaces, dots, and hyphens.",
-            ),
-        ],
-    )
-    phone = fields.String(
-        attribute="user.phone", required=True, validate=validate_phone
-    )
-    address = fields.String(
-        attribute="user.address",
-        required=True,
-        validate=validate.Length(
-            min=1, max=500, error="Address must be between 1 and 500 characters."
-        ),
-    )
-    pin_code = fields.String(
-        attribute="user.pin_code", required=True, validate=validate_pincode
-    )
-    password = fields.String(load_only=True, required=True, validate=validate_password)
-    role = fields.Function(lambda obj: obj.user.role)
-    is_active = fields.Boolean(attribute="user.is_active", dump_only=True)
+    @validates("pin_code")
+    def validate_pincode_field(self, value: str) -> None:
+        self.validate_pincode(value)
 
 
-class ProfessionalProfileSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = ProfessionalProfile
-        include_fk = True
-        load_instance = True
+class CustomerRegisterInput(BaseUserInput):
+    pass
 
-    # Profile specific fields with validations
-    id = fields.Integer(dump_only=True)
-    user_id = fields.Integer(required=True)
-    experience_years = fields.Integer(
-        required=True,
-        validate=validate.Range(
-            min=0, max=50, error="Experience must be between 0 and 50 years."
-        ),
-    )
-    description = fields.String(
-        required=True,
-        validate=validate.Length(
-            min=1,
-            max=1000,
-            error="Description must be between 1 and 1000 characters.",
-        ),
-    )
-    service_type_id = fields.Integer(required=True)
-    verification_documents = fields.String(
-        allow_none=True,
+
+class ProfessionalRegisterInput(BaseUserInput):
+    service_type_id = fields.Int(required=True)
+    experience_years = fields.Int(required=True, validate=validate.Range(min=0, max=50))
+    description = fields.Str(required=True, validate=validate.Length(min=10, max=1000))
+    verification_documents = fields.Str(
         validate=validate.Regexp(
             r"^[\w\-. ]+\.(pdf|jpg|jpeg|png)$",
-            error="Invalid document format. Allowed formats: pdf, jpg, jpeg, png",
-        ),
-    )
-
-    # Read-only fields
-    is_verified = fields.Boolean(dump_only=True)
-    average_rating = fields.Float(dump_only=True)
-    created_at = fields.DateTime(dump_only=True)
-
-    # Nested user relationship
-    user = fields.Nested("UserSchema", exclude=("password",), dump_only=True)
-
-
-class ServiceSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = Service
-        load_instance = True
-
-    id = ma.auto_field(dump_only=True)
-
-    name = ma.String(
-        required=True,
-        validate=[
-            validate.Length(min=2, max=100),
-            validate.Regexp(
-                r"^[a-zA-Z0-9\s&-]+$",
-                error="Service name can only contain letters, numbers, spaces, &, and hyphens.",
-            ),
-        ],
-    )
-    description = ma.String(
-        validate=validate.Length(
-            min=1,
-            max=2000,
-            error="Description must be between 1 and 2000 characters.",
-        ),
-    )
-    base_price = ma.Float(
-        required=True,
-        validate=validate.Range(
-            min=100, max=50000, error="Base price must be between ₹100 and ₹50,000."
-        ),
-    )
-
-    time_required = ma.Integer(
-        required=True,
-        validate=validate.Range(
-            min=15,
-            max=480,  # 15 minutes to 8 hours
-            error="Service duration must be between 15 and 480 minutes",
-        ),
-    )
-
-    is_active = ma.Boolean()
-    created_at = ma.DateTime(dump_only=True)
-
-    professionals = fields.Nested(
-        "ProfessionalProfileSchema",
-        many=True,
-        only=("id", "user.full_name", "average_rating"),
-        dump_only=True,
+            error="Invalid document format. Allowed: pdf, jpg, jpeg, png",
+        )
     )
 
 
-class ServiceRequestSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = ServiceRequest
-        load_instance = True
-        include_fk = True
+class PasswordUpdateInput(BaseSchema):
+    old_password = fields.Str(required=True)
+    new_password = fields.Str(required=True)
 
-    id = ma.auto_field(dump_only=True)
-    service_id = ma.Integer(required=True)
-    customer_id = ma.Integer(required=True)
-    professional_id = ma.Integer()
-    date_of_request = ma.DateTime(required=True)
-    preferred_time = ma.String()
-    description = ma.String()
-    status = fields.String(required=True, validate=validate.OneOf(REQUEST_STATUSES))
-    date_of_assignment = ma.DateTime(dump_only=True)
-    date_of_completion = ma.DateTime(dump_only=True)
-    remarks = ma.String()
-    created_at = ma.DateTime(dump_only=True)
-
-    # Nested relationships
-    service = fields.Nested(
-        ServiceSchema, only=("id", "name", "base_price"), dump_only=True
-    )
-    customer = fields.Nested(
-        CustomerProfileSchema,
-        only=("id", "user.full_name", "user.phone"),
-        dump_only=True,
-    )
-    professional = fields.Nested(
-        ProfessionalProfileSchema,
-        only=("id", "user.full_name", "user.phone"),
-        dump_only=True,
-    )
-    review = fields.Nested("ReviewSchema", exclude=("service_request",), dump_only=True)
+    @validates("new_password")
+    def validate_new_password(self, value: str) -> None:
+        self.validate_password(value)
 
 
-class ReviewSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = Review
-        load_instance = True
-        include_fk = True
-
-    id = ma.auto_field(dump_only=True)
-    service_request_id = ma.Integer(required=True)
-
-    rating = ma.Integer(
-        required=True,
-        validate=validate.Range(
-            min=1, max=5, error="Rating must be between 1 and 5 stars."
-        ),
-    )
-    comment = ma.String(
-        required=False,
-        allow_none=True,
-        validate=validate.Length(
-            min=1,
-            max=500,
-            error="Review comment must be between 1 and 500 characters.",
-        ),
-    )
-
-    is_reported = ma.Boolean(dump_only=True)
-    report_reason = ma.String(dump_only=True)
-    created_at = ma.DateTime(dump_only=True)
-
-    # Nested relationship
-    service_request = fields.Nested(
-        ServiceRequestSchema, exclude=("review",), dump_only=True
-    )
+# Output Schemas
+class TokenOutput(Schema):
+    token = fields.Str(required=True)
 
 
-# Initialize schema instances
-user_schema = UserSchema()
-users_schema = UserSchema(many=True)
-professional_profile_schema = ProfessionalProfileSchema()
-professional_profiles_schema = ProfessionalProfileSchema(many=True)
-customer_profile_schema = CustomerProfileSchema()
-customer_profiles_schema = CustomerProfileSchema(many=True)
-service_schema = ServiceSchema()
-services_schema = ServiceSchema(many=True)
-service_request_schema = ServiceRequestSchema()
-service_requests_schema = ServiceRequestSchema(many=True)
-review_schema = ReviewSchema()
-reviews_schema = ReviewSchema(many=True)
+class ErrorOutput(Schema):
+    status = fields.Str(required=True)
+    status_code = fields.Int(required=True)
+    detail = fields.Str(required=True)
+    error_type = fields.Str(required=True)
+
+
+class BaseUserOutput(Schema):
+    id = fields.Int(required=True)
+    username = fields.Str(required=True)
+    email = fields.Str(required=True)
+    full_name = fields.Str(required=True)
+    phone = fields.Str(required=True)
+    address = fields.Str(required=True)
+    pin_code = fields.Str(required=True)
+    role = fields.Str(required=True)
+    is_active = fields.Bool(required=True)
+    created_at = fields.DateTime(required=True)
+    last_login = fields.DateTime(allow_none=True)
+
+
+class CustomerOutput(BaseUserOutput):
+    pass
+
+
+class ProfessionalOutput(BaseUserOutput):
+    service_type_id = fields.Int(required=True)
+    experience_years = fields.Int(required=True)
+    description = fields.Str(required=True)
+    is_verified = fields.Bool(required=True)
+    average_rating = fields.Float(required=True)
+    verification_documents = fields.Str(allow_none=True)
+
+
+class ServiceOutput(Schema):
+    id = fields.Int(required=True)
+    name = fields.Str(required=True)
+    description = fields.Str(required=True)
+    base_price = fields.Float(required=True)
+    time_required = fields.Int(required=True)
+    is_active = fields.Bool(required=True)
+
+
+class ReviewOutput(Schema):
+    id = fields.Int(required=True)
+    rating = fields.Int(required=True)
+    comment = fields.Str(allow_none=True)
+    created_at = fields.DateTime(required=True)
+    service_request_id = fields.Int(required=True)
+
+
+class ServiceRequestOutput(Schema):
+    id = fields.Int(required=True)
+    service = fields.Nested(ServiceOutput)
+    customer = fields.Nested(CustomerOutput)
+    professional = fields.Nested(ProfessionalOutput, allow_none=True)
+    date_of_request = fields.DateTime(required=True)
+    preferred_time = fields.Str(allow_none=True)
+    status = fields.Str(required=True)
+    description = fields.Str(allow_none=True)
+    date_of_assignment = fields.DateTime(allow_none=True)
+    date_of_completion = fields.DateTime(allow_none=True)
+    remarks = fields.Str(allow_none=True)
+    review = fields.Nested(ReviewOutput, allow_none=True)
+
+
+# Initialize schemas
+login_input_schema = LoginInput()
+customer_register_input_schema = CustomerRegisterInput()
+professional_register_input_schema = ProfessionalRegisterInput()
+password_update_input_schema = PasswordUpdateInput()
+
+token_output_schema = TokenOutput()
+error_output_schema = ErrorOutput()
+customer_output_schema = CustomerOutput()
+professional_output_schema = ProfessionalOutput()
+service_output_schema = ServiceOutput()
+review_output_schema = ReviewOutput()
+service_request_output_schema = ServiceRequestOutput()
+
+# List schemas
+customers_output_schema = CustomerOutput(many=True)
+professionals_output_schema = ProfessionalOutput(many=True)
+services_output_schema = ServiceOutput(many=True)
+reviews_output_schema = ReviewOutput(many=True)
+service_requests_output_schema = ServiceRequestOutput(many=True)
