@@ -65,11 +65,17 @@ def register_customer():
     data = request.get_json()
 
     try:
-        # Separate password from user data
-        password = data.pop("password")
+        # Validate password format first
+        password = data.get("password")
+        if not password:
+            return APIResponse.error(
+                message="Password is required",
+                status_code=HTTPStatus.BAD_REQUEST,
+                error_type="ValidationError",
+            )
 
         # All data comes in a single object
-        userData = {
+        user_data = {
             "username": data["username"],
             "email": data["email"],
             "full_name": data.get("full_name", data["username"]),
@@ -77,6 +83,7 @@ def register_customer():
             "address": data["address"],
             "pin_code": data["pin_code"],
             "role": USER_ROLE_CUSTOMER,
+            "password": password,  # Include password for validation
         }
     except KeyError as e:
         return APIResponse.error(
@@ -85,7 +92,7 @@ def register_customer():
             error_type="MissingField",
         )
 
-    errors = user_schema.validate(userData)
+    errors = user_schema.validate(user_data)
     if errors:
         return APIResponse.error(
             message=f"Validation error: {errors}",
@@ -93,14 +100,14 @@ def register_customer():
             error_type="ValidationError",
         )
 
-    if User.query.filter_by(username=userData["username"]).first():
+    if User.query.filter_by(username=user_data["username"]).first():
         return APIResponse.error(
             message="Username already exists",
             status_code=HTTPStatus.CONFLICT,
             error_type="DuplicateUsername",
         )
 
-    if User.query.filter_by(email=userData["email"]).first():
+    if User.query.filter_by(email=user_data["email"]).first():
         return APIResponse.error(
             message="Email already exists",
             status_code=HTTPStatus.CONFLICT,
@@ -108,7 +115,7 @@ def register_customer():
         )
 
     # Create user and profile in a transaction
-    user = User(**userData)
+    user = User(**{k: v for k, v in user_data.items() if k != "password"})
     user.set_password(password)  # Set password using the method
     db.session.add(user)
     db.session.flush()  # Flush to get user.id
@@ -138,109 +145,106 @@ def register_professional():
     data = request.get_json()
 
     try:
-        # Separate password from user data
-        password = data.pop("password")
+        # Validate password format first
+        password = data.get("password")
+        if not password:
+            return APIResponse.error(
+                message="Password is required",
+                status_code=HTTPStatus.BAD_REQUEST,
+                error_type="ValidationError",
+            )
 
-        # All data comes in a single object
-        userData = {
-            "username": data["username"],
-            "email": data["email"],
-            "full_name": data.get("full_name", data["username"]),
-            "phone": data["phone"],
-            "address": data["address"],
-            "pin_code": data["pin_code"],
+        # Split data into user and professional profile
+        user_data = {
+            "username": data.get("username"),
+            "email": data.get("email"),
+            "full_name": data.get("full_name", data.get("username")),
+            "phone": data.get("phone"),
+            "address": data.get("address"),
+            "pin_code": data.get("pin_code"),
             "role": USER_ROLE_PROFESSIONAL,
-            # Professional specific fields are kept separate
-            "description": data["description"],
-            "service_type_id": data["service_type_id"],
-            "experience_years": data["experience_years"],
+            "password": password,  # Include password for validation
+        }
+
+        profile_data = {
+            "description": data.get("description"),
+            "service_type_id": data.get("service_type_id"),
+            "experience_years": data.get("experience_years"),
             "verification_documents": data.get("verification_documents"),
         }
-    except KeyError as e:
+
+    except Exception as e:
         return APIResponse.error(
-            message=f"Missing required field: {str(e)}",
+            message=f"Invalid request data: {str(e)}",
             status_code=HTTPStatus.BAD_REQUEST,
-            error_type="MissingField",
+            error_type="InvalidData",
         )
 
-    # Validate user fields
-    user_fields = {
-        k: userData[k]
-        for k in [
-            "username",
-            "email",
-            "full_name",
-            "phone",
-            "address",
-            "pin_code",
-            "role",
-        ]
-    }
-
-    errors = user_schema.validate(user_fields)
-    if errors:
+    # Validate user data
+    user_errors = user_schema.validate(user_data)
+    if user_errors:
         return APIResponse.error(
-            message=f"Validation error: {errors}",
+            message=f"User validation error: {user_errors}",
             status_code=HTTPStatus.BAD_REQUEST,
             error_type="ValidationError",
         )
 
-    if User.query.filter_by(username=userData["username"]).first():
+    # Check for existing username/email
+    if User.query.filter_by(username=user_data["username"]).first():
         return APIResponse.error(
             message="Username already exists",
             status_code=HTTPStatus.CONFLICT,
             error_type="DuplicateUsername",
         )
 
-    if User.query.filter_by(email=userData["email"]).first():
+    if User.query.filter_by(email=user_data["email"]).first():
         return APIResponse.error(
             message="Email already exists",
             status_code=HTTPStatus.CONFLICT,
             error_type="DuplicateEmail",
         )
 
-    # Create user and profile in a transaction
-    user = User(**user_fields)
-    user.set_password(password)  # Set password using the method
-    user.is_active = False  # Professional needs verification
-    db.session.add(user)
-    db.session.flush()  # Flush to get user.id
+    try:
+        # Create user
+        user = User(**{k: v for k, v in user_data.items() if k != "password"})
+        user.set_password(password)
+        user.is_active = False  # Professional needs verification
+        db.session.add(user)
+        db.session.flush()  # Get user.id
 
-    profile_data = {
-        "user_id": user.id,
-        "description": userData["description"],
-        "service_type_id": userData["service_type_id"],
-        "experience_years": userData["experience_years"],
-        "verification_documents": userData.get("verification_documents"),
-        "is_verified": False,
-    }
+        # Create professional profile
+        profile_data["user_id"] = user.id
+        profile_data["is_verified"] = False
+        profile = ProfessionalProfile(**profile_data)
 
-    errors = professional_profile_schema.validate(profile_data)
-    if errors:
-        db.session.rollback()
-        return APIResponse.error(
-            message=f"Validation error in professional profile: {errors}",
-            status_code=HTTPStatus.BAD_REQUEST,
-            error_type="ValidationError",
+        # Validate professional profile
+        profile_errors = professional_profile_schema.validate(
+            professional_profile_schema.dump(profile)
+        )
+        if profile_errors:
+            db.session.rollback()
+            return APIResponse.error(
+                message=f"Professional profile validation error: {profile_errors}",
+                status_code=HTTPStatus.BAD_REQUEST,
+                error_type="ValidationError",
+            )
+
+        db.session.add(profile)
+        db.session.commit()
+
+        return APIResponse.success(
+            data=professional_profile_schema.dump(profile),
+            message="Professional registered successfully. Account will be activated after verification.",
+            status_code=HTTPStatus.CREATED,
         )
 
-    profile = ProfessionalProfile(**profile_data)
-    db.session.add(profile)
-    db.session.commit()
-
-    # Query to get joined data for response
-    professional_data = (
-        db.session.query(ProfessionalProfile)
-        .join(User)
-        .filter(ProfessionalProfile.id == profile.id)
-        .first()
-    )
-
-    return APIResponse.success(
-        data=professional_profile_schema.dump(professional_data),
-        message="Professional registered successfully. Account will be activated after verification.",
-        status_code=HTTPStatus.CREATED,
-    )
+    except Exception as e:
+        db.session.rollback()
+        return APIResponse.error(
+            message=f"Error creating professional: {str(e)}",
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            error_type="DatabaseError",
+        )
 
 
 @auth_bp.route("/profile", methods=["GET"])

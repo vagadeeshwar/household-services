@@ -169,9 +169,11 @@ class ProfessionalProfileSchema(ma.SQLAlchemySchema):
     class Meta:
         model = ProfessionalProfile
         include_fk = True
+        load_instance = True
 
     # Profile specific fields with validations
-    id = ma.auto_field(dump_only=True)
+    id = fields.Integer(dump_only=True)
+    user_id = fields.Integer(required=True)
     experience_years = fields.Integer(
         required=True,
         validate=validate.Range(
@@ -179,76 +181,29 @@ class ProfessionalProfileSchema(ma.SQLAlchemySchema):
         ),
     )
     description = fields.String(
+        required=True,
         validate=validate.Length(
             min=1,
             max=1000,
             error="Description must be between 1 and 1000 characters.",
-        )
+        ),
     )
-    is_verified = fields.Boolean(dump_only=True)
+    service_type_id = fields.Integer(required=True)
     verification_documents = fields.String(
+        allow_none=True,
         validate=validate.Regexp(
             r"^[\w\-. ]+\.(pdf|jpg|jpeg|png)$",
             error="Invalid document format. Allowed formats: pdf, jpg, jpeg, png",
-        )
+        ),
     )
-    service_type_id = fields.Integer(required=True)
+
+    # Read-only fields
+    is_verified = fields.Boolean(dump_only=True)
     average_rating = fields.Float(dump_only=True)
     created_at = fields.DateTime(dump_only=True)
 
-    # User fields with all validations preserved
-    username = fields.String(
-        attribute="user.username",
-        required=True,
-        validate=[
-            validate.Length(
-                min=4, max=80, error="Username must be between 4 and 80 characters."
-            ),
-            validate.Regexp(
-                r"^[a-zA-Z0-9_.-]+$",
-                error="Username can only contain letters, numbers, and the characters _ . -",
-            ),
-        ],
-    )
-    email = fields.Email(
-        attribute="user.email",
-        required=True,
-        validate=validate.Length(
-            max=120, error="Email must not exceed 120 characters."
-        ),
-    )
-    full_name = fields.String(
-        attribute="user.full_name",
-        validate=[
-            validate.Length(
-                min=4, max=100, error="Full name must be between 4 and 100 characters."
-            ),
-            validate.Regexp(
-                r"^[a-zA-Z\s.-]+$",
-                error="Full name can only contain letters, spaces, dots, and hyphens.",
-            ),
-        ],
-    )
-    phone = fields.String(
-        attribute="user.phone", required=True, validate=validate_phone
-    )
-    address = fields.String(
-        attribute="user.address",
-        required=True,
-        validate=validate.Length(
-            min=1, max=500, error="Address must be between 1 and 500 characters."
-        ),
-    )
-    pin_code = fields.String(
-        attribute="user.pin_code", required=True, validate=validate_pincode
-    )
-    password = fields.String(load_only=True, required=True, validate=validate_password)
-    role = fields.Function(lambda obj: obj.user.role)
-
-    is_active = fields.Boolean(attribute="user.is_active", dump_only=True)
-
-    # Include service relationship
-    service_type = fields.Nested("ServiceSchema", only=("id", "name"), dump_only=True)
+    # Nested user relationship
+    user = fields.Nested("UserSchema", exclude=("password",), dump_only=True)
 
 
 class ServiceSchema(ma.SQLAlchemySchema):
