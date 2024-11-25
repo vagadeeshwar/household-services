@@ -1,4 +1,5 @@
-from flask import Blueprint, request, current_app, func
+from flask import Blueprint, request, current_app
+from sqlalchemy import func
 from marshmallow import ValidationError
 import base64
 from http import HTTPStatus
