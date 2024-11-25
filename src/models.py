@@ -1,8 +1,10 @@
 from datetime import datetime
 from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
-from . import db
 from sqlalchemy.schema import CheckConstraint
+
+from src import db
+
 from src.constants import (
     USER_ROLES,
     REQUEST_STATUSES,

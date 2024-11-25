@@ -2,10 +2,13 @@ import os
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
+
+from src import db, ma
+
+from src.setup_db import setup_database  # noqa
+
 from src.utils.api import register_error_handlers
 from src.utils.file import UPLOAD_FOLDER
-from src import db, ma
-from src.setup_db import setup_database  # noqa
 
 
 def create_app():
@@ -29,16 +32,21 @@ def create_app():
     #     setup_database()
 
     # Register blueprints
+    from src.routes.user import user_bp
+    from src.routes.customer import customer_bp
+    from src.routes.professional import professional_bp
     from src.routes.auth import auth_bp
-
     # from src.routes.service import service_bp
     from src.routes.admin import admin_bp
     # from src.routes.request import request_bp
 
-    app.register_blueprint(auth_bp, url_prefix="/api/auth")
-    # app.register_blueprint(service_bp, url_prefix="/api/services")
-    app.register_blueprint(admin_bp, url_prefix="/api/admin")
-    # app.register_blueprint(request_bp, url_prefix="/api/requests")
+    app.register_blueprint(user_bp, url_prefix="/api")
+    app.register_blueprint(customer_bp, url_prefix="/api")
+    app.register_blueprint(professional_bp, url_prefix="/api")
+    app.register_blueprint(auth_bp, url_prefix="/api")
+    # app.register_blueprint(service_bp, url_prefix="/api")
+    app.register_blueprint(admin_bp, url_prefix="/api")
+    # app.register_blueprint(request_bp, url_prefix="/api")
 
     # Register error handler
     register_error_handlers(app)

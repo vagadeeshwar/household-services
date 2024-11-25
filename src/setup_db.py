@@ -2,7 +2,9 @@ import logging
 from faker import Faker
 from datetime import datetime, timedelta
 import random
-from . import db
+
+from src import db
+
 from src.models import (
     User,
     ProfessionalProfile,
@@ -12,6 +14,7 @@ from src.models import (
     Review,
     ActivityLog,
 )
+
 from src.constants import (
     USER_ROLE_ADMIN,
     USER_ROLE_PROFESSIONAL,

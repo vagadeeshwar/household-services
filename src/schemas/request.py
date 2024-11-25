@@ -37,3 +37,9 @@ class ReviewOutputSchema(Schema):
     comment = fields.Str(allow_none=True)
     created_at = fields.DateTime(required=True)
     service_request_id = fields.Int(required=True)
+
+
+service_request_schema = ServiceRequestOutputSchema()
+service_requests_schema = ServiceRequestOutputSchema(many=True)
+review_schema = ReviewOutputSchema()
+reviews_schema = ReviewOutputSchema(many=True)

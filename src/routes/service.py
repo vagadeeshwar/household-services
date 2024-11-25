@@ -1,84 +1,144 @@
-from flask import Blueprint, request, jsonify
-from src.models import Service, ProfessionalProfile
-from src.schemas import service_schema, services_schema, professional_profiles_schema
-from src.utils.auth import token_required, role_required, APIError
+from flask import Blueprint, request
+from marshmallow import ValidationError
+from http import HTTPStatus
+from src.models import Service, ProfessionalProfile, ActivityLog
+from src.schemas import (
+    service_schema,
+    services_schema,
+    professional_profiles_schema,
+    service_input_schema,
+)
+from src.utils.auth import token_required, role_required
+from src.utils.api import APIResponse
+from src.constants import ActivityLogActions
 from src import db
 
 service_bp = Blueprint("service", __name__)
 
 
-# Public endpoints
 @service_bp.route("/", methods=["GET"])
+@token_required
 def list_services():
     """List all active services"""
-    services = Service.query.filter_by(is_active=True).all()
-    return jsonify(services_schema.dump(services)), 200
+    try:
+        services = Service.query.filter_by(is_active=True).all()
+        return APIResponse.success(
+            data=services_schema.dump(services),
+            message="Services retrieved successfully",
+        )
+    except Exception as e:
+        return APIResponse.error(
+            f"Error retrieving services: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
 
 @service_bp.route("/<int:service_id>", methods=["GET"])
 def get_service(service_id):
     """Get service details with available professionals"""
-    service = Service.query.get_or_404(service_id)
-    if not service.is_active:
-        raise APIError("Service is not available", 404)
+    try:
+        service = Service.query.get_or_404(service_id)
+        if not service.is_active:
+            return APIResponse.error(
+                "Service is not available",
+                HTTPStatus.NOT_FOUND,
+                "ServiceNotAvailable",
+            )
 
-    # Get verified professionals for this service
-    professionals = ProfessionalProfile.query.filter_by(
-        service_type_id=service_id, is_verified=True
-    ).all()
+        # Get verified professionals for this service
+        professionals = ProfessionalProfile.query.filter_by(
+            service_type_id=service_id,
+            is_verified=True,
+        ).all()
 
-    result = service_schema.dump(service)
-    result["available_professionals"] = professional_profiles_schema.dump(professionals)
+        result = service_schema.dump(service)
+        result["available_professionals"] = professional_profiles_schema.dump(
+            professionals
+        )
 
-    return jsonify(result), 200
+        return APIResponse.success(
+            data=result,
+            message="Service details retrieved successfully",
+        )
+    except Exception as e:
+        return APIResponse.error(
+            f"Error retrieving service details: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
 
 @service_bp.route("/search", methods=["GET"])
 def search_services():
     """Search services by name or filter by various criteria"""
-    name = request.args.get("name", "").lower()
-    min_price = request.args.get("min_price", type=float)
-    max_price = request.args.get("max_price", type=float)
+    try:
+        name = request.args.get("name", "").lower()
+        min_price = request.args.get("min_price", type=float)
+        max_price = request.args.get("max_price", type=float)
 
-    query = Service.query.filter_by(is_active=True)
+        query = Service.query.filter_by(is_active=True)
 
-    if name:
-        query = query.filter(Service.name.ilike(f"%{name}%"))
-    if min_price is not None:
-        query = query.filter(Service.base_price >= min_price)
-    if max_price is not None:
-        query = query.filter(Service.base_price <= max_price)
+        if name:
+            query = query.filter(Service.name.ilike(f"%{name}%"))
+        if min_price is not None:
+            query = query.filter(Service.base_price >= min_price)
+        if max_price is not None:
+            query = query.filter(Service.base_price <= max_price)
 
-    services = query.all()
-    return jsonify(services_schema.dump(services)), 200
+        services = query.all()
+        return APIResponse.success(
+            data=services_schema.dump(services),
+            message="Services search completed successfully",
+        )
+    except Exception as e:
+        return APIResponse.error(
+            f"Error searching services: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
 
-# Admin endpoints
 @service_bp.route("/", methods=["POST"])
 @token_required
 @role_required("admin")
 def create_service(current_user):
     """Create a new service"""
-    data = request.get_json()
+    try:
+        data = service_input_schema.load(request.get_json())
 
-    errors = service_schema.validate(data)
-    if errors:
-        raise APIError(f"Validation error: {errors}", 400)
+        # Check if service name already exists
+        if Service.query.filter_by(name=data["name"]).first():
+            return APIResponse.error(
+                "Service with this name already exists",
+                HTTPStatus.CONFLICT,
+                "DuplicateService",
+            )
 
-    # Check if service name already exists
-    if Service.query.filter_by(name=data["name"]).first():
-        raise APIError("Service with this name already exists", 400)
+        service = Service(**data)
+        db.session.add(service)
 
-    service = Service(**data)
-    db.session.add(service)
-    db.session.commit()
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=ActivityLogActions.SERVICE_CREATE,
+            description=f"Created new service: {service.name}",
+        )
+        db.session.add(log)
+        db.session.commit()
 
-    return jsonify(
-        {
-            "message": "Service created successfully",
-            "service": service_schema.dump(service),
-        }
-    ), 201
+        return APIResponse.success(
+            data=service_schema.dump(service),
+            message="Service created successfully",
+            status_code=HTTPStatus.CREATED,
+        )
+    except ValidationError as err:
+        return APIResponse.error(str(err.messages))
+    except Exception as e:
+        return APIResponse.error(
+            f"Error creating service: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
 
 @service_bp.route("/<int:service_id>", methods=["PUT"])
@@ -86,30 +146,44 @@ def create_service(current_user):
 @role_required("admin")
 def update_service(current_user, service_id):
     """Update an existing service"""
-    service = Service.query.get_or_404(service_id)
-    data = request.get_json()
+    try:
+        service = Service.query.get_or_404(service_id)
+        data = service_input_schema.load(request.get_json(), partial=True)
 
-    errors = service_schema.validate(data, partial=True)
-    if errors:
-        raise APIError(f"Validation error: {errors}", 400)
+        # Check name uniqueness if name is being updated
+        if "name" in data and data["name"] != service.name:
+            if Service.query.filter_by(name=data["name"]).first():
+                return APIResponse.error(
+                    "Service with this name already exists",
+                    HTTPStatus.CONFLICT,
+                    "DuplicateService",
+                )
 
-    # Check name uniqueness if name is being updated
-    if "name" in data and data["name"] != service.name:
-        if Service.query.filter_by(name=data["name"]).first():
-            raise APIError("Service with this name already exists", 400)
+        # Update fields
+        for key, value in data.items():
+            setattr(service, key, value)
 
-    # Update fields
-    for key, value in data.items():
-        setattr(service, key, value)
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=ActivityLogActions.SERVICE_UPDATE,
+            entity_id=service_id,
+            description=f"Updated service: {service.name}",
+        )
+        db.session.add(log)
+        db.session.commit()
 
-    db.session.commit()
-
-    return jsonify(
-        {
-            "message": "Service updated successfully",
-            "service": service_schema.dump(service),
-        }
-    ), 200
+        return APIResponse.success(
+            data=service_schema.dump(service),
+            message="Service updated successfully",
+        )
+    except ValidationError as err:
+        return APIResponse.error(str(err.messages))
+    except Exception as e:
+        return APIResponse.error(
+            f"Error updating service: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
 
 @service_bp.route("/<int:service_id>", methods=["DELETE"])
@@ -117,23 +191,40 @@ def update_service(current_user, service_id):
 @role_required("admin")
 def delete_service(current_user, service_id):
     """Soft delete a service by marking it as inactive"""
-    service = Service.query.get_or_404(service_id)
+    try:
+        service = Service.query.get_or_404(service_id)
 
-    # Check if service has active professionals
-    active_professionals = ProfessionalProfile.query.filter_by(
-        service_type_id=service_id, is_verified=True
-    ).count()
+        # Check if service has active professionals
+        active_professionals = ProfessionalProfile.query.filter_by(
+            service_type_id=service_id,
+            is_verified=True,
+        ).count()
 
-    if active_professionals > 0:
-        raise APIError(
-            "Cannot delete service with active professionals. Deactivate professionals first.",
-            400,
+        if active_professionals > 0:
+            return APIResponse.error(
+                "Cannot delete service with active professionals. Deactivate professionals first.",
+                HTTPStatus.CONFLICT,
+                "ActiveProfessionalsExist",
+            )
+
+        service.is_active = False
+
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=ActivityLogActions.SERVICE_DELETE,
+            entity_id=service_id,
+            description=f"Deleted service: {service.name}",
         )
+        db.session.add(log)
+        db.session.commit()
 
-    service.is_active = False
-    db.session.commit()
-
-    return jsonify({"message": "Service deleted successfully"}), 200
+        return APIResponse.success(message="Service deleted successfully")
+    except Exception as e:
+        return APIResponse.error(
+            f"Error deleting service: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
 
 @service_bp.route("/<int:service_id>/restore", methods=["POST"])
@@ -141,13 +232,26 @@ def delete_service(current_user, service_id):
 @role_required("admin")
 def restore_service(current_user, service_id):
     """Restore a soft-deleted service"""
-    service = Service.query.get_or_404(service_id)
-    service.is_active = True
-    db.session.commit()
+    try:
+        service = Service.query.get_or_404(service_id)
+        service.is_active = True
 
-    return jsonify(
-        {
-            "message": "Service restored successfully",
-            "service": service_schema.dump(service),
-        }
-    ), 200
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=ActivityLogActions.SERVICE_RESTORE,
+            entity_id=service_id,
+            description=f"Restored service: {service.name}",
+        )
+        db.session.add(log)
+        db.session.commit()
+
+        return APIResponse.success(
+            data=service_schema.dump(service),
+            message="Service restored successfully",
+        )
+    except Exception as e:
+        return APIResponse.error(
+            f"Error restoring service: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
