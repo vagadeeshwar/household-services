@@ -1,12 +1,20 @@
 from flask import Blueprint, request
 from datetime import datetime
+from marshmallow import ValidationError
+from http import HTTPStatus
+
 from src.models import (
     User,
     ProfessionalProfile,
     CustomerProfile,
+    ServiceRequest,
+    ActivityLog,
+)
+from src.constants import (
     USER_ROLE_CUSTOMER,
     USER_ROLE_PROFESSIONAL,
-    ServiceRequest,
+    ActivityLogActions,
+    USER_ROLE_ADMIN,
 )
 from src.schemas import (
     login_schema,
@@ -14,7 +22,6 @@ from src.schemas import (
     professional_register_schema,
     password_update_schema,
     token_schema,
-    error_schema,
     customer_output_schema,
     professional_output_schema,
     delete_account_schema,
@@ -22,52 +29,12 @@ from src.schemas import (
     professional_profile_update_schema,
     combine_professional_data,
 )
-from src.utils.auth import generate_token, token_required
+from src.utils.auth import generate_token, token_required, APIResponse
 from src.utils.file import save_verification_document, delete_verification_document
-from marshmallow import ValidationError
+from src.utils.user import check_existing_user
 from src import db
-from http import HTTPStatus
 
 auth_bp = Blueprint("auth", __name__)
-
-
-def create_error_response(
-    message: str,
-    status_code: int = HTTPStatus.BAD_REQUEST,
-    error_type: str = "ValidationError",
-) -> tuple:
-    return error_schema.dump(
-        {
-            "status": "failure",
-            "status_code": status_code,
-            "detail": message,
-            "error_type": error_type,
-        }
-    ), status_code
-
-
-def create_success_response(
-    data: dict = None, message: str = None, status_code: int = HTTPStatus.OK
-) -> tuple:
-    response = {"status": "success", "status_code": status_code, "data": data}
-    if message:
-        response["detail"] = message
-    return response, status_code
-
-
-def check_existing_user(username: str, email: str) -> tuple[bool, tuple]:
-    """Check if username or email already exists"""
-    if User.query.filter_by(username=username).first():
-        return True, create_error_response(
-            "Username already exists", HTTPStatus.CONFLICT, "DuplicateUsername"
-        )
-
-    if User.query.filter_by(email=email).first():
-        return True, create_error_response(
-            "Email already exists", HTTPStatus.CONFLICT, "DuplicateEmail"
-        )
-
-    return False, None
 
 
 @auth_bp.route("/login", methods=["POST"])
@@ -76,31 +43,37 @@ def login():
     try:
         data = login_schema.load(request.get_json())
     except ValidationError as err:
-        return create_error_response(str(err.messages))
+        return APIResponse.error(str(err.messages))
 
     user = User.query.filter_by(username=data["username"]).first()
 
     if not user or not user.check_password(data["password"]):
-        return create_error_response(
+        return APIResponse.error(
             "Invalid credentials", HTTPStatus.UNAUTHORIZED, "InvalidCredentials"
         )
 
     if not user.is_active:
-        return create_error_response(
+        return APIResponse.error(
             "Account is deactivated", HTTPStatus.FORBIDDEN, "InactiveAccount"
         )
 
     try:
         user.last_login = datetime.utcnow()
+
+        log = ActivityLog(
+            user_id=user.id,
+            action=ActivityLogActions.USER_LOGIN,
+            description=f"User {user.username} logged in successfully",
+        )
+        db.session.add(log)
         db.session.commit()
 
         token = generate_token(user.id, user.role)
-        return create_success_response(
-            token_schema.dump({"token": token}), "Login successful"
+        return APIResponse.success(
+            data=token_schema.dump({"token": token}), message="Login successful"
         )
     except Exception as e:
-        db.session.rollback()
-        return create_error_response(
+        return APIResponse.error(
             f"Error during login: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
@@ -113,7 +86,7 @@ def register_customer():
     try:
         data = customer_register_schema.load(request.get_json())
     except ValidationError as err:
-        return create_error_response(str(err.messages))
+        return APIResponse.error(str(err.messages))
 
     exists, error_response = check_existing_user(data["username"], data["email"])
     if exists:
@@ -136,16 +109,22 @@ def register_customer():
 
         profile = CustomerProfile(user_id=user.id)
         db.session.add(profile)
+
+        log = ActivityLog(
+            user_id=user.id,
+            action=ActivityLogActions.USER_REGISTER,
+            description=f"New customer account created for {user.username}",
+        )
+        db.session.add(log)
         db.session.commit()
 
-        return create_success_response(
-            customer_output_schema.dump(user),
-            "Customer registered successfully",
-            HTTPStatus.CREATED,
+        return APIResponse.success(
+            data=customer_output_schema.dump(user),
+            message="Customer registered successfully",
+            status_code=HTTPStatus.CREATED,
         )
     except Exception as e:
-        db.session.rollback()
-        return create_error_response(
+        return APIResponse.error(
             f"Error creating customer: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
@@ -156,14 +135,13 @@ def register_customer():
 def register_professional():
     """Register a new professional"""
     if "verification_document" not in request.files:
-        return create_error_response(
+        return APIResponse.error(
             "Verification document is required",
             HTTPStatus.BAD_REQUEST,
             "MissingDocument",
         )
 
     try:
-        # Parse and validate form data
         form_data = {
             "username": request.form.get("username"),
             "email": request.form.get("email"),
@@ -177,7 +155,7 @@ def register_professional():
             "description": request.form.get("description"),
         }
     except (TypeError, ValueError):
-        return create_error_response(
+        return APIResponse.error(
             "Invalid service_type_id or experience_years",
             HTTPStatus.BAD_REQUEST,
             "ValidationError",
@@ -186,7 +164,7 @@ def register_professional():
     try:
         data = professional_register_schema.load(form_data)
     except ValidationError as err:
-        return create_error_response(str(err.messages))
+        return APIResponse.error(str(err.messages))
 
     exists, error_response = check_existing_user(data["username"], data["email"])
     if exists:
@@ -194,7 +172,7 @@ def register_professional():
 
     filename, error = save_verification_document(request.files["verification_document"])
     if error:
-        return create_error_response(error, HTTPStatus.BAD_REQUEST, "FileUploadError")
+        return APIResponse.error(error, HTTPStatus.BAD_REQUEST, "FileUploadError")
 
     try:
         user = User(
@@ -220,21 +198,26 @@ def register_professional():
             is_verified=False,
         )
         db.session.add(profile)
+
+        log = ActivityLog(
+            user_id=user.id,
+            action=ActivityLogActions.USER_REGISTER,
+            description=f"New professional account created for {user.username}, pending verification",
+        )
+        db.session.add(log)
         db.session.commit()
 
-        # Combine user and profile data
         response_data = combine_professional_data(user, profile)
 
-        return create_success_response(
-            response_data,
-            "Professional registered successfully. Account will be activated after verification.",
-            HTTPStatus.CREATED,
+        return APIResponse.success(
+            data=response_data,
+            message="Professional registered successfully. Account will be activated after verification.",
+            status_code=HTTPStatus.CREATED,
         )
     except Exception as e:
         if filename:
             delete_verification_document(filename)
-        db.session.rollback()
-        return create_error_response(
+        return APIResponse.error(
             f"Error creating professional: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
@@ -253,9 +236,9 @@ def get_profile(current_user):
             schema = customer_output_schema
             message = f"{current_user.role.capitalize()} profile retrieved successfully"
 
-        return create_success_response(schema.dump(current_user), message)
+        return APIResponse.success(data=schema.dump(current_user), message=message)
     except Exception as e:
-        return create_error_response(
+        return APIResponse.error(
             f"Error retrieving profile: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
@@ -269,20 +252,27 @@ def change_password(current_user):
     try:
         data = password_update_schema.load(request.get_json())
     except ValidationError as err:
-        return create_error_response(str(err.messages))
+        return APIResponse.error(str(err.messages))
 
     if not current_user.check_password(data["old_password"]):
-        return create_error_response(
+        return APIResponse.error(
             "Current password is incorrect", HTTPStatus.UNAUTHORIZED, "InvalidPassword"
         )
 
     try:
         current_user.set_password(data["new_password"])
+
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=ActivityLogActions.USER_PASSWORD_CHANGE,
+            description=f"Password changed for user {current_user.username}",
+        )
+        db.session.add(log)
         db.session.commit()
-        return create_success_response(None, "Password changed successfully")
+
+        return APIResponse.success(message="Password changed successfully")
     except Exception as e:
-        db.session.rollback()
-        return create_error_response(
+        return APIResponse.error(
             f"Error changing password: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
@@ -301,12 +291,12 @@ def update_profile(current_user):
         )
         data = schema.load(request.get_json())
     except ValidationError as err:
-        return create_error_response(str(err.messages))
+        return APIResponse.error(str(err.messages))
 
     try:
         if "email" in data and data["email"] != current_user.email:
             if User.query.filter_by(email=data["email"]).first():
-                return create_error_response(
+                return APIResponse.error(
                     "Email already in use", HTTPStatus.CONFLICT, "DuplicateEmail"
                 )
             current_user.email = data["email"]
@@ -318,6 +308,12 @@ def update_profile(current_user):
         if current_user.role == USER_ROLE_PROFESSIONAL and "description" in data:
             current_user.professional_profile.description = data["description"]
 
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=ActivityLogActions.USER_PROFILE_UPDATE,
+            description=f"Profile updated for user {current_user.username}",
+        )
+        db.session.add(log)
         db.session.commit()
 
         schema = (
@@ -325,12 +321,11 @@ def update_profile(current_user):
             if current_user.role == USER_ROLE_PROFESSIONAL
             else customer_output_schema
         )
-        return create_success_response(
-            schema.dump(current_user), "Profile updated successfully"
+        return APIResponse.success(
+            data=schema.dump(current_user), message="Profile updated successfully"
         )
     except Exception as e:
-        db.session.rollback()
-        return create_error_response(
+        return APIResponse.error(
             f"Error updating profile: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
@@ -342,12 +337,18 @@ def update_profile(current_user):
 def delete_account(current_user):
     """Hard delete user account"""
     try:
+        if current_user.role == USER_ROLE_ADMIN:
+            return APIResponse.error(
+                "Admin accounts cannot be deleted",
+                HTTPStatus.UNAUTHORIZED,
+                "DeletionError",
+            )
         data = delete_account_schema.load(request.get_json())
     except ValidationError as err:
-        return create_error_response(str(err.messages))
+        return APIResponse.error(str(err.messages))
 
     if not current_user.check_password(data["password"]):
-        return create_error_response(
+        return APIResponse.error(
             "Incorrect password", HTTPStatus.UNAUTHORIZED, "InvalidPassword"
         )
 
@@ -362,8 +363,6 @@ def delete_account(current_user):
                 ).first()
                 is not None
             )
-
-            # Store verification document filename for later deletion
             verification_doc = current_user.professional_profile.verification_documents
         else:
             has_active_requests = (
@@ -375,25 +374,30 @@ def delete_account(current_user):
             )
 
         if has_active_requests:
-            return create_error_response(
+            return APIResponse.error(
                 "Cannot delete account while having active service requests",
                 HTTPStatus.CONFLICT,
                 "ActiveRequestsExist",
             )
 
-        # Delete verification document if professional
+        log = ActivityLog(
+            user_id=None,  # Since user will be deleted
+            action=ActivityLogActions.USER_DELETE,
+            description=f"Account deleted for user {current_user.username} (role: {current_user.role})",
+        )
+        db.session.add(log)
+
         if current_user.role == USER_ROLE_PROFESSIONAL and verification_doc:
             delete_verification_document(verification_doc)
 
         db.session.delete(current_user)
         db.session.commit()
 
-        return create_success_response(
-            None, "Account successfully deleted", HTTPStatus.OK
+        return APIResponse.success(
+            message="Account successfully deleted", status_code=HTTPStatus.OK
         )
     except Exception as e:
-        db.session.rollback()
-        return create_error_response(
+        return APIResponse.error(
             f"Error deleting account: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",

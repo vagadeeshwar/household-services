@@ -11,12 +11,15 @@ from src.models import (
     ServiceRequest,
     Review,
     ActivityLog,
+)
+from src.constants import (
     USER_ROLE_ADMIN,
     USER_ROLE_PROFESSIONAL,
     USER_ROLE_CUSTOMER,
     REQUEST_STATUS_REQUESTED,
     REQUEST_STATUS_ASSIGNED,
     REQUEST_STATUS_COMPLETED,
+    ActivityLogActions,
 )
 
 # Set up logging
@@ -308,8 +311,7 @@ def create_requests_and_reviews(services, professionals, customers):
             # Create activity log for the request
             log = ActivityLog(
                 user_id=customer.id,
-                action="create_service_request",
-                entity_type="service_request",
+                action=ActivityLogActions.REQUEST_CREATE,
                 entity_id=service_request.id,
                 description=f"Created service request for {service.name}",
             )

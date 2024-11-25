@@ -15,12 +15,14 @@ from src.schemas import (
     block_user_schema,
     review_action_schema,
     dashboard_stats_schema,
-    professional_profiles_schema,
     professional_profile_schema,
+    combine_professional_data,
     customer_profiles_schema,
     reviews_schema,
 )
-from src.utils.auth import token_required, role_required, APIResponse
+from src.utils.auth import token_required, role_required
+from src.utils.api import APIResponse
+from src.constants import ActivityLogActions
 from src import db
 
 admin_bp = Blueprint("admin", __name__)
@@ -45,19 +47,21 @@ def list_professionals(current_user):
             page=params["page"], per_page=params["per_page"], error_out=False
         )
 
+        professionals = []
+        for profile in paginated.items:
+            professionals.append(combine_professional_data(profile.user, profile))
+
         return APIResponse.success(
-            data={
-                "professionals": professional_profiles_schema.dump(paginated.items),
-                "pagination": {
-                    "total": paginated.total,
-                    "pages": paginated.pages,
-                    "current_page": paginated.page,
-                    "per_page": paginated.per_page,
-                    "has_next": paginated.has_next,
-                    "has_prev": paginated.has_prev,
-                },
-            },
+            data=professionals,
             message="Professionals retrieved successfully",
+            pagination={
+                "total": paginated.total,
+                "pages": paginated.pages,
+                "current_page": paginated.page,
+                "per_page": paginated.per_page,
+                "has_next": paginated.has_next,
+                "has_prev": paginated.has_prev,
+            },
         )
     except ValidationError as err:
         return APIResponse.error(str(err.messages))
@@ -89,17 +93,15 @@ def verify_professional(current_user, profile_id):
 
         log = ActivityLog(
             user_id=current_user.id,
-            action="verify_professional",
-            entity_type="professional_profile",
-            entity_id=profile_id,
+            action=ActivityLogActions.PROFESSIONAL_VERIFY,
             description=f"Verified professional profile for {profile.user.full_name}",
         )
         db.session.add(log)
         db.session.commit()
 
         return APIResponse.success(
-            professional_profile_schema.dump(profile),
-            "Professional verified successfully",
+            data=professional_profile_schema.dump(profile),
+            message="Professional verified successfully",
         )
     except Exception as e:
         return APIResponse.error(
@@ -127,9 +129,7 @@ def block_professional(current_user, profile_id):
 
         log = ActivityLog(
             user_id=current_user.id,
-            action="block_professional",
-            entity_type="professional_profile",
-            entity_id=profile_id,
+            action=ActivityLogActions.PROFESSIONAL_BLOCK,
             description=f"Blocked professional {profile.user.full_name}. Reason: {data['reason']}",
         )
         db.session.add(log)
@@ -166,18 +166,16 @@ def list_customers(current_user):
         )
 
         return APIResponse.success(
-            data={
-                "customers": customer_profiles_schema.dump(paginated.items),
-                "pagination": {
-                    "total": paginated.total,
-                    "pages": paginated.pages,
-                    "current_page": paginated.page,
-                    "per_page": paginated.per_page,
-                    "has_next": paginated.has_next,
-                    "has_prev": paginated.has_prev,
-                },
-            },
+            data=customer_profiles_schema.dump(paginated.items),
             message="Customers retrieved successfully",
+            pagination={
+                "total": paginated.total,
+                "pages": paginated.pages,
+                "current_page": paginated.page,
+                "per_page": paginated.per_page,
+                "has_next": paginated.has_next,
+                "has_prev": paginated.has_prev,
+            },
         )
     except ValidationError as err:
         return APIResponse.error(str(err.messages))
@@ -207,9 +205,7 @@ def block_customer(current_user, profile_id):
 
         log = ActivityLog(
             user_id=current_user.id,
-            action="block_customer",
-            entity_type="customer_profile",
-            entity_id=profile_id,
+            action=ActivityLogActions.CUSTOMER_BLOCK,
             description=f"Blocked customer {profile.user.full_name}. Reason: {data['reason']}",
         )
         db.session.add(log)
@@ -232,7 +228,6 @@ def block_customer(current_user, profile_id):
 def list_reported_reviews(current_user):
     """List all reported reviews with pagination"""
     try:
-        # Using customers_list_query_schema for pagination as it has the same structure
         params = customers_list_query_schema.load(request.args)
 
         paginated = Review.query.filter_by(is_reported=True).paginate(
@@ -240,18 +235,16 @@ def list_reported_reviews(current_user):
         )
 
         return APIResponse.success(
-            data={
-                "reviews": reviews_schema.dump(paginated.items),
-                "pagination": {
-                    "total": paginated.total,
-                    "pages": paginated.pages,
-                    "current_page": paginated.page,
-                    "per_page": paginated.per_page,
-                    "has_next": paginated.has_next,
-                    "has_prev": paginated.has_prev,
-                },
-            },
+            data=reviews_schema.dump(paginated.items),
             message="Reported reviews retrieved successfully",
+            pagination={
+                "total": paginated.total,
+                "pages": paginated.pages,
+                "current_page": paginated.page,
+                "per_page": paginated.per_page,
+                "has_next": paginated.has_next,
+                "has_prev": paginated.has_prev,
+            },
         )
     except ValidationError as err:
         return APIResponse.error(str(err.messages))
@@ -279,16 +272,16 @@ def handle_review_report(current_user, review_id):
 
         if data["action"] == "dismiss":
             review.is_reported = False
+            action_type = ActivityLogActions.REVIEW_DISMISS
             message = "Review report dismissed"
         else:  # remove
             db.session.delete(review)
+            action_type = ActivityLogActions.REVIEW_REMOVE
             message = "Review removed"
 
         log = ActivityLog(
             user_id=current_user.id,
-            action=f"review_{data['action']}",
-            entity_type="review",
-            entity_id=review_id,
+            action=action_type,
             description=f"{message} for service request {review.service_request_id}",
         )
         db.session.add(log)

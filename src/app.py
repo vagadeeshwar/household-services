@@ -2,7 +2,7 @@ import os
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
-from src.utils.auth import register_error_handlers
+from src.utils.api import register_error_handlers
 from src.utils.file import UPLOAD_FOLDER
 from src import db, ma
 from src.setup_db import setup_database  # noqa

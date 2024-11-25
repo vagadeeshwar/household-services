@@ -3,21 +3,12 @@ from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db
 from sqlalchemy.schema import CheckConstraint
-
-# Constants remain the same
-USER_ROLE_ADMIN = "admin"
-USER_ROLE_PROFESSIONAL = "professional"
-USER_ROLE_CUSTOMER = "customer"
-USER_ROLES = [USER_ROLE_ADMIN, USER_ROLE_PROFESSIONAL, USER_ROLE_CUSTOMER]
-
-REQUEST_STATUS_REQUESTED = "requested"
-REQUEST_STATUS_ASSIGNED = "assigned"
-REQUEST_STATUS_COMPLETED = "completed"
-REQUEST_STATUSES = [
+from src.constants import (
+    USER_ROLES,
+    REQUEST_STATUSES,
     REQUEST_STATUS_REQUESTED,
-    REQUEST_STATUS_ASSIGNED,
-    REQUEST_STATUS_COMPLETED,
-]
+    ActivityLogActions,
+)
 
 
 class TimestampMixin:
@@ -239,7 +230,18 @@ class ActivityLog(db.Model, TimestampMixin):
     user_id = db.Column(
         db.Integer, db.ForeignKey("users.id", ondelete="SET NULL", onupdate="CASCADE")
     )
-    action = db.Column(db.String(50), nullable=False)
-    entity_type = db.Column(db.String(50), nullable=False)
-    entity_id = db.Column(db.Integer, nullable=False)
+    action = db.Column(
+        db.String(50),
+        nullable=False,
+    )
     description = db.Column(db.Text, nullable=False)
+
+    __table_args__ = (
+        db.CheckConstraint(
+            f"action IN {tuple(ActivityLogActions.get_all_actions())}",
+            name="valid_action_types",
+        ),
+    )
+
+    def __repr__(self):
+        return f"<ActivityLog {self.action} by User {self.user_id}>"
