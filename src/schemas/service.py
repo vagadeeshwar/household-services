@@ -1,33 +1,49 @@
 from marshmallow import fields, validate, Schema
-from .base import BaseSchema
+from src.schemas.base import BaseSchema
 
 
 class ServiceInputSchema(BaseSchema):
-    name = fields.Str(required=True, validate=validate.Length(min=3, max=100))
-    description = fields.Str(required=True, validate=validate.Length(min=10, max=1000))
+    """Schema for creating/updating services"""
+
+    name = fields.Str(required=True, validate=validate.Length(min=4, max=100))
+    description = fields.Str(required=True, validate=validate.Length(min=1, max=1000))
     base_price = fields.Float(required=True, validate=validate.Range(min=0))
-    time_required = fields.Int(required=True, validate=validate.Range(min=1))
-    is_active = fields.Bool()
+    duration_minutes = fields.Int(required=True, validate=validate.Range(min=1))
+    is_active = fields.Bool(dump_only=True)
+
+
+class ServiceUpdateSchema(BaseSchema):
+    """Schema for creating/updating services"""
+
+    name = fields.Str(validate=validate.Length(min=4, max=100))
+    description = fields.Str(validate=validate.Length(min=1, max=1000))
+    base_price = fields.Float(validate=validate.Range(min=0))
+    duration_minutes = fields.Int(validate=validate.Range(min=1))
 
 
 class ServiceOutputSchema(Schema):
-    id = fields.Int(required=True)
+    """Schema for service output data"""
+
+    id = fields.Int(dump_only=True)
     name = fields.Str(required=True)
     description = fields.Str(required=True)
     base_price = fields.Float(required=True)
-    time_required = fields.Int(required=True)
+    duration_minutes = fields.Int(required=True)
     is_active = fields.Bool(required=True)
+    created_at = fields.DateTime(dump_only=True)
+    updated_at = fields.DateTime(dump_only=True)
 
-class ServiceListQuerySchema(Schema):
+
+class ServicesListQuerySchema(Schema):
     """Schema for validating service list query parameters"""
-    name = fields.Str(required=False)
-    min_price = fields.Float(required=False)
-    max_price = fields.Float(required=False)
-    is_active = fields.Boolean(required=False)  # Only for admin
+
+    is_active = fields.Bool(required=False)
     page = fields.Int(required=False, missing=1)
     per_page = fields.Int(required=False, missing=10)
 
-service_schema = ServiceOutputSchema()
-services_schema = ServiceOutputSchema(many=True)
+
+# Initialize schemas
+service_output_schema = ServiceOutputSchema()
 service_input_schema = ServiceInputSchema()
-service_list_query_schema = ServiceListQuerySchema()
+service_update_schema = ServiceUpdateSchema()
+services_list_query_schema = ServicesListQuerySchema()

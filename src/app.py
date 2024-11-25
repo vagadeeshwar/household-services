@@ -36,7 +36,7 @@ def create_app():
     from src.routes.customer import customer_bp
     from src.routes.professional import professional_bp
     from src.routes.auth import auth_bp
-    # from src.routes.service import service_bp
+    from src.routes.service import service_bp
     from src.routes.admin import admin_bp
     # from src.routes.request import request_bp
 
@@ -44,7 +44,7 @@ def create_app():
     app.register_blueprint(customer_bp, url_prefix="/api")
     app.register_blueprint(professional_bp, url_prefix="/api")
     app.register_blueprint(auth_bp, url_prefix="/api")
-    # app.register_blueprint(service_bp, url_prefix="/api")
+    app.register_blueprint(service_bp, url_prefix="/api")
     app.register_blueprint(admin_bp, url_prefix="/api")
     # app.register_blueprint(request_bp, url_prefix="/api")
 

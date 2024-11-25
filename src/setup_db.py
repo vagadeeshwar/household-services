@@ -144,7 +144,7 @@ def create_services():
             name=data["name"],
             description=data["description"],
             base_price=data["price"],
-            time_required=data["time"],  # Stored in minutes
+            duration_minutes=data["time"],  # Stored in minutes
             is_active=True,
         )
         services.append(service)
