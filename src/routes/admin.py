@@ -10,15 +10,11 @@ from src.models import (
     ActivityLog,
 )
 from src.schemas import (
-    professionals_list_query_schema,
     customers_list_query_schema,
     block_user_schema,
     review_action_schema,
     dashboard_stats_schema,
-    professional_profile_schema,
     combine_professional_data,
-    customer_profiles_schema,
-    reviews_schema,
 )
 from src.utils.auth import token_required, role_required
 from src.utils.api import APIResponse
@@ -26,51 +22,6 @@ from src.constants import ActivityLogActions
 from src import db
 
 admin_bp = Blueprint("admin", __name__)
-
-
-@admin_bp.route("/professionals", methods=["GET"])
-@token_required
-@role_required("admin")
-def list_professionals(current_user):
-    """List all professionals with optional filters and pagination"""
-    try:
-        params = professionals_list_query_schema.load(request.args)
-
-        query = ProfessionalProfile.query
-
-        if params.get("verified") is not None:
-            query = query.filter_by(is_verified=params["verified"])
-        if params.get("service_type"):
-            query = query.filter_by(service_type_id=params["service_type"])
-
-        paginated = query.paginate(
-            page=params["page"], per_page=params["per_page"], error_out=False
-        )
-
-        professionals = []
-        for profile in paginated.items:
-            professionals.append(combine_professional_data(profile.user, profile))
-
-        return APIResponse.success(
-            data=professionals,
-            message="Professionals retrieved successfully",
-            pagination={
-                "total": paginated.total,
-                "pages": paginated.pages,
-                "current_page": paginated.page,
-                "per_page": paginated.per_page,
-                "has_next": paginated.has_next,
-                "has_prev": paginated.has_prev,
-            },
-        )
-    except ValidationError as err:
-        return APIResponse.error(str(err.messages))
-    except Exception as e:
-        return APIResponse.error(
-            f"Error retrieving professionals: {str(e)}",
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            "DatabaseError",
-        )
 
 
 @admin_bp.route("/professionals/<int:profile_id>/verify", methods=["POST"])
@@ -100,7 +51,7 @@ def verify_professional(current_user, profile_id):
         db.session.commit()
 
         return APIResponse.success(
-            data=professional_profile_schema.dump(profile),
+            data=combine_professional_data(profile.user, profile),
             message="Professional verified successfully",
         )
     except Exception as e:
@@ -146,47 +97,6 @@ def block_professional(current_user, profile_id):
         )
 
 
-@admin_bp.route("/customers", methods=["GET"])
-@token_required
-@role_required("admin")
-def list_customers(current_user):
-    """List all customers with optional filters and pagination"""
-    try:
-        params = customers_list_query_schema.load(request.args)
-
-        query = CustomerProfile.query
-
-        if params.get("active") is not None:
-            query = query.join(User).filter(User.is_active == params["active"])
-        if params.get("pin_code"):
-            query = query.join(User).filter(User.pin_code == params["pin_code"])
-
-        paginated = query.paginate(
-            page=params["page"], per_page=params["per_page"], error_out=False
-        )
-
-        return APIResponse.success(
-            data=customer_profiles_schema.dump(paginated.items),
-            message="Customers retrieved successfully",
-            pagination={
-                "total": paginated.total,
-                "pages": paginated.pages,
-                "current_page": paginated.page,
-                "per_page": paginated.per_page,
-                "has_next": paginated.has_next,
-                "has_prev": paginated.has_prev,
-            },
-        )
-    except ValidationError as err:
-        return APIResponse.error(str(err.messages))
-    except Exception as e:
-        return APIResponse.error(
-            f"Error retrieving customers: {str(e)}",
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            "DatabaseError",
-        )
-
-
 @admin_bp.route("/customers/<int:profile_id>/block", methods=["POST"])
 @token_required
 @role_required("admin")
@@ -206,6 +116,7 @@ def block_customer(current_user, profile_id):
         log = ActivityLog(
             user_id=current_user.id,
             action=ActivityLogActions.CUSTOMER_BLOCK,
+            entity_id=profile.user.id,
             description=f"Blocked customer {profile.user.full_name}. Reason: {data['reason']}",
         )
         db.session.add(log)
@@ -230,12 +141,45 @@ def list_reported_reviews(current_user):
     try:
         params = customers_list_query_schema.load(request.args)
 
-        paginated = Review.query.filter_by(is_reported=True).paginate(
+        # Optimize query with joins to get related data
+        query = (
+            Review.query.join(ServiceRequest)
+            .join(CustomerProfile)
+            .join(User)
+            .filter(Review.is_reported)
+        )
+
+        paginated = query.paginate(
             page=params["page"], per_page=params["per_page"], error_out=False
         )
 
+        # Create flat review objects with necessary context
+        reviews = []
+        for review in paginated.items:
+            review_data = {
+                "id": review.id,
+                "rating": review.rating,
+                "comment": review.comment,
+                "created_at": review.created_at,
+                "service_request_id": review.service_request_id,
+                "is_reported": review.is_reported,
+                "report_reason": review.report_reason,
+                # Add customer context
+                "customer": {
+                    "id": review.service_request.customer.user.id,
+                    "username": review.service_request.customer.user.username,
+                    "full_name": review.service_request.customer.user.full_name,
+                },
+                # Add service context
+                "service": {
+                    "id": review.service_request.service.id,
+                    "name": review.service_request.service.name,
+                },
+            }
+            reviews.append(review_data)
+
         return APIResponse.success(
-            data=reviews_schema.dump(paginated.items),
+            data=reviews,
             message="Reported reviews retrieved successfully",
             pagination={
                 "total": paginated.total,
@@ -282,6 +226,7 @@ def handle_review_report(current_user, review_id):
         log = ActivityLog(
             user_id=current_user.id,
             action=action_type,
+            entity_id=review.id,
             description=f"{message} for service request {review.service_request_id}",
         )
         db.session.add(log)

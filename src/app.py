@@ -30,13 +30,16 @@ def create_app():
 
     # Register blueprints
     from src.routes.auth import auth_bp
+
     # from src.routes.service import service_bp
-    # from src.routes.admin import admin_bp
+    from src.routes.admin import admin_bp
+    from src.routes.user import user_bp
     # from src.routes.request import request_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(user_bp, url_prefix="/api/user")
     # app.register_blueprint(service_bp, url_prefix="/api/services")
-    # app.register_blueprint(admin_bp, url_prefix="/api/admin")
+    app.register_blueprint(admin_bp, url_prefix="/api/admin")
     # app.register_blueprint(request_bp, url_prefix="/api/requests")
 
     # Register error handler

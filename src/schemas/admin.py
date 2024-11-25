@@ -17,7 +17,6 @@ class CustomersListQuerySchema(Schema):
     """Schema for validating customer list query parameters"""
 
     active = fields.Bool(required=False)
-    pin_code = fields.Str(required=False)
     page = fields.Int(required=False, missing=1)
     per_page = fields.Int(required=False, missing=10)
 
