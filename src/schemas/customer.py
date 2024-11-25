@@ -1,16 +1,24 @@
 from marshmallow import fields, Schema
 
-from src.schemas.base import BaseUserSchema, BaseProfileUpdateSchema, BaseUserInputSchema
+from src.schemas.base import (
+    BaseUserSchema,
+    BaseProfileUpdateSchema,
+    BaseUserInputSchema,
+)
+
 
 class CustomerRegisterInputSchema(BaseUserInputSchema):
     pass
 
-class CustomerOutputSchema(BaseUserSchema):
-    """Customer output schema - includes all user fields"""
-
 
 class CustomerProfileUpdateSchema(BaseProfileUpdateSchema):
     """Schema for customer profile updates"""
+
+    pass
+
+
+class CustomerOutputSchema(BaseUserSchema):
+    """Customer output schema - includes all user fields"""
 
     pass
 

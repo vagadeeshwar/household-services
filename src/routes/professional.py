@@ -15,7 +15,7 @@ from src.models import (
 from src.constants import ActivityLogActions, USER_ROLE_PROFESSIONAL
 
 from src.schemas.professional import (
-    combine_professional_data,
+    professional_output_schema,
     professionals_list_query_schema,
     professional_register_schema,
 )
@@ -90,7 +90,7 @@ def register_professional():
         )
         user.set_password(data["password"])
         db.session.add(user)
-        db.session.flush()
+        db.session.flush()  # Get user.id
 
         profile = ProfessionalProfile(
             user_id=user.id,
@@ -110,10 +110,10 @@ def register_professional():
         db.session.add(log)
         db.session.commit()
 
-        response_data = combine_professional_data(user, profile)
-
+        # Query the user again to get the relationship loaded
+        user = User.query.get(user.id)
         return APIResponse.success(
-            data=response_data,
+            data=professional_output_schema.dump(user),
             message="Professional registered successfully. Account will be activated after verification.",
             status_code=HTTPStatus.CREATED,
         )
@@ -132,36 +132,35 @@ def register_professional():
 @token_required
 @role_required("admin", "customer")
 def list_professionals(current_user, profile_id=None):
-    """
-    List all professionals or get a specific professional by ID
-    Accessible by both admins and customers with role-specific behavior
-    """
     try:
         if profile_id is not None:
-            # Single professional retrieval
-            profile = (
-                ProfessionalProfile.query.join(User)
+            # Single professional retrieval - get the User object with joined profile
+            user = (
+                User.query.join(ProfessionalProfile)
                 .filter(ProfessionalProfile.id == profile_id)
                 .first_or_404()
             )
 
             # Check visibility based on role
             if current_user.role != "admin":
-                if not profile.is_verified or not profile.user.is_active:
+                if not user.professional_profile.is_verified or not user.is_active:
                     return APIResponse.error(
                         "Professional not found", HTTPStatus.NOT_FOUND, "NotFound"
                     )
 
-            prof_data = combine_professional_data(profile.user, profile)
+            prof_data = professional_output_schema.dump(user)
 
-            # For admin users requesting specific profile, include the verification document content
-            if current_user.role == "admin" and profile.verification_documents:
+            # For admin users, include verification document
+            if (
+                current_user.role == "admin"
+                and user.professional_profile.verification_documents
+            ):
                 try:
                     with open(
                         os.path.join(
                             current_app.root_path,
                             UPLOAD_FOLDER,
-                            profile.verification_documents,
+                            user.professional_profile.verification_documents,
                         ),
                         "rb",
                     ) as f:
@@ -190,7 +189,7 @@ def list_professionals(current_user, profile_id=None):
 
         # List all professionals
         params = professionals_list_query_schema.load(request.args)
-        query = ProfessionalProfile.query.join(User)
+        query = User.query.join(ProfessionalProfile)
 
         # Apply role-specific filters
         if current_user.role != "admin":
@@ -216,8 +215,8 @@ def list_professionals(current_user, profile_id=None):
         )
 
         professionals = []
-        for profile in paginated.items:
-            prof_data = combine_professional_data(profile.user, profile)
+        for user in paginated.items:
+            prof_data = professional_output_schema.dump(user)
             if current_user.role != "admin":
                 sensitive_fields = [
                     "verification_documents",
@@ -257,6 +256,7 @@ def verify_professional(current_user, profile_id):
     """Verify a professional's profile"""
     try:
         profile = ProfessionalProfile.query.get_or_404(profile_id)
+        user = User.query.get(profile.user_id)
 
         if profile.is_verified:
             return APIResponse.error(
@@ -266,19 +266,19 @@ def verify_professional(current_user, profile_id):
             )
 
         profile.is_verified = True
-        profile.user.is_active = True
+        user.is_active = True
 
         log = ActivityLog(
             user_id=current_user.id,
-            entity_id=profile.user.id,
+            entity_id=user.id,
             action=ActivityLogActions.PROFESSIONAL_VERIFY,
-            description=f"Verified professional profile for {profile.user.full_name}",
+            description=f"Verified professional profile for {user.full_name}",
         )
         db.session.add(log)
         db.session.commit()
 
         return APIResponse.success(
-            data=combine_professional_data(profile.user, profile),
+            data=professional_output_schema.dump(user),
             message="Professional verified successfully",
         )
     except Exception as e:

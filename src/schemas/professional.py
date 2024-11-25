@@ -39,31 +39,6 @@ class ProfessionalsListQuerySchema(Schema):
     per_page = fields.Int(required=False, missing=10)
 
 
-# Method to combine user and professional profile data
-def combine_professional_data(user, profile):
-    """Combine user and professional profile data into a single dict"""
-    data = {
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
-        "full_name": user.full_name,
-        "phone": user.phone,
-        "address": user.address,
-        "pin_code": user.pin_code,
-        "role": user.role,
-        "is_active": user.is_active,
-        "created_at": user.created_at,
-        "last_login": user.last_login,
-        "service_type_id": profile.service_type_id,
-        "experience_years": profile.experience_years,
-        "description": profile.description,
-        "is_verified": profile.is_verified,
-        "average_rating": profile.average_rating,
-        "verification_documents": profile.verification_documents,
-    }
-    return data
-
-
 professional_output_schema = ProfessionalOutputSchema()
 professional_profile_update_schema = ProfessionalProfileUpdateSchema()
 professionals_list_query_schema = ProfessionalsListQuerySchema()

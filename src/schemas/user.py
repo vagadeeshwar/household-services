@@ -1,6 +1,12 @@
 from marshmallow import fields, validates
 
-from src.schemas.base import BaseSchema
+from src.schemas.base import BaseSchema, BaseUserSchema
+
+
+class AdminAccountSchema(BaseUserSchema):
+    """Schema for admin account creation"""
+
+    pass
 
 
 class BlockUserSchema(BaseSchema):
@@ -22,6 +28,7 @@ class DeleteAccountInputSchema(BaseSchema):
     password = fields.Str(required=True)
 
 
+admin_output_schema = AdminAccountSchema()
 block_user_schema = BlockUserSchema()
 password_update_schema = PasswordUpdateInputSchema()
 delete_account_schema = DeleteAccountInputSchema()

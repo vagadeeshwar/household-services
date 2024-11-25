@@ -12,13 +12,14 @@ from src.models import (
 
 from src.constants import (
     USER_ROLE_PROFESSIONAL,
+    USER_ROLE_CUSTOMER,
     ActivityLogActions,
-    USER_ROLE_ADMIN,
 )
 
 from src.schemas.user import (
     password_update_schema,
     delete_account_schema,
+    admin_output_schema,
 )
 from src.schemas.customer import (
     customer_output_schema,
@@ -30,7 +31,7 @@ from src.schemas.professional import (
 )
 
 
-from src.utils.auth import token_required, APIResponse
+from src.utils.auth import token_required, APIResponse, role_required
 from src.utils.file import delete_verification_document
 
 user_bp = Blueprint("user", __name__)
@@ -44,8 +45,11 @@ def get_profile(current_user):
         if current_user.role == USER_ROLE_PROFESSIONAL:
             schema = professional_output_schema
             message = "Professional profile retrieved successfully"
-        else:
+        elif current_user.role == USER_ROLE_CUSTOMER:
             schema = customer_output_schema
+            message = f"{current_user.role.capitalize()} profile retrieved successfully"
+        else:
+            schema = admin_output_schema
             message = f"{current_user.role.capitalize()} profile retrieved successfully"
 
         return APIResponse.success(data=schema.dump(current_user), message=message)
@@ -59,6 +63,7 @@ def get_profile(current_user):
 
 @user_bp.route("/change-password", methods=["POST"])
 @token_required
+@role_required("customer", "professional")
 def change_password(current_user):
     """Change user's password"""
     try:
@@ -93,6 +98,7 @@ def change_password(current_user):
 
 @user_bp.route("/profile", methods=["PUT"])
 @token_required
+@role_required("customer", "professional")
 def update_profile(current_user):
     """Update user's profile information"""
     try:
@@ -146,15 +152,10 @@ def update_profile(current_user):
 
 @user_bp.route("/delete-account", methods=["DELETE"])
 @token_required
+@role_required("customer", "professional")
 def delete_account(current_user):
     """Hard delete user account"""
     try:
-        if current_user.role == USER_ROLE_ADMIN:
-            return APIResponse.error(
-                "Admin accounts cannot be deleted",
-                HTTPStatus.UNAUTHORIZED,
-                "DeletionError",
-            )
         data = delete_account_schema.load(request.get_json())
     except ValidationError as err:
         return APIResponse.error(str(err.messages))
