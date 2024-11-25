@@ -230,6 +230,7 @@ class ActivityLog(db.Model, TimestampMixin):
     user_id = db.Column(
         db.Integer, db.ForeignKey("users.id", ondelete="SET NULL", onupdate="CASCADE")
     )
+    entity_id = db.Column(db.Integer, nullable=True)
     action = db.Column(
         db.String(50),
         nullable=False,
