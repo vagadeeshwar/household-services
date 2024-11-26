@@ -1,4 +1,4 @@
-from marshmallow import fields, Schema, validate
+from marshmallow import fields, Schema, validate, post_dump
 
 from src.schemas.base import (
     BaseUserSchema,
@@ -22,12 +22,34 @@ class ProfessionalUpdateSchema(BaseProfileUpdateSchema):
 class ProfessionalOutputSchema(BaseUserSchema):
     """Professional output schema - includes all user fields plus professional-specific fields"""
 
-    service_type_id = fields.Int(required=True)
-    experience_years = fields.Int(required=True)
-    description = fields.Str(required=True)
-    is_verified = fields.Bool(dump_only=True)
-    average_rating = fields.Float(dump_only=True)
-    verification_documents = fields.Str(dump_only=True)
+    professional_id = fields.Int(attribute="professional_profile.id", dump_only=True)
+    service_type_id = fields.Int(attribute="professional_profile.service_type_id")
+    experience_years = fields.Int(attribute="professional_profile.experience_years")
+    description = fields.Str(attribute="professional_profile.description")
+    is_verified = fields.Bool(
+        attribute="professional_profile.is_verified", dump_only=True
+    )
+    average_rating = fields.Float(
+        attribute="professional_profile.average_rating", dump_only=True
+    )
+    verification_documents = fields.Str(
+        attribute="professional_profile.verification_documents", dump_only=True
+    )
+
+    @post_dump(pass_many=True)
+    def remove_sensitive_fields(self, data, many, **kwargs):
+        from flask import g
+
+        if not hasattr(g, "current_user") or g.current_user.role != "admin":
+            sensitive_fields = ["verification_documents", "created_at", "last_login"]
+            if many:
+                for item in data:
+                    for field in sensitive_fields:
+                        item.pop(field, None)
+            else:
+                for field in sensitive_fields:
+                    data.pop(field, None)
+        return data
 
 
 class ProfessionalQuerySchema(Schema):
@@ -40,6 +62,7 @@ class ProfessionalQuerySchema(Schema):
 
 
 professional_output_schema = ProfessionalOutputSchema()
+professionals_output_schema = ProfessionalOutputSchema(many=True)
 professional_update_schema = ProfessionalUpdateSchema()
 professional_query_schema = ProfessionalQuerySchema()
 professional_register_schema = ProfessionalRegisterSchema()

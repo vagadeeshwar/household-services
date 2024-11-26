@@ -24,10 +24,12 @@ from src.constants import (
 
 from src.schemas.professional import (
     professional_output_schema,
+    professionals_output_schema,
     professional_query_schema,
     professional_register_schema,
 )
 from src.schemas.user import block_user_schema
+from src.schemas.service import reviews_output_schema
 
 from src.utils.auth import token_required, role_required
 from src.utils.api import APIResponse
@@ -222,21 +224,8 @@ def list_professionals(current_user, profile_id=None):
             page=params["page"], per_page=params["per_page"], error_out=False
         )
 
-        professionals = []
-        for user in paginated.items:
-            prof_data = professional_output_schema.dump(user)
-            if current_user.role != "admin":
-                sensitive_fields = [
-                    "verification_documents",
-                    "created_at",
-                    "last_login",
-                ]
-                for field in sensitive_fields:
-                    prof_data.pop(field, None)
-            professionals.append(prof_data)
-
         return APIResponse.success(
-            data=professionals,
+            data=professionals_output_schema.dump(paginated.items),
             message="Professionals retrieved successfully",
             pagination={
                 "total": paginated.total,
@@ -247,6 +236,7 @@ def list_professionals(current_user, profile_id=None):
                 "has_prev": paginated.has_prev,
             },
         )
+
     except ValidationError as err:
         return APIResponse.error(str(err.messages))
     except Exception as e:
@@ -560,27 +550,8 @@ def get_professional_reviews(current_user):
                 f"Pagination error: {str(e)}", HTTPStatus.BAD_REQUEST, "PaginationError"
             )
 
-        # Format the reviews
-        reviews = []
-        for review in paginated.items:
-            review_data = {
-                "id": review.id,
-                "rating": review.rating,
-                "comment": review.comment,
-                "created_at": review.created_at,
-                "is_reported": review.is_reported,
-                "report_reason": review.report_reason,
-                "service_request": {
-                    "id": review.service_request.id,
-                    "date_of_completion": review.service_request.date_of_completion,
-                    "service_name": review.service_request.service.name,
-                    "customer_name": review.service_request.customer.user.full_name,
-                },
-            }
-            reviews.append(review_data)
-
         return APIResponse.success(
-            data=reviews,
+            data=reviews_output_schema.dump(paginated.items),
             message="Reviews retrieved successfully",
             pagination={
                 "total": paginated.total,

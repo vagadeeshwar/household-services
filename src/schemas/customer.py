@@ -20,7 +20,7 @@ class CustomerUpdateSchema(BaseProfileUpdateSchema):
 class CustomerOutputSchema(BaseUserSchema):
     """Customer output schema - includes all user fields"""
 
-    pass
+    customer_id = fields.Int(attribute="customer_profile.id", dump_only=True)
 
 
 class CustomerQuerySchema(Schema):
@@ -32,6 +32,7 @@ class CustomerQuerySchema(Schema):
 
 
 customer_output_schema = CustomerOutputSchema()
+customers_output_schema = CustomerOutputSchema(many=True)
 customer_update_schema = CustomerUpdateSchema()
 customer_query_schema = CustomerQuerySchema()
 customer_register_schema = CustomerRegisterSchema()

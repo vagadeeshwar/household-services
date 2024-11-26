@@ -17,6 +17,7 @@ from src.schemas.customer import (
     customer_query_schema,
     customer_register_schema,
     customer_output_schema,
+    customers_output_schema,
 )
 from src.schemas.user import block_user_schema
 
@@ -94,57 +95,31 @@ def list_customers(current_user, profile_id=None):
                 .first_or_404()
             )
 
-            customer_data = {
-                "id": profile.user.id,
-                "username": profile.user.username,
-                "email": profile.user.email,
-                "full_name": profile.user.full_name,
-                "phone": profile.user.phone,
-                "address": profile.user.address,
-                "pin_code": profile.user.pin_code,
-                "is_active": profile.user.is_active,
-                "created_at": profile.user.created_at,
-                "last_login": profile.user.last_login,
-                "profile_id": profile.id,
-            }
-
             return APIResponse.success(
-                data=customer_data,
+                data=customer_output_schema.dump(profile.user),  # Use the schema here
                 message="Customer retrieved successfully",
             )
 
         # List all customers
         params = customer_query_schema.load(request.args)
-        query = CustomerProfile.query.join(User)
+        query = User.query.join(CustomerProfile).filter(User.role == USER_ROLE_CUSTOMER)
 
         if params.get("active") is not None:
             query = query.filter(User.is_active == params["active"])
         if params.get("pin_code"):
             query = query.filter(User.pin_code == params["pin_code"])
-
-        paginated = query.paginate(
-            page=params["page"], per_page=params["per_page"], error_out=False
-        )
-
-        customers = []
-        for profile in paginated.items:
-            customer_data = {
-                "id": profile.user.id,
-                "username": profile.user.username,
-                "email": profile.user.email,
-                "full_name": profile.user.full_name,
-                "phone": profile.user.phone,
-                "address": profile.user.address,
-                "pin_code": profile.user.pin_code,
-                "is_active": profile.user.is_active,
-                "created_at": profile.user.created_at,
-                "last_login": profile.user.last_login,
-                "profile_id": profile.id,
-            }
-            customers.append(customer_data)
+        
+        try:
+            paginated = query.paginate(
+                page=params["page"], per_page=params["per_page"], error_out=False
+            )
+        except Exception as e:
+            return APIResponse.error(
+                f"Pagination error: {str(e)}", HTTPStatus.BAD_REQUEST, "PaginationError"
+            )
 
         return APIResponse.success(
-            data=customers,
+            data=customers_output_schema.dump(paginated.items),
             message="Customers retrieved successfully",
             pagination={
                 "total": paginated.total,
