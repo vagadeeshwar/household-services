@@ -16,7 +16,11 @@ from src.models import (
     Review,
 )
 
-from src.constants import ActivityLogActions, USER_ROLE_PROFESSIONAL
+from src.constants import (
+    ActivityLogActions,
+    USER_ROLE_PROFESSIONAL,
+    REQUEST_STATUS_ASSIGNED,
+)
 
 from src.schemas.professional import (
     professional_output_schema,
@@ -339,7 +343,7 @@ def update_verification_document(current_user):
         has_active_requests = (
             ServiceRequest.query.filter(
                 ServiceRequest.professional_id == current_user.professional_profile.id,
-                ServiceRequest.status.in_(["assigned", "in_progress"]),
+                ServiceRequest.status.in_([REQUEST_STATUS_ASSIGNED]),
             ).first()
             is not None
         )
@@ -374,6 +378,7 @@ def update_verification_document(current_user):
         current_user.professional_profile.is_verified = (
             False  # Reset verification status
         )
+        current_user.is_active = False
 
         log = ActivityLog(
             user_id=current_user.id,
@@ -391,6 +396,7 @@ def update_verification_document(current_user):
         # Clean up the newly uploaded file in case of error
         if "filename" in locals() and filename:
             delete_verification_document(filename)
+        db.session.rollback()  # Added rollback in case of error
         return APIResponse.error(
             f"Error updating document: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -414,7 +420,7 @@ def update_service_type(current_user):
         has_active_requests = (
             ServiceRequest.query.filter(
                 ServiceRequest.professional_id == current_user.professional_profile.id,
-                ServiceRequest.status.in_(["assigned", "in_progress"]),
+                ServiceRequest.status.in_([REQUEST_STATUS_ASSIGNED]),
             ).first()
             is not None
         )
@@ -447,10 +453,11 @@ def update_service_type(current_user):
         current_user.professional_profile.is_verified = (
             False  # Reset verification status
         )
+        current_user.is_active = False
 
         log = ActivityLog(
             user_id=current_user.id,
-            action=ActivityLogActions.PROFESSIONAL_PROFILE_UPDATE,
+            action=ActivityLogActions.PROFESSIONAL_SERVICE_UPDATE,
             entity_id=current_user.id,
             description=f"Updated service type for professional {current_user.username} from "
             f"{current_user.professional_profile.service_type.name} to {service.name}",
