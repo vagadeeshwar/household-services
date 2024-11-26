@@ -11,7 +11,7 @@ from src.constants import ActivityLogActions
 from src.schemas.service import (
     service_output_schema,
     service_input_schema,
-    services_list_query_schema,
+    service_query_schema,
     service_update_schema,
 )
 
@@ -95,7 +95,7 @@ def list_services(current_user, service_id=None):
             )
 
         # List services with filtering and pagination
-        params = services_list_query_schema.load(request.args)
+        params = service_query_schema.load(request.args)
         query = Service.query
 
         # Non-admin users can only see active services

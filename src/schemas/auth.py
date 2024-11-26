@@ -1,14 +1,14 @@
 from marshmallow import fields, Schema
 
 
-class LoginInputSchema(Schema):
+class LoginSchema(Schema):
     username = fields.Str(required=True)
     password = fields.Str(required=True)
 
 
-class TokenOutputSchema(Schema):
+class TokenSchema(Schema):
     token = fields.Str(required=True)
 
 
-login_schema = LoginInputSchema()
-token_schema = TokenOutputSchema()
+login_schema = LoginSchema()
+token_schema = TokenSchema()

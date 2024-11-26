@@ -7,13 +7,13 @@ from src.schemas.base import (
 )
 
 
-class ProfessionalRegisterInputSchema(BaseUserInputSchema):
+class ProfessionalRegisterSchema(BaseUserInputSchema):
     service_type_id = fields.Int(required=True)
     experience_years = fields.Int(required=True, validate=validate.Range(min=0, max=50))
     description = fields.Str(required=True, validate=validate.Length(min=10, max=1000))
 
 
-class ProfessionalProfileUpdateSchema(BaseProfileUpdateSchema):
+class ProfessionalUpdateSchema(BaseProfileUpdateSchema):
     """Schema for professional profile updates"""
 
     description = fields.Str(validate=validate.Length(min=10, max=1000))
@@ -30,7 +30,7 @@ class ProfessionalOutputSchema(BaseUserSchema):
     verification_documents = fields.Str(dump_only=True)
 
 
-class ProfessionalsListQuerySchema(Schema):
+class ProfessionalQuerySchema(Schema):
     """Schema for validating professional list query parameters"""
 
     verified = fields.Bool(required=False)
@@ -40,6 +40,6 @@ class ProfessionalsListQuerySchema(Schema):
 
 
 professional_output_schema = ProfessionalOutputSchema()
-professional_profile_update_schema = ProfessionalProfileUpdateSchema()
-professionals_list_query_schema = ProfessionalsListQuerySchema()
-professional_register_schema = ProfessionalRegisterInputSchema()
+professional_update_schema = ProfessionalUpdateSchema()
+professional_query_schema = ProfessionalQuerySchema()
+professional_register_schema = ProfessionalRegisterSchema()

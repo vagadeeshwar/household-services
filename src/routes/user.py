@@ -23,11 +23,11 @@ from src.schemas.user import (
 )
 from src.schemas.customer import (
     customer_output_schema,
-    customer_profile_update_schema,
+    customer_update_schema,
 )
 from src.schemas.professional import (
     professional_output_schema,
-    professional_profile_update_schema,
+    professional_update_schema,
 )
 
 
@@ -103,9 +103,9 @@ def update_profile(current_user):
     """Update user's profile information"""
     try:
         schema = (
-            professional_profile_update_schema
+            professional_update_schema
             if current_user.role == USER_ROLE_PROFESSIONAL
-            else customer_profile_update_schema
+            else customer_update_schema
         )
         data = schema.load(request.get_json())
     except ValidationError as err:

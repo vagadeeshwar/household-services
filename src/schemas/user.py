@@ -15,7 +15,7 @@ class BlockUserSchema(BaseSchema):
     reason = fields.Str(required=True, validate=lambda x: len(x.strip()) > 0)
 
 
-class PasswordUpdateInputSchema(BaseSchema):
+class PasswordUpdateSchema(BaseSchema):
     old_password = fields.Str(required=True)
     new_password = fields.Str(required=True)
 
@@ -24,11 +24,11 @@ class PasswordUpdateInputSchema(BaseSchema):
         self.validate_password(value)
 
 
-class DeleteAccountInputSchema(BaseSchema):
+class DeleteAccountSchema(BaseSchema):
     password = fields.Str(required=True)
 
 
 admin_output_schema = AdminAccountSchema()
 block_user_schema = BlockUserSchema()
-password_update_schema = PasswordUpdateInputSchema()
-delete_account_schema = DeleteAccountInputSchema()
+password_update_schema = PasswordUpdateSchema()
+delete_account_schema = DeleteAccountSchema()

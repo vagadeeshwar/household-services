@@ -14,7 +14,7 @@ from src.constants import ActivityLogActions, USER_ROLE_CUSTOMER
 
 
 from src.schemas.customer import (
-    customers_list_query_schema,
+    customer_query_schema,
     customer_register_schema,
     customer_output_schema,
 )
@@ -114,7 +114,7 @@ def list_customers(current_user, profile_id=None):
             )
 
         # List all customers
-        params = customers_list_query_schema.load(request.args)
+        params = customer_query_schema.load(request.args)
         query = CustomerProfile.query.join(User)
 
         if params.get("active") is not None:

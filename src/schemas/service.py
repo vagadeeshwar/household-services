@@ -34,7 +34,7 @@ class ServiceOutputSchema(Schema):
     updated_at = fields.DateTime(dump_only=True)
 
 
-class ServicesListQuerySchema(Schema):
+class ServiceQuerySchema(Schema):
     """Schema for validating service list query parameters"""
 
     is_active = fields.Bool(required=False)
@@ -46,4 +46,4 @@ class ServicesListQuerySchema(Schema):
 service_output_schema = ServiceOutputSchema()
 service_input_schema = ServiceInputSchema()
 service_update_schema = ServiceUpdateSchema()
-services_list_query_schema = ServicesListQuerySchema()
+service_query_schema = ServiceQuerySchema()

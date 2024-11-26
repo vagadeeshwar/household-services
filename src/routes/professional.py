@@ -24,7 +24,7 @@ from src.constants import (
 
 from src.schemas.professional import (
     professional_output_schema,
-    professionals_list_query_schema,
+    professional_query_schema,
     professional_register_schema,
 )
 from src.schemas.user import block_user_schema
@@ -196,7 +196,7 @@ def list_professionals(current_user, profile_id=None):
             )
 
         # List all professionals
-        params = professionals_list_query_schema.load(request.args)
+        params = professional_query_schema.load(request.args)
         query = User.query.join(ProfessionalProfile)
 
         # Apply role-specific filters

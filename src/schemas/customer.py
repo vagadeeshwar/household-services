@@ -7,11 +7,11 @@ from src.schemas.base import (
 )
 
 
-class CustomerRegisterInputSchema(BaseUserInputSchema):
+class CustomerRegisterSchema(BaseUserInputSchema):
     pass
 
 
-class CustomerProfileUpdateSchema(BaseProfileUpdateSchema):
+class CustomerUpdateSchema(BaseProfileUpdateSchema):
     """Schema for customer profile updates"""
 
     pass
@@ -23,7 +23,7 @@ class CustomerOutputSchema(BaseUserSchema):
     pass
 
 
-class CustomersListQuerySchema(Schema):
+class CustomerQuerySchema(Schema):
     """Schema for validating customer list query parameters"""
 
     active = fields.Bool(required=False)
@@ -32,6 +32,6 @@ class CustomersListQuerySchema(Schema):
 
 
 customer_output_schema = CustomerOutputSchema()
-customer_profile_update_schema = CustomerProfileUpdateSchema()
-customers_list_query_schema = CustomersListQuerySchema()
-customer_register_schema = CustomerRegisterInputSchema()
+customer_update_schema = CustomerUpdateSchema()
+customer_query_schema = CustomerQuerySchema()
+customer_register_schema = CustomerRegisterSchema()
