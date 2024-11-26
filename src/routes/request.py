@@ -1,7 +1,8 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, current_app
 from marshmallow import ValidationError
 from http import HTTPStatus
-from datetime import datetime
+from datetime import datetime, timedelta
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from src import db
 
@@ -10,6 +11,7 @@ from src.models import (
     CustomerProfile,
     ProfessionalProfile,
     Review,
+    Service,
     ActivityLog,
 )
 
@@ -31,43 +33,57 @@ from src.schemas.request import (
 
 from src.utils.auth import token_required, role_required
 from src.utils.api import APIResponse
+from src.utils.request import check_booking_availability
 
 request_bp = Blueprint("request", __name__)
+
+scheduler = BackgroundScheduler()
+scheduler.start()
 
 
 @request_bp.route("/requests", methods=["POST"])
 @token_required
 @role_required("customer")
 def create_service_request(current_user):
-    """Create a new service request"""
     try:
         data = service_request_input_schema.load(request.get_json())
-    except ValidationError as err:
-        return APIResponse.error(str(err.messages))
 
-    try:
-        # Get customer profile
-        customer_profile = CustomerProfile.query.filter_by(
-            user_id=current_user.id
-        ).first()
-        if not customer_profile:
-            return APIResponse.error(
-                "Customer profile not found", HTTPStatus.NOT_FOUND, "ProfileNotFound"
-            )
+        # Get service for duration info
+        service = Service.query.get_or_404(data["service_id"])
 
-        # Create service request
+        # Calculate estimated completion time
+        estimated_completion = data["preferred_time"] + timedelta(
+            minutes=service.duration_minutes
+        )
+
         service_request = ServiceRequest(
             service_id=data["service_id"],
-            customer_id=customer_profile.id,
+            customer_id=current_user.customer_profile.id,
             date_of_request=datetime.utcnow(),
-            preferred_time=data.get("preferred_time"),
+            preferred_time=data["preferred_time"],
             description=data.get("description"),
             status=REQUEST_STATUS_CREATED,
         )
+
         db.session.add(service_request)
         db.session.flush()
 
-        # Log activity
+        # Schedule status updates
+        scheduler.add_job(
+            update_request_status,
+            "date",
+            run_date=data["preferred_time"],
+            args=[service_request.id, REQUEST_STATUS_IN_PROGRESS],
+        )
+
+        scheduler.add_job(
+            update_request_status,
+            "date",
+            run_date=estimated_completion,
+            args=[service_request.id, REQUEST_STATUS_COMPLETED],
+        )
+
+        # Create activity log
         log = ActivityLog(
             user_id=current_user.id,
             action=ActivityLogActions.REQUEST_CREATE,
@@ -425,6 +441,18 @@ def accept_request(current_user, request_id):
                 "Service type mismatch", HTTPStatus.BAD_REQUEST, "ServiceMismatch"
             )
 
+        # Check for booking availability
+        is_available, error_message = check_booking_availability(
+            professional.id,
+            service_request.preferred_time,
+            service_request.service.duration_minutes,
+        )
+
+        if not is_available:
+            return APIResponse.error(
+                error_message, HTTPStatus.CONFLICT, "BookingOverlap"
+            )
+
         service_request.professional_id = professional.id
         service_request.status = REQUEST_STATUS_ASSIGNED
         service_request.date_of_assignment = datetime.utcnow()
@@ -561,6 +589,87 @@ def complete_service(current_user, request_id):
     except Exception as e:
         return APIResponse.error(
             f"Error completing service: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
+
+
+def update_request_status(request_id: int, new_status: str):
+    """Background job to update request status"""
+    with current_app.app_context():
+        try:
+            service_request = ServiceRequest.query.get(request_id)
+            if not service_request:
+                return
+
+            # Only update if current status matches expected flow
+            valid_transitions = {
+                REQUEST_STATUS_ASSIGNED: REQUEST_STATUS_IN_PROGRESS,
+                REQUEST_STATUS_IN_PROGRESS: REQUEST_STATUS_COMPLETED,
+            }
+
+            if (
+                service_request.status in valid_transitions
+                and valid_transitions[service_request.status] == new_status
+            ):
+                service_request.status = new_status
+
+                if new_status == REQUEST_STATUS_COMPLETED:
+                    service_request.date_of_completion = datetime.utcnow()
+
+                log = ActivityLog(
+                    action=f"request_{new_status.lower()}",
+                    entity_id=request_id,
+                    description=f"Request automatically moved to {new_status} status",
+                )
+                db.session.add(log)
+                db.session.commit()
+
+        except Exception as e:
+            current_app.logger.error(f"Error updating request status: {str(e)}")
+            db.session.rollback()
+
+
+@request_bp.route("/professionals/<int:professional_id>/availability", methods=["GET"])
+@token_required
+def check_professional_availability(current_user, professional_id):
+    """Check professional's availability for a given time slot"""
+    try:
+        # Validate input parameters
+        try:
+            preferred_time = datetime.fromisoformat(request.args.get("preferred_time"))
+        except (ValueError, TypeError):
+            return APIResponse.error(
+                "Invalid preferred_time format. Use ISO format (YYYY-MM-DDTHH:MM:SS)",
+                HTTPStatus.BAD_REQUEST,
+                "InvalidDateFormat",
+            )
+
+        # Get the service duration
+        service_id = request.args.get("service_id", type=int)
+        if not service_id:
+            return APIResponse.error(
+                "service_id is required", HTTPStatus.BAD_REQUEST, "MissingParameter"
+            )
+
+        service = Service.query.get_or_404(service_id)
+
+        # Check availability
+        is_available, error_message = check_booking_availability(
+            professional_id, preferred_time, service.duration_minutes
+        )
+
+        return APIResponse.success(
+            data={
+                "is_available": is_available,
+                "message": error_message
+                if not is_available
+                else "Time slot is available",
+            }
+        )
+    except Exception as e:
+        return APIResponse.error(
+            f"Error checking availability: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
         )
