@@ -19,7 +19,8 @@ from src.constants import (
     USER_ROLE_ADMIN,
     USER_ROLE_PROFESSIONAL,
     USER_ROLE_CUSTOMER,
-    REQUEST_STATUS_REQUESTED,
+    REQUEST_STATUS_CREATED,
+    REQUEST_STATUS_IN_PROGRESS,
     REQUEST_STATUS_ASSIGNED,
     REQUEST_STATUS_COMPLETED,
     ActivityLogActions,
@@ -240,9 +241,10 @@ def create_customers():
 
 def create_requests_and_reviews(services, professionals, customers):
     status_weights = [
-        (REQUEST_STATUS_COMPLETED, 0.4),
+        (REQUEST_STATUS_IN_PROGRESS, 0.2),
+        (REQUEST_STATUS_COMPLETED, 0.2),
         (REQUEST_STATUS_ASSIGNED, 0.3),
-        (REQUEST_STATUS_REQUESTED, 0.3),
+        (REQUEST_STATUS_CREATED, 0.3),
     ]
 
     for customer in customers:
@@ -261,7 +263,7 @@ def create_requests_and_reviews(services, professionals, customers):
             request_date = base_date
             assignment_date = (
                 base_date + timedelta(hours=2)
-                if status != REQUEST_STATUS_REQUESTED
+                if status != REQUEST_STATUS_CREATED
                 else None
             )
             completion_date = (
@@ -274,7 +276,7 @@ def create_requests_and_reviews(services, professionals, customers):
                 service_id=service.id,
                 customer_id=customer.id,
                 professional_id=professional.id
-                if status != REQUEST_STATUS_REQUESTED
+                if status != REQUEST_STATUS_CREATED
                 else None,
                 date_of_request=request_date,
                 preferred_time=f"{random.randint(9, 17)}:00",  # Business hours

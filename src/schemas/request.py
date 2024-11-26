@@ -1,7 +1,9 @@
 from marshmallow import fields, validate, Schema
-from .base import BaseSchema
-from .service import ServiceOutputSchema
-from .user import CustomerOutputSchema, ProfessionalOutputSchema
+
+from src.schemas.base import BaseSchema
+from src.schemas.service import ServiceOutputSchema
+from src.schemas.customer import CustomerOutputSchema
+from src.schemas.professional import ProfessionalOutputSchema
 
 
 class ServiceRequestInputSchema(BaseSchema):
@@ -32,14 +34,19 @@ class ReviewInputSchema(BaseSchema):
 
 
 class ReviewOutputSchema(Schema):
+    """Schema for review output data"""
+
     id = fields.Int(required=True)
     rating = fields.Int(required=True)
     comment = fields.Str(allow_none=True)
     created_at = fields.DateTime(required=True)
-    service_request_id = fields.Int(required=True)
+    is_reported = fields.Bool(required=True)
+    report_reason = fields.Str(allow_none=True)
+    service_request = fields.Nested(ServiceOutputSchema)
 
 
-service_request_schema = ServiceRequestOutputSchema()
-service_requests_schema = ServiceRequestOutputSchema(many=True)
-review_schema = ReviewOutputSchema()
-reviews_schema = ReviewOutputSchema(many=True)
+service_request_input_schema = ServiceRequestInputSchema()
+service_request_output_schema = ServiceRequestOutputSchema()
+service_requests_output_schema = ServiceRequestOutputSchema(many=True)
+review_output_schema = ReviewOutputSchema()
+reviews_output_schema = ReviewOutputSchema(many=True)

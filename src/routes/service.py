@@ -10,6 +10,7 @@ from src.constants import ActivityLogActions
 
 from src.schemas.service import (
     service_output_schema,
+    services_output_schema,
     service_input_schema,
     service_query_schema,
     service_update_schema,
@@ -109,14 +110,9 @@ def list_services(current_user, service_id=None):
             page=params["page"], per_page=params["per_page"], error_out=False
         )
 
-        services = []
-
-        for service in paginated.items:
-            service_data = service_output_schema.dump(service)
-            services.append(service_data)
 
         return APIResponse.success(
-            data=services,
+            data=services_output_schema.dump(paginated.items),
             message="Services retrieved successfully",
             pagination={
                 "total": paginated.total,

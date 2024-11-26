@@ -1,4 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request
+from marshmallow import ValidationError
+from http import HTTPStatus
+from datetime import datetime
+
+from src import db
+
 from src.models import (
     ServiceRequest,
     CustomerProfile,
@@ -6,323 +12,555 @@ from src.models import (
     Review,
     ActivityLog,
 )
-from src.schemas import service_request_schema, service_requests_schema, review_schema
-from src.utils.auth import token_required, role_required, APIError
-from src import db
-from datetime import datetime
+
+from src.constants import (
+    ActivityLogActions,
+    REQUEST_STATUS_CREATED,
+    REQUEST_STATUS_ASSIGNED,
+    REQUEST_STATUS_COMPLETED,
+    REQUEST_STATUS_IN_PROGRESS,
+)
+
+from src.schemas.request import (
+    service_request_input_schema,
+    service_request_output_schema,
+    service_requests_output_schema,
+    review_output_schema,
+    ReviewInputSchema,
+)
+
+from src.utils.auth import token_required, role_required
+from src.utils.api import APIResponse
 
 request_bp = Blueprint("request", __name__)
 
 
-# Customer endpoints
-@request_bp.route("/", methods=["POST"])
+@request_bp.route("/requests", methods=["POST"])
 @token_required
 @role_required("customer")
 def create_service_request(current_user):
     """Create a new service request"""
-    data = request.get_json()
+    try:
+        data = service_request_input_schema.load(request.get_json())
+    except ValidationError as err:
+        return APIResponse.error(str(err.messages))
 
-    # Get customer profile
-    customer_profile = CustomerProfile.query.filter_by(user_id=current_user.id).first()
-    if not customer_profile:
-        raise APIError("Customer profile not found", 404)
+    try:
+        # Get customer profile
+        customer_profile = CustomerProfile.query.filter_by(
+            user_id=current_user.id
+        ).first()
+        if not customer_profile:
+            return APIResponse.error(
+                "Customer profile not found", HTTPStatus.NOT_FOUND, "ProfileNotFound"
+            )
 
-    # Prepare request data
-    request_data = {
-        "service_id": data.get("service_id"),
-        "customer_id": customer_profile.id,
-        "date_of_request": datetime.fromisoformat(data.get("date_of_request")),
-        "preferred_time": data.get("preferred_time"),
-        "address": data.get("address", customer_profile.address),
-        "pin_code": data.get("pin_code", customer_profile.pin_code),
-        "description": data.get("description"),
-        "status": "requested",
-    }
+        # Create service request
+        service_request = ServiceRequest(
+            service_id=data["service_id"],
+            customer_id=customer_profile.id,
+            date_of_request=datetime.utcnow(),
+            preferred_time=data.get("preferred_time"),
+            description=data.get("description"),
+            status=REQUEST_STATUS_CREATED,
+        )
+        db.session.add(service_request)
+        db.session.flush()
 
-    errors = service_request_schema.validate(request_data)
-    if errors:
-        raise APIError(f"Validation error: {errors}", 400)
+        # Log activity
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=ActivityLogActions.REQUEST_CREATE,
+            entity_id=service_request.id,
+            description=f"Created service request for service {service_request.service_id}",
+        )
+        db.session.add(log)
+        db.session.commit()
 
-    service_request = ServiceRequest(**request_data)
-    db.session.add(service_request)
-
-    # Log activity
-    log = ActivityLog(
-        user_id=current_user.id,
-        action="create_service_request",
-        entity_type="service_request",
-        entity_id=service_request.id,
-        description=f"Created service request for service {service_request.service_id}",
-    )
-    db.session.add(log)
-
-    db.session.commit()
-
-    return jsonify(
-        {
-            "message": "Service request created successfully",
-            "service_request": service_request_schema.dump(service_request),
-        }
-    ), 201
+        return APIResponse.success(
+            data=service_request_output_schema.dump(service_request),
+            message="Service request created successfully",
+            status_code=HTTPStatus.CREATED,
+        )
+    except Exception as e:
+        return APIResponse.error(
+            f"Error creating service request: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
 
-@request_bp.route("/my-requests", methods=["GET"])
+@request_bp.route("/requests/customer", methods=["GET"])
 @token_required
 @role_required("customer")
-def list_my_requests(current_user):
+def list_customer_requests(current_user):
     """List all service requests for the current customer"""
-    customer_profile = CustomerProfile.query.filter_by(user_id=current_user.id).first()
-    if not customer_profile:
-        raise APIError("Customer profile not found", 404)
+    try:
+        customer_profile = CustomerProfile.query.filter_by(
+            user_id=current_user.id
+        ).first()
+        if not customer_profile:
+            return APIResponse.error(
+                "Customer profile not found", HTTPStatus.NOT_FOUND, "ProfileNotFound"
+            )
 
-    status = request.args.get("status")
-    query = ServiceRequest.query.filter_by(customer_id=customer_profile.id)
+        # Get query parameters
+        status = request.args.get("status")
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
 
-    if status:
-        query = query.filter_by(status=status)
+        # Build query
+        query = ServiceRequest.query.filter_by(customer_id=customer_profile.id)
+        if status:
+            query = query.filter_by(status=status)
 
-    requests = query.order_by(ServiceRequest.date_of_request.desc()).all()
-    return jsonify(service_requests_schema.dump(requests)), 200
+        # Apply pagination
+        try:
+            paginated = query.order_by(ServiceRequest.date_of_request.desc()).paginate(
+                page=page, per_page=per_page, error_out=False
+            )
+        except Exception as e:
+            return APIResponse.error(
+                f"Pagination error: {str(e)}", HTTPStatus.BAD_REQUEST, "PaginationError"
+            )
+
+        return APIResponse.success(
+            data=service_requests_output_schema.dump(paginated.items),
+            message="Requests retrieved successfully",
+            pagination={
+                "total": paginated.total,
+                "pages": paginated.pages,
+                "current_page": paginated.page,
+                "per_page": paginated.per_page,
+                "has_next": paginated.has_next,
+                "has_prev": paginated.has_prev,
+            },
+        )
+    except Exception as e:
+        return APIResponse.error(
+            f"Error retrieving requests: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
 
-@request_bp.route("/<int:request_id>/cancel", methods=["POST"])
+@request_bp.route("/requests/<int:request_id>/cancel", methods=["POST"])
 @token_required
 @role_required("customer")
 def cancel_request(current_user, request_id):
     """Cancel a service request"""
-    customer_profile = CustomerProfile.query.filter_by(user_id=current_user.id).first()
-    service_request = ServiceRequest.query.get_or_404(request_id)
+    try:
+        customer_profile = CustomerProfile.query.filter_by(
+            user_id=current_user.id
+        ).first()
+        if not customer_profile:
+            return APIResponse.error(
+                "Customer profile not found", HTTPStatus.NOT_FOUND, "ProfileNotFound"
+            )
 
-    if service_request.customer_id != customer_profile.id:
-        raise APIError("Unauthorized access", 403)
+        service_request = ServiceRequest.query.get_or_404(request_id)
 
-    if service_request.status not in ["requested", "assigned"]:
-        raise APIError("Cannot cancel request in current status", 400)
+        if service_request.customer_id != customer_profile.id:
+            return APIResponse.error(
+                "Unauthorized access", HTTPStatus.FORBIDDEN, "UnauthorizedAccess"
+            )
 
-    service_request.status = "cancelled"
+        if service_request.status not in [
+            REQUEST_STATUS_CREATED,
+            REQUEST_STATUS_ASSIGNED,
+        ]:
+            return APIResponse.error(
+                "Cannot cancel request in current status",
+                HTTPStatus.BAD_REQUEST,
+                "InvalidStatus",
+            )
 
-    # Log activity
-    log = ActivityLog(
-        user_id=current_user.id,
-        action="cancel_service_request",
-        entity_type="service_request",
-        entity_id=request_id,
-        description=f"Cancelled service request {request_id}",
-    )
-    db.session.add(log)
+        service_request.status = "cancelled"
 
-    db.session.commit()
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=ActivityLogActions.REQUEST_CANCEL,
+            entity_id=request_id,
+            description=f"Cancelled service request {request_id}",
+        )
+        db.session.add(log)
+        db.session.commit()
 
-    return jsonify({"message": "Service request cancelled successfully"}), 200
+        return APIResponse.success(message="Service request cancelled successfully")
+    except Exception as e:
+        return APIResponse.error(
+            f"Error cancelling request: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
 
-@request_bp.route("/<int:request_id>/review", methods=["POST"])
+@request_bp.route("/requests/<int:request_id>/review", methods=["POST"])
 @token_required
 @role_required("customer")
 def submit_review(current_user, request_id):
     """Submit a review for a completed service request"""
-    customer_profile = CustomerProfile.query.filter_by(user_id=current_user.id).first()
-    service_request = ServiceRequest.query.get_or_404(request_id)
+    try:
+        data = ReviewInputSchema().load(request.get_json())
+    except ValidationError as err:
+        return APIResponse.error(str(err.messages))
 
-    if service_request.customer_id != customer_profile.id:
-        raise APIError("Unauthorized access", 403)
+    try:
+        customer_profile = CustomerProfile.query.filter_by(
+            user_id=current_user.id
+        ).first()
+        if not customer_profile:
+            return APIResponse.error(
+                "Customer profile not found", HTTPStatus.NOT_FOUND, "ProfileNotFound"
+            )
 
-    if service_request.status != "completed":
-        raise APIError("Can only review completed services", 400)
+        service_request = ServiceRequest.query.get_or_404(request_id)
 
-    if Review.query.filter_by(service_request_id=request_id).first():
-        raise APIError("Review already exists for this service request", 400)
+        if service_request.customer_id != customer_profile.id:
+            return APIResponse.error(
+                "Unauthorized access", HTTPStatus.FORBIDDEN, "UnauthorizedAccess"
+            )
 
-    data = request.get_json()
-    review_data = {
-        "service_request_id": request_id,
-        "rating": data.get("rating"),
-        "comment": data.get("comment"),
-    }
+        if service_request.status != REQUEST_STATUS_COMPLETED:
+            return APIResponse.error(
+                "Can only review completed services",
+                HTTPStatus.BAD_REQUEST,
+                "InvalidStatus",
+            )
 
-    errors = review_schema.validate(review_data)
-    if errors:
-        raise APIError(f"Validation error: {errors}", 400)
+        if Review.query.filter_by(service_request_id=request_id).first():
+            return APIResponse.error(
+                "Review already exists for this service request",
+                HTTPStatus.CONFLICT,
+                "DuplicateReview",
+            )
 
-    review = Review(**review_data)
-    db.session.add(review)
+        review = Review(
+            service_request_id=request_id,
+            rating=data["rating"],
+            comment=data.get("comment"),
+        )
+        db.session.add(review)
 
-    # Update professional's average rating
-    professional = service_request.professional
-    all_reviews = (
-        Review.query.join(ServiceRequest)
-        .filter(ServiceRequest.professional_id == professional.id)
-        .all()
-    )
-    total_ratings = sum(r.rating for r in all_reviews) + review.rating
-    professional.average_rating = total_ratings / (len(all_reviews) + 1)
+        # Update professional's average rating
+        professional = service_request.professional
+        reviews = (
+            Review.query.join(ServiceRequest)
+            .filter(ServiceRequest.professional_id == professional.id)
+            .all()
+        )
+        total_ratings = sum(r.rating for r in reviews) + review.rating
+        professional.average_rating = round(total_ratings / (len(reviews) + 1), 1)
 
-    # Mark request as closed
-    service_request.status = "closed"
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=ActivityLogActions.REVIEW_SUBMIT,
+            entity_id=review.id,
+            description=f"Submitted review for service request {request_id}",
+        )
+        db.session.add(log)
+        db.session.commit()
 
-    # Log activity
-    log = ActivityLog(
-        user_id=current_user.id,
-        action="submit_review",
-        entity_type="review",
-        entity_id=review.id,
-        description=f"Submitted review for service request {request_id}",
-    )
-    db.session.add(log)
-
-    db.session.commit()
-
-    return jsonify(
-        {
-            "message": "Review submitted successfully",
-            "review": review_schema.dump(review),
-        }
-    ), 201
+        return APIResponse.success(
+            data=review_output_schema.dump(review),
+            message="Review submitted successfully",
+            status_code=HTTPStatus.CREATED,
+        )
+    except Exception as e:
+        return APIResponse.error(
+            f"Error submitting review: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
 
 # Professional endpoints
-@request_bp.route("/available", methods=["GET"])
+@request_bp.route("/requests/available", methods=["GET"])
 @token_required
 @role_required("professional")
 def list_available_requests(current_user):
     """List service requests available for assignment"""
-    professional = ProfessionalProfile.query.filter_by(user_id=current_user.id).first()
-    if not professional:
-        raise APIError("Professional profile not found", 404)
+    try:
+        professional = ProfessionalProfile.query.filter_by(
+            user_id=current_user.id
+        ).first()
+        if not professional:
+            return APIResponse.error(
+                "Professional profile not found",
+                HTTPStatus.NOT_FOUND,
+                "ProfileNotFound",
+            )
 
-    if not professional.is_verified:
-        raise APIError("Account not verified yet", 403)
+        if not professional.is_verified:
+            return APIResponse.error(
+                "Account not verified yet", HTTPStatus.FORBIDDEN, "UnverifiedAccount"
+            )
 
-    requests = (
-        ServiceRequest.query.filter_by(
-            service_id=professional.service_type_id, status="requested"
+        # Get pagination parameters
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+
+        # Build query
+        query = ServiceRequest.query.filter_by(
+            service_id=professional.service_type_id,
+            status=REQUEST_STATUS_CREATED,
+        ).order_by(ServiceRequest.date_of_request.asc())
+
+        # Apply pagination
+        try:
+            paginated = query.paginate(page=page, per_page=per_page, error_out=False)
+        except Exception as e:
+            return APIResponse.error(
+                f"Pagination error: {str(e)}", HTTPStatus.BAD_REQUEST, "PaginationError"
+            )
+
+        return APIResponse.success(
+            data=service_requests_output_schema.dump(paginated.items),
+            message="Available requests retrieved successfully",
+            pagination={
+                "total": paginated.total,
+                "pages": paginated.pages,
+                "current_page": paginated.page,
+                "per_page": paginated.per_page,
+                "has_next": paginated.has_next,
+                "has_prev": paginated.has_prev,
+            },
         )
-        .order_by(ServiceRequest.date_of_request.asc())
-        .all()
-    )
+    except Exception as e:
+        return APIResponse.error(
+            f"Error retrieving available requests: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
-    return jsonify(service_requests_schema.dump(requests)), 200
 
-
-@request_bp.route("/my-assignments", methods=["GET"])
+@request_bp.route("/requests/professional", methods=["GET"])
 @token_required
 @role_required("professional")
-def list_my_assignments(current_user):
+def list_professional_assignments(current_user):
     """List all assigned service requests for the professional"""
-    professional = ProfessionalProfile.query.filter_by(user_id=current_user.id).first()
-    if not professional:
-        raise APIError("Professional profile not found", 404)
+    try:
+        professional = ProfessionalProfile.query.filter_by(
+            user_id=current_user.id
+        ).first()
+        if not professional:
+            return APIResponse.error(
+                "Professional profile not found",
+                HTTPStatus.NOT_FOUND,
+                "ProfileNotFound",
+            )
 
-    status = request.args.get("status")
-    query = ServiceRequest.query.filter_by(professional_id=professional.id)
+        # Get query parameters
+        status = request.args.get("status")
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
 
-    if status:
-        query = query.filter_by(status=status)
+        # Build query
+        query = ServiceRequest.query.filter_by(professional_id=professional.id)
+        if status:
+            query = query.filter_by(status=status)
 
-    requests = query.order_by(ServiceRequest.date_of_request.desc()).all()
-    return jsonify(service_requests_schema.dump(requests)), 200
+        # Apply pagination
+        try:
+            paginated = query.order_by(ServiceRequest.date_of_request.desc()).paginate(
+                page=page, per_page=per_page, error_out=False
+            )
+        except Exception as e:
+            return APIResponse.error(
+                f"Pagination error: {str(e)}", HTTPStatus.BAD_REQUEST, "PaginationError"
+            )
+
+        return APIResponse.success(
+            data=service_requests_output_schema.dump(paginated.items),
+            message="Assignments retrieved successfully",
+            pagination={
+                "total": paginated.total,
+                "pages": paginated.pages,
+                "current_page": paginated.page,
+                "per_page": paginated.per_page,
+                "has_next": paginated.has_next,
+                "has_prev": paginated.has_prev,
+            },
+        )
+    except Exception as e:
+        return APIResponse.error(
+            f"Error retrieving assignments: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
 
-@request_bp.route("/<int:request_id>/accept", methods=["POST"])
+@request_bp.route("/requests/<int:request_id>/accept", methods=["POST"])
 @token_required
 @role_required("professional")
 def accept_request(current_user, request_id):
     """Accept a service request"""
-    professional = ProfessionalProfile.query.filter_by(user_id=current_user.id).first()
-    if not professional or not professional.is_verified:
-        raise APIError("Unauthorized or unverified professional", 403)
+    try:
+        professional = ProfessionalProfile.query.filter_by(
+            user_id=current_user.id
+        ).first()
+        if not professional:
+            return APIResponse.error(
+                "Professional profile not found",
+                HTTPStatus.NOT_FOUND,
+                "ProfileNotFound",
+            )
 
-    service_request = ServiceRequest.query.get_or_404(request_id)
+        if not professional.is_verified:
+            return APIResponse.error(
+                "Account not verified yet", HTTPStatus.FORBIDDEN, "UnverifiedAccount"
+            )
 
-    if service_request.status != "requested":
-        raise APIError("Request is not available for acceptance", 400)
+        service_request = ServiceRequest.query.get_or_404(request_id)
 
-    if service_request.service_id != professional.service_type_id:
-        raise APIError("Service type mismatch", 400)
+        if service_request.status != REQUEST_STATUS_CREATED:
+            return APIResponse.error(
+                "Request is not available for acceptance",
+                HTTPStatus.BAD_REQUEST,
+                "InvalidStatus",
+            )
 
-    service_request.professional_id = professional.id
-    service_request.status = "assigned"
-    service_request.date_of_assignment = datetime.utcnow()
+        if service_request.service_id != professional.service_type_id:
+            return APIResponse.error(
+                "Service type mismatch", HTTPStatus.BAD_REQUEST, "ServiceMismatch"
+            )
 
-    # Log activity
-    log = ActivityLog(
-        user_id=current_user.id,
-        action="accept_service_request",
-        entity_type="service_request",
-        entity_id=request_id,
-        description=f"Accepted service request {request_id}",
-    )
-    db.session.add(log)
+        service_request.professional_id = professional.id
+        service_request.status = REQUEST_STATUS_ASSIGNED
+        service_request.date_of_assignment = datetime.utcnow()
 
-    db.session.commit()
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=ActivityLogActions.REQUEST_ASSIGN,
+            entity_id=request_id,
+            description=f"Accepted service request {request_id}",
+        )
+        db.session.add(log)
+        db.session.commit()
 
-    return jsonify(
-        {
-            "message": "Service request accepted successfully",
-            "service_request": service_request_schema.dump(service_request),
-        }
-    ), 200
+        return APIResponse.success(
+            data=service_request_output_schema.dump(service_request),
+            message="Service request accepted successfully",
+        )
+    except Exception as e:
+        return APIResponse.error(
+            f"Error accepting request: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
 
-@request_bp.route("/<int:request_id>/start", methods=["POST"])
+@request_bp.route("/requests/<int:request_id>/start", methods=["POST"])
 @token_required
 @role_required("professional")
 def start_service(current_user, request_id):
     """Mark a service request as started"""
-    professional = ProfessionalProfile.query.filter_by(user_id=current_user.id).first()
-    service_request = ServiceRequest.query.get_or_404(request_id)
+    try:
+        professional = ProfessionalProfile.query.filter_by(
+            user_id=current_user.id
+        ).first()
+        if not professional:
+            return APIResponse.error(
+                "Professional profile not found",
+                HTTPStatus.NOT_FOUND,
+                "ProfileNotFound",
+            )
 
-    if service_request.professional_id != professional.id:
-        raise APIError("Unauthorized access", 403)
+        service_request = ServiceRequest.query.get_or_404(request_id)
 
-    if service_request.status != "assigned":
-        raise APIError("Cannot start service in current status", 400)
+        if service_request.professional_id != professional.id:
+            return APIResponse.error(
+                "Unauthorized access", HTTPStatus.FORBIDDEN, "UnauthorizedAccess"
+            )
 
-    service_request.status = "in_progress"
+        if service_request.status != REQUEST_STATUS_ASSIGNED:
+            return APIResponse.error(
+                "Cannot start service in current status",
+                HTTPStatus.BAD_REQUEST,
+                "InvalidStatus",
+            )
 
-    # Log activity
-    log = ActivityLog(
-        user_id=current_user.id,
-        action="start_service",
-        entity_type="service_request",
-        entity_id=request_id,
-        description=f"Started service for request {request_id}",
-    )
-    db.session.add(log)
+        service_request.status = "in_progress"
 
-    db.session.commit()
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=ActivityLogActions.REQUEST_START,
+            entity_id=request_id,
+            description=f"Started service for request {request_id}",
+        )
+        db.session.add(log)
+        db.session.commit()
 
-    return jsonify({"message": "Service started successfully"}), 200
+        return APIResponse.success(
+            data=service_request_output_schema.dump(service_request),
+            message="Service started successfully",
+        )
+    except Exception as e:
+        return APIResponse.error(
+            f"Error starting service: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
 
 
-@request_bp.route("/<int:request_id>/complete", methods=["POST"])
+@request_bp.route("/requests/<int:request_id>/complete", methods=["POST"])
 @token_required
 @role_required("professional")
 def complete_service(current_user, request_id):
     """Mark a service request as completed"""
-    professional = ProfessionalProfile.query.filter_by(user_id=current_user.id).first()
-    service_request = ServiceRequest.query.get_or_404(request_id)
+    try:
+        professional = ProfessionalProfile.query.filter_by(
+            user_id=current_user.id
+        ).first()
+        if not professional:
+            return APIResponse.error(
+                "Professional profile not found",
+                HTTPStatus.NOT_FOUND,
+                "ProfileNotFound",
+            )
 
-    if service_request.professional_id != professional.id:
-        raise APIError("Unauthorized access", 403)
+        service_request = ServiceRequest.query.get_or_404(request_id)
 
-    if service_request.status != "in_progress":
-        raise APIError("Cannot complete service in current status", 400)
+        if service_request.professional_id != professional.id:
+            return APIResponse.error(
+                "Unauthorized access", HTTPStatus.FORBIDDEN, "UnauthorizedAccess"
+            )
 
-    service_request.status = "completed"
-    service_request.date_of_completion = datetime.utcnow()
-    service_request.remarks = request.json.get("remarks")
+        if service_request.status != "in_progress":
+            return APIResponse.error(
+                "Cannot complete service in current status",
+                HTTPStatus.BAD_REQUEST,
+                "InvalidStatus",
+            )
 
-    # Log activity
-    log = ActivityLog(
-        user_id=current_user.id,
-        action="complete_service",
-        entity_type="service_request",
-        entity_id=request_id,
-        description=f"Completed service for request {request_id}",
-    )
-    db.session.add(log)
+        remarks = request.get_json().get("remarks")
+        if not remarks:
+            return APIResponse.error(
+                "Remarks are required for completion",
+                HTTPStatus.BAD_REQUEST,
+                "MissingRemarks",
+            )
 
-    db.session.commit()
+        service_request.status = REQUEST_STATUS_COMPLETED
+        service_request.date_of_completion = datetime.utcnow()
+        service_request.remarks = remarks
 
-    return jsonify({"message": "Service marked as completed successfully"}), 200
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=ActivityLogActions.REQUEST_COMPLETE,
+            entity_id=request_id,
+            description=f"Completed service for request {request_id}",
+        )
+        db.session.add(log)
+        db.session.commit()
+
+        return APIResponse.success(
+            data=service_request_output_schema.dump(service_request),
+            message="Service marked as completed successfully",
+        )
+    except Exception as e:
+        return APIResponse.error(
+            f"Error completing service: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )

@@ -20,6 +20,7 @@ from src.constants import (
     ActivityLogActions,
     USER_ROLE_PROFESSIONAL,
     REQUEST_STATUS_ASSIGNED,
+    REQUEST_STATUS_IN_PROGRESS,
 )
 
 from src.schemas.professional import (
@@ -29,7 +30,7 @@ from src.schemas.professional import (
     professional_register_schema,
 )
 from src.schemas.user import block_user_schema
-from src.schemas.service import reviews_output_schema
+from src.schemas.request import reviews_output_schema
 
 from src.utils.auth import token_required, role_required
 from src.utils.api import APIResponse
@@ -333,7 +334,9 @@ def update_verification_document(current_user):
         has_active_requests = (
             ServiceRequest.query.filter(
                 ServiceRequest.professional_id == current_user.professional_profile.id,
-                ServiceRequest.status.in_([REQUEST_STATUS_ASSIGNED]),
+                ServiceRequest.status.in_(
+                    [REQUEST_STATUS_ASSIGNED, REQUEST_STATUS_IN_PROGRESS]
+                ),
             ).first()
             is not None
         )
@@ -410,7 +413,9 @@ def update_service_type(current_user):
         has_active_requests = (
             ServiceRequest.query.filter(
                 ServiceRequest.professional_id == current_user.professional_profile.id,
-                ServiceRequest.status.in_([REQUEST_STATUS_ASSIGNED]),
+                ServiceRequest.status.in_(
+                    [REQUEST_STATUS_ASSIGNED, REQUEST_STATUS_IN_PROGRESS]
+                ),
             ).first()
             is not None
         )

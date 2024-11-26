@@ -42,24 +42,9 @@ class ServiceQuerySchema(Schema):
     per_page = fields.Int(required=False, missing=10)
 
 
-class ReviewOutputSchema(Schema):
-    """Schema for review output data"""
-
-    id = fields.Int(required=True)
-    rating = fields.Int(required=True)
-    comment = fields.Str(allow_none=True)
-    created_at = fields.DateTime(required=True)
-    is_reported = fields.Bool(required=True)
-    report_reason = fields.Str(allow_none=True)
-    service_request = fields.Nested(ServiceOutputSchema)
-
-
 # Initialize schemas
 service_output_schema = ServiceOutputSchema()
 services_output_schema = ServiceOutputSchema(many=True)
 service_input_schema = ServiceInputSchema()
 service_update_schema = ServiceUpdateSchema()
 service_query_schema = ServiceQuerySchema()
-
-review_output_schema = ReviewOutputSchema()
-reviews_output_schema = ReviewOutputSchema(many=True)
