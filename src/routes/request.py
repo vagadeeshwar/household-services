@@ -18,7 +18,7 @@ from src.constants import (
     REQUEST_STATUS_CREATED,
     REQUEST_STATUS_ASSIGNED,
     REQUEST_STATUS_COMPLETED,
-    REQUEST_STATUS_IN_PROGRESS,
+    REQUEST_STATUS_IN_PROGRESS,  # noqa
 )
 
 from src.schemas.request import (

@@ -53,18 +53,18 @@ REVIEW_DISMISS = "review_dismiss"
 REVIEW_REMOVE = "review_remove"
 
 # Payment Related Actions (if needed in future)
-PAYMENT_INITIATE = "payment_initiate"
-PAYMENT_SUCCESS = "payment_success"
-PAYMENT_FAIL = "payment_fail"
-PAYMENT_REFUND = "payment_refund"
+# PAYMENT_INITIATE = "payment_initiate"
+# PAYMENT_SUCCESS = "payment_success"
+# PAYMENT_FAIL = "payment_fail"
+# PAYMENT_REFUND = "payment_refund"
 
 # Admin Actions
-ADMIN_SETTINGS_UPDATE = "settings_update"
-ADMIN_BULK_ACTION = "bulk_action"
+# ADMIN_SETTINGS_UPDATE = "settings_update"
+# ADMIN_BULK_ACTION = "bulk_action"
 
 # System Actions
-SYSTEM_MAINTENANCE = "system_maintenance"
-SYSTEM_ERROR = "system_error"
+# SYSTEM_MAINTENANCE = "system_maintenance"
+# SYSTEM_ERROR = "system_error"
 
 
 # Group these constants in a class for better organization
@@ -109,18 +109,18 @@ class ActivityLogActions:
     REVIEW_REMOVE = REVIEW_REMOVE
 
     # Payment Related
-    PAYMENT_INITIATE = PAYMENT_INITIATE
-    PAYMENT_SUCCESS = PAYMENT_SUCCESS
-    PAYMENT_FAIL = PAYMENT_FAIL
-    PAYMENT_REFUND = PAYMENT_REFUND
+    # PAYMENT_INITIATE = PAYMENT_INITIATE
+    # PAYMENT_SUCCESS = PAYMENT_SUCCESS
+    # PAYMENT_FAIL = PAYMENT_FAIL
+    # PAYMENT_REFUND = PAYMENT_REFUND
 
-    # Admin Actions
-    ADMIN_SETTINGS_UPDATE = ADMIN_SETTINGS_UPDATE
-    ADMIN_BULK_ACTION = ADMIN_BULK_ACTION
+    # # Admin Actions
+    # ADMIN_SETTINGS_UPDATE = ADMIN_SETTINGS_UPDATE
+    # ADMIN_BULK_ACTION = ADMIN_BULK_ACTION
 
-    # System Actions
-    SYSTEM_MAINTENANCE = SYSTEM_MAINTENANCE
-    SYSTEM_ERROR = SYSTEM_ERROR
+    # # System Actions
+    # SYSTEM_MAINTENANCE = SYSTEM_MAINTENANCE
+    # SYSTEM_ERROR = SYSTEM_ERROR
 
     @classmethod
     def get_all_actions(cls):

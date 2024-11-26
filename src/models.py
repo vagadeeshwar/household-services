@@ -8,7 +8,7 @@ from src import db
 from src.constants import (
     USER_ROLES,
     REQUEST_STATUSES,
-    REQUEST_STATUS_REQUESTED,
+    REQUEST_STATUS_CREATED,
     ActivityLogActions,
 )
 
@@ -175,7 +175,7 @@ class ServiceRequest(db.Model, TimestampMixin):
     date_of_request = db.Column(db.DateTime, nullable=False)
     preferred_time = db.Column(db.String(50))
     description = db.Column(db.Text)
-    status = db.Column(db.String(20), nullable=False, default=REQUEST_STATUS_REQUESTED)
+    status = db.Column(db.String(20), nullable=False, default=REQUEST_STATUS_CREATED)
     date_of_assignment = db.Column(db.DateTime)
     date_of_completion = db.Column(db.DateTime)
     remarks = db.Column(db.Text)
