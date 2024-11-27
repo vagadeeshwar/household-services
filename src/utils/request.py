@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional, Tuple
-from sqlalchemy import or_, and_
+from sqlalchemy import func
 
 from src.constants import (
     REQUEST_STATUS_ASSIGNED,
@@ -18,49 +18,55 @@ def check_booking_availability(
     Args:
         professional_id: ID of the professional
         preferred_time: Requested start time
-        service_duration: Service duration in minutes
+        service_duration: Service duration in minutes (must be an integer)
 
     Returns:
         Tuple of (is_available, error_message)
     """
-    # Calculate the end time of the requested booking
-    booking_end_time = preferred_time + timedelta(minutes=service_duration)
+    # Ensure service_duration is an integer
+    try:
+        duration_minutes = int(service_duration)
+    except (TypeError, ValueError):
+        return False, "Invalid service duration"
 
-    # Find any overlapping bookings
-    overlapping_requests = (
+    # Calculate the end time of the requested booking
+    booking_end_time = preferred_time + timedelta(minutes=duration_minutes)
+
+    # Get all assigned requests for the professional
+    assigned_requests = (
         ServiceRequest.query.join(Service)
         .filter(
             ServiceRequest.professional_id == professional_id,
             ServiceRequest.status == REQUEST_STATUS_ASSIGNED,
-            or_(
-                # Case 1: New booking starts during an existing booking
-                and_(
-                    ServiceRequest.preferred_time <= preferred_time,
-                    ServiceRequest.preferred_time
-                    + timedelta(minutes=Service.estimated_time)
-                    > preferred_time,
-                ),
-                # Case 2: New booking ends during an existing booking
-                and_(
-                    ServiceRequest.preferred_time < booking_end_time,
-                    ServiceRequest.preferred_time
-                    + timedelta(minutes=Service.estimated_time)
-                    >= booking_end_time,
-                ),
-                # Case 3: New booking completely encompasses an existing booking
-                and_(
-                    ServiceRequest.preferred_time >= preferred_time,
-                    ServiceRequest.preferred_time
-                    + timedelta(minutes=Service.estimated_time)
-                    <= booking_end_time,
-                ),
-            ),
+            # Get requests on the same day
+            func.date(ServiceRequest.preferred_time) == preferred_time.date(),
         )
-        .first()
+        .all()
     )
 
-    if overlapping_requests:
-        return False, "Professional has an overlapping booking during this time slot"
+    # Check for overlaps
+    for existing_request in assigned_requests:
+        existing_start = existing_request.preferred_time
+        existing_end = existing_start + timedelta(
+            minutes=int(existing_request.service.estimated_time)
+        )
+
+        # Check for any overlap
+        if (
+            (
+                existing_start <= preferred_time < existing_end
+            )  # New booking starts during existing
+            or (
+                existing_start < booking_end_time <= existing_end
+            )  # New booking ends during existing
+            or (
+                preferred_time <= existing_start and booking_end_time >= existing_end
+            )  # New booking encompasses existing
+        ):
+            return (
+                False,
+                "Professional has an overlapping booking during this time slot",
+            )
 
     # Check if service extends beyond business hours (6 PM)
     end_time_limit = datetime.combine(

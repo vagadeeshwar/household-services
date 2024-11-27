@@ -425,7 +425,7 @@ def accept_request(current_user, request_id):
                 "Account not verified yet", HTTPStatus.FORBIDDEN, "UnverifiedAccount"
             )
 
-        service_request = ServiceRequest.query.join(Service).get_or_404(request_id)
+        service_request = ServiceRequest.query.get_or_404(request_id)
 
         if service_request.status != REQUEST_STATUS_CREATED:
             return APIResponse.error(
@@ -439,11 +439,22 @@ def accept_request(current_user, request_id):
                 "Service type mismatch", HTTPStatus.BAD_REQUEST, "ServiceMismatch"
             )
 
-        # Check for booking availability using the service's estimated time
+        # Get the service estimated time value
+        service = Service.query.get(service_request.service_id)
+        estimated_time = service.estimated_time if service else None
+
+        if estimated_time is None:
+            return APIResponse.error(
+                "Invalid service configuration",
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                "ServiceError",
+            )
+
+        # Check for booking availability using the integer value of estimated_time
         is_available, error_message = check_booking_availability(
             professional.id,
             service_request.preferred_time,
-            service_request.service.estimated_time,
+            estimated_time,  # Now passing the integer value
         )
 
         if not is_available:
@@ -469,6 +480,7 @@ def accept_request(current_user, request_id):
             message="Service request accepted successfully",
         )
     except Exception as e:
+        db.session.rollback()  # Added rollback in case of error
         return APIResponse.error(
             f"Error accepting request: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -496,12 +508,14 @@ def complete_service(current_user, request_id):
 
         if service_request.professional_id != professional.id:
             return APIResponse.error(
-                "Unauthorized access", HTTPStatus.FORBIDDEN, "UnauthorizedAccess"
+                "Cannot access others requests",
+                HTTPStatus.FORBIDDEN,
+                "UnauthorizedAccess",
             )
 
         if service_request.status != REQUEST_STATUS_ASSIGNED:
             return APIResponse.error(
-                "Only assigned requests can be completed",
+                "Cannot complete already completed service",
                 HTTPStatus.BAD_REQUEST,
                 "InvalidStatus",
             )
@@ -534,53 +548,6 @@ def complete_service(current_user, request_id):
     except Exception as e:
         return APIResponse.error(
             f"Error completing service: {str(e)}",
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            "DatabaseError",
-        )
-
-
-@request_bp.route("/professionals/<int:professional_id>/availability", methods=["GET"])
-@token_required
-def check_professional_availability(current_user, professional_id):
-    """Check professional's availability for a given time slot"""
-    try:
-        # Validate input parameters
-        try:
-            preferred_time = datetime.fromisoformat(request.args.get("preferred_time"))
-        except (ValueError, TypeError):
-            return APIResponse.error(
-                "Invalid preferred_time format. Use ISO format (YYYY-MM-DDTHH:MM:SS)",
-                HTTPStatus.BAD_REQUEST,
-                "InvalidDateFormat",
-            )
-
-        # Get the service type
-        service_id = request.args.get("service_id", type=int)
-        if not service_id:
-            return APIResponse.error(
-                "service_id is required", HTTPStatus.BAD_REQUEST, "MissingParameter"
-            )
-
-        service = Service.query.get_or_404(service_id)
-
-        # Check availability using duration in minutes
-        is_available, error_message = check_booking_availability(
-            professional_id,
-            preferred_time,
-            service.estimated_time,  # Now in minutes
-        )
-
-        return APIResponse.success(
-            data={
-                "is_available": is_available,
-                "message": error_message
-                if not is_available
-                else "Time slot is available",
-            }
-        )
-    except Exception as e:
-        return APIResponse.error(
-            f"Error checking availability: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
         )
