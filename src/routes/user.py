@@ -14,6 +14,8 @@ from src.constants import (
     USER_ROLE_PROFESSIONAL,
     USER_ROLE_CUSTOMER,
     ActivityLogActions,
+    REQUEST_STATUS_ASSIGNED,
+    REQUEST_STATUS_CREATED,
 )
 
 from src.schemas.user import (
@@ -172,7 +174,7 @@ def delete_account(current_user):
                 ServiceRequest.query.filter(
                     ServiceRequest.professional_id
                     == current_user.professional_profile.id,
-                    ServiceRequest.status.in_(["assigned", "in_progress"]),
+                    ServiceRequest.status.in_([REQUEST_STATUS_ASSIGNED]),
                 ).first()
                 is not None
             )
@@ -181,7 +183,9 @@ def delete_account(current_user):
             has_active_requests = (
                 ServiceRequest.query.filter(
                     ServiceRequest.customer_id == current_user.customer_profile.id,
-                    ServiceRequest.status.in_(["requested", "assigned", "in_progress"]),
+                    ServiceRequest.status.in_(
+                        [REQUEST_STATUS_CREATED, REQUEST_STATUS_ASSIGNED]
+                    ),
                 ).first()
                 is not None
             )

@@ -5,6 +5,7 @@ from src.schemas.base import BaseSchema
 from src.schemas.service import ServiceOutputSchema
 from src.schemas.customer import CustomerOutputSchema
 from src.schemas.professional import ProfessionalOutputSchema
+from src.models import Service
 
 
 class ServiceRequestInputSchema(BaseSchema):
@@ -28,7 +29,17 @@ class ServiceRequestInputSchema(BaseSchema):
                 "Cannot schedule requests more than 7 days in advance"
             )
 
-        # Check if time is within reasonable hours (optional)
+        # Get service duration and check if service can be completed by 6 PM
+        service = Service.query.get(self.service_id)
+        if service:
+            service_end_time = value + timedelta(minutes=service.estimated_time)
+            end_time_limit = datetime.combine(
+                value.date(), datetime.strptime("18:00", "%H:%M").time()
+            )
+            if service_end_time > end_time_limit:
+                raise ValidationError("Service must be completed by 6 PM")
+
+        # Check if time is within reasonable hours
         if value.hour < 9 or value.hour >= 18:
             raise ValidationError("Service can only be scheduled between 9 AM and 6 PM")
 
@@ -41,13 +52,12 @@ class ServiceRequestOutputSchema(Schema):
         ProfessionalOutputSchema, dump_only=True, allow_none=True
     )
     date_of_request = fields.DateTime(required=True)
-    preferred_time = fields.DateTime(required=True)  # Changed to DateTime
+    preferred_time = fields.DateTime(required=True)
     status = fields.Str(required=True)
     description = fields.Str(allow_none=True)
     date_of_assignment = fields.DateTime(allow_none=True)
     date_of_completion = fields.DateTime(allow_none=True)
     remarks = fields.Str(allow_none=True)
-    estimated_completion_time = fields.DateTime(dump_only=True)  # New field
 
 
 class ReviewInputSchema(BaseSchema):
@@ -96,8 +106,8 @@ class CalendarViewSchema(Schema):
     available_days = fields.Int(required=True)
 
 
+# Schema instances
 calendar_view_schema = CalendarViewSchema()
-
 service_request_input_schema = ServiceRequestInputSchema()
 service_request_output_schema = ServiceRequestOutputSchema()
 service_requests_output_schema = ServiceRequestOutputSchema(many=True)

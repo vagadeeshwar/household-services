@@ -4,7 +4,6 @@ from sqlalchemy import or_, and_
 
 from src.constants import (
     REQUEST_STATUS_ASSIGNED,
-    REQUEST_STATUS_IN_PROGRESS,
     REQUEST_STATUS_COMPLETED,
 )
 
@@ -12,41 +11,45 @@ from src.models import ServiceRequest, ProfessionalProfile, Service
 
 
 def check_booking_availability(
-    professional_id: int, preferred_time: datetime, duration_minutes: int
+    professional_id: int, preferred_time: datetime, estimated_time: int
 ) -> Tuple[bool, Optional[str]]:
     """
     Check if a professional is available for a booking time slot.
-    Returns: (is_available, error_message)
+    Args:
+        professional_id: ID of the professional
+        preferred_time: Requested start time
+        estimated_time: Service duration in minutes
+
+    Returns:
+        Tuple of (is_available, error_message)
     """
     # Calculate the end time of the requested booking
-    booking_end_time = preferred_time + timedelta(minutes=duration_minutes)
+    booking_end_time = preferred_time + timedelta(minutes=estimated_time)
 
     # Find any overlapping bookings
     overlapping_requests = ServiceRequest.query.filter(
         ServiceRequest.professional_id == professional_id,
-        ServiceRequest.status.in_(
-            [REQUEST_STATUS_ASSIGNED, REQUEST_STATUS_IN_PROGRESS]
-        ),
+        ServiceRequest.status == REQUEST_STATUS_ASSIGNED,
         or_(
             # Case 1: New booking starts during an existing booking
             and_(
                 ServiceRequest.preferred_time <= preferred_time,
                 ServiceRequest.preferred_time
-                + timedelta(minutes=ServiceRequest.service.duration_minutes)
+                + timedelta(minutes=ServiceRequest.service.estimated_time)
                 > preferred_time,
             ),
             # Case 2: New booking ends during an existing booking
             and_(
                 ServiceRequest.preferred_time < booking_end_time,
                 ServiceRequest.preferred_time
-                + timedelta(minutes=ServiceRequest.service.duration_minutes)
+                + timedelta(minutes=ServiceRequest.service.estimated_time)
                 >= booking_end_time,
             ),
             # Case 3: New booking completely encompasses an existing booking
             and_(
                 ServiceRequest.preferred_time >= preferred_time,
                 ServiceRequest.preferred_time
-                + timedelta(minutes=ServiceRequest.service.duration_minutes)
+                + timedelta(minutes=ServiceRequest.service.estimated_time)
                 <= booking_end_time,
             ),
         ),
@@ -54,6 +57,13 @@ def check_booking_availability(
 
     if overlapping_requests:
         return False, "Professional has an overlapping booking during this time slot"
+
+    # Check if service extends beyond business hours (6 PM)
+    end_time_limit = datetime.combine(
+        preferred_time.date(), datetime.strptime("18:00", "%H:%M").time()
+    )
+    if booking_end_time > end_time_limit:
+        return False, "Service cannot extend beyond 6 PM"
 
     return True, None
 
@@ -102,9 +112,9 @@ def get_professional_schedule(
     professional = ProfessionalProfile.query.get_or_404(professional_id)
     if service_id:
         service = Service.query.get_or_404(service_id)
-        slot_duration = service.duration_minutes
+        slot_duration = service.estimated_time
     else:
-        slot_duration = professional.service_type.duration_minutes
+        slot_duration = professional.service_type.estimated_time
 
     # Generate all possible time slots
     all_slots = generate_available_slots(start_date, end_date, slot_duration)
@@ -116,7 +126,6 @@ def get_professional_schedule(
             ServiceRequest.status.in_(
                 [
                     REQUEST_STATUS_ASSIGNED,
-                    REQUEST_STATUS_IN_PROGRESS,
                     REQUEST_STATUS_COMPLETED,
                 ]
             ),
@@ -148,7 +157,7 @@ def get_professional_schedule(
     # Mark booked slots
     for booking in bookings:
         booking_end = booking.preferred_time + timedelta(
-            minutes=booking.service.duration_minutes
+            minutes=booking.service.estimated_time
         )
         booking_date = booking.preferred_time.date()
 

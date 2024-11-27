@@ -22,7 +22,6 @@ from src.constants import (
     USER_ROLE_PROFESSIONAL,
     USER_ROLE_CUSTOMER,
     REQUEST_STATUS_CREATED,
-    REQUEST_STATUS_IN_PROGRESS,
     REQUEST_STATUS_ASSIGNED,
     REQUEST_STATUS_COMPLETED,
     ActivityLogActions,
@@ -140,163 +139,6 @@ def create_dummy_data():
 
     except Exception as e:
         logger.error(f"Error in create_dummy_data: {str(e)}")
-        db.session.rollback()
-        raise
-
-
-def create_services(admin_id):
-    services = []
-    service_data = [
-        {
-            "name": "AC Repair & Service",
-            "price": 1500,
-            "time": 120,
-            "is_active": 0,  # Initially inactive
-            "description": "Professional AC repair and maintenance services including gas refill, component replacement, and thorough cleaning.",
-            "history": [
-                ("restore", "Service restored after technician verification completed"),
-                ("update", "Updated base price from 1200 to 1500"),
-                ("delete", "Temporarily suspended due to lack of verified technicians"),
-            ],
-        },
-        {
-            "name": "Plumbing Service",
-            "price": 800,
-            "time": 60,
-            "is_active": 1,
-            "description": "Expert plumbing services for leak repairs, pipe installation, fixture mounting, and drainage solutions.",
-            "history": [
-                (
-                    "update",
-                    "Updated duration from 90 to 60 minutes based on service data",
-                ),
-                ("update", "Modified description to include drainage solutions"),
-            ],
-        },
-        {
-            "name": "Electrical Work",
-            "price": 1000,
-            "time": 120,
-            "is_active": 1,
-            "description": "Certified electrical services including wiring, installation, repairs, and safety inspections.",
-            "history": [
-                ("update", "Added safety inspections to service description"),
-                ("delete", "Temporarily disabled for safety protocol update"),
-                ("restore", "Restored after implementing new safety protocols"),
-            ],
-        },
-        {
-            "name": "Carpentry",
-            "price": 1200,
-            "time": 180,
-            "is_active": 0,  # Initially inactive
-            "description": "Professional carpentry services for furniture repair, custom woodwork, and installations.",
-            "history": [
-                ("update", "Increased base price from 1000 to 1200"),
-                ("delete", "Service suspended for quality review"),
-            ],
-        },
-        {
-            "name": "House Painting",
-            "price": 3000,
-            "time": 480,
-            "is_active": 1,
-            "description": "Complete house painting services with premium quality paints and professional finish.",
-            "history": [
-                ("update", "Updated to include premium quality paints"),
-                ("update", "Adjusted duration to 8 hours for accurate scheduling"),
-            ],
-        },
-        {
-            "name": "Appliance Repair",
-            "price": 1200,
-            "time": 90,
-            "is_active": 0,  # This will be created and then deleted
-            "description": "General appliance repair and maintenance services.",
-            "history": [
-                ("delete", "Service consolidated with specific appliance services")
-            ],
-        },
-        {
-            "name": "Home Cleaning",
-            "price": 1000,
-            "time": 240,
-            "is_active": 1,
-            "description": "Professional home cleaning and sanitization services.",
-            "history": [
-                ("update", "Added sanitization to service scope"),
-                ("delete", "Temporarily suspended due to COVID protocols"),
-                ("restore", "Restored with enhanced safety measures"),
-                ("update", "Updated price to reflect new safety equipment costs"),
-            ],
-        },
-    ]
-
-    try:
-        # Create base timeline for services
-        base_date = datetime.utcnow() - timedelta(days=90)  # Start 90 days ago
-
-        for data in service_data:
-            # Initial service creation
-            service = Service(
-                name=data["name"],
-                description=data["description"],
-                base_price=data["price"],
-                duration_minutes=data["time"],
-                is_active=data["is_active"],
-                created_at=base_date,
-            )
-            services.append(service)
-            db.session.add(service)
-            db.session.flush()
-
-            # Log initial creation
-            create_activity_log(
-                admin_id,
-                ActivityLogActions.SERVICE_CREATE,
-                service.id,
-                f"Created new service: {service.name}",
-            )
-
-            # Process historical actions with time progression
-            current_date = base_date
-            for action_type, action_desc in data.get("history", []):
-                current_date += timedelta(
-                    days=random.randint(1, 5)
-                )  # Space out actions
-
-                if action_type == "update":
-                    create_activity_log(
-                        admin_id,
-                        ActivityLogActions.SERVICE_UPDATE,
-                        service.id,
-                        f"Updated service {service.name}: {action_desc}",
-                    )
-
-                elif action_type == "delete":
-                    service.is_active = False
-                    create_activity_log(
-                        admin_id,
-                        ActivityLogActions.SERVICE_DELETE,
-                        service.id,
-                        f"Deactivated service {service.name}: {action_desc}",
-                    )
-
-                elif action_type == "restore":
-                    service.is_active = True
-                    create_activity_log(
-                        admin_id,
-                        ActivityLogActions.SERVICE_RESTORE,
-                        service.id,
-                        f"Restored service {service.name}: {action_desc}",
-                    )
-
-        db.session.commit()
-        logger.info(f"Created {len(services)} services with comprehensive history")
-        return services
-
-    except Exception as e:
-        logger.error(f"Error creating services: {str(e)}")
         db.session.rollback()
         raise
 
@@ -645,14 +487,145 @@ def create_customers():
         raise
 
 
+def create_services(admin_id):
+    services = []
+    service_data = [
+        {
+            "name": "AC Repair & Service",
+            "price": 1500,
+            "time": 120,
+            "is_active": 0,
+            "description": "Professional AC repair and maintenance services including gas refill, component replacement, and thorough cleaning.",
+            "history": [
+                ("restore", "Service restored after technician verification completed"),
+                ("update", "Updated base price from 1200 to 1500"),
+                ("delete", "Temporarily suspended due to lack of verified technicians"),
+            ],
+        },
+        {
+            "name": "Plumbing Service",
+            "price": 800,
+            "time": 60,
+            "is_active": 1,
+            "description": "Expert plumbing services for leak repairs, pipe installation, fixture mounting, and drainage solutions.",
+            "history": [
+                (
+                    "update",
+                    "Updated duration from 90 to 60 minutes based on service data",
+                ),
+                ("update", "Modified description to include drainage solutions"),
+            ],
+        },
+        {
+            "name": "Electrical Work",
+            "price": 1000,
+            "time": 120,
+            "is_active": 1,
+            "description": "Certified electrical services including wiring, installation, repairs, and safety inspections.",
+            "history": [
+                ("update", "Added safety inspections to service description"),
+                ("delete", "Temporarily disabled for safety protocol update"),
+                ("restore", "Restored after implementing new safety protocols"),
+            ],
+        },
+        {
+            "name": "Carpentry",
+            "price": 1200,
+            "time": 180,
+            "is_active": 0,
+            "description": "Professional carpentry services for furniture repair, custom woodwork, and installations.",
+            "history": [
+                ("update", "Increased base price from 1000 to 1200"),
+                ("delete", "Service suspended for quality review"),
+            ],
+        },
+        {
+            "name": "House Painting",
+            "price": 3000,
+            "time": 480,
+            "is_active": 1,
+            "description": "Complete house painting services with premium quality paints and professional finish.",
+            "history": [
+                ("update", "Updated to include premium quality paints"),
+                ("update", "Adjusted duration to 8 hours for accurate scheduling"),
+            ],
+        },
+        {
+            "name": "Home Cleaning",
+            "price": 1000,
+            "time": 240,
+            "is_active": 1,
+            "description": "Professional home cleaning and sanitization services.",
+            "history": [
+                ("update", "Added sanitization to service scope"),
+                ("restore", "Restored with enhanced safety measures"),
+                ("update", "Updated price to reflect new safety equipment costs"),
+            ],
+        },
+    ]
+
+    try:
+        base_date = datetime.utcnow() - timedelta(days=90)
+
+        for data in service_data:
+            service = Service(
+                name=data["name"],
+                description=data["description"],
+                base_price=data["price"],
+                estimated_time=data["time"],  # Already in minutes
+                is_active=data["is_active"],
+                created_at=base_date,
+            )
+            services.append(service)
+            db.session.add(service)
+            db.session.flush()
+
+            create_activity_log(
+                admin_id,
+                ActivityLogActions.SERVICE_CREATE,
+                service.id,
+                f"Created new service: {service.name}",
+            )
+
+            current_date = base_date
+            for action_type, action_desc in data.get("history", []):
+                current_date += timedelta(days=random.randint(1, 5))
+
+                if action_type == "update":
+                    create_activity_log(
+                        admin_id,
+                        ActivityLogActions.SERVICE_UPDATE,
+                        service.id,
+                        f"Updated service {service.name}: {action_desc}",
+                    )
+                elif action_type == "delete":
+                    service.is_active = False
+                    create_activity_log(
+                        admin_id,
+                        ActivityLogActions.SERVICE_DELETE,
+                        service.id,
+                        f"Deactivated service {service.name}: {action_desc}",
+                    )
+                elif action_type == "restore":
+                    service.is_active = True
+                    create_activity_log(
+                        admin_id,
+                        ActivityLogActions.SERVICE_RESTORE,
+                        service.id,
+                        f"Restored service {service.name}: {action_desc}",
+                    )
+
+        db.session.commit()
+        return services
+
+    except Exception as e:
+        logger.error(f"Error creating services: {str(e)}")
+        db.session.rollback()
+        raise
+
+
 def create_requests_and_reviews(services, professionals, customers, admin_id):
-
-    # Simulation probability helpers
-    should_cancel = lambda: random.random() < 0.3  # noqa 30% chance of cancellation
-    should_report = lambda: random.random() < 0.2  # noqa 20% chance of review being reported
-
     review_templates = [
-        # 5 star reviews
         ("Excellent service! Very professional and punctual. {}", 5, False),
         ("Great work quality and attention to detail. {}", 5, False),
         (
@@ -661,11 +634,9 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
             True,
             "Suspected fake review",
         ),
-        # 4 star reviews
         ("Good service, met expectations. {}", 4, False),
         ("Professional and efficient work. {}", 4, False),
         ("Quality service but a bit expensive. {}", 4, False),
-        # 3 star reviews
         ("Average service, room for improvement. {}", 3, False),
         (
             "Work done but communication was poor. {}",
@@ -673,9 +644,7 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
             True,
             "Unprofessional behavior",
         ),
-        # 2 star reviews
         ("Below expectations, multiple issues. {}", 2, True, "Service quality issues"),
-        # 1 star reviews
         ("Very disappointing service. {}", 1, True, "Multiple issues reported"),
     ]
 
@@ -683,33 +652,32 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
         base_date = datetime.utcnow() - timedelta(days=90)
 
         for customer in customers:
-            # Create 2-5 service requests per customer
-            for _ in range(random.randint(2, 5)):
+            for _ in range(random.randint(2, 5)):  # 2-5 requests per customer
                 service = random.choice([s for s in services if s.is_active])
                 professional = random.choice(
                     [p for p in professionals if p.user.is_active and p.is_verified]
                 )
 
-                # Calculate request dates
                 request_date = base_date + timedelta(days=random.randint(0, 85))
-                preferred_time = f"{random.randint(9, 17)}:00"
-                preferred_datetime = datetime.strptime(
-                    f"{request_date.date()} {preferred_time}", "%Y-%m-%d %H:%M"
+
+                # Generate time between 9 AM and max possible start time
+                max_start_hour = min(17, 17 - service.estimated_time // 60)
+                preferred_time = datetime.combine(
+                    request_date.date(),
+                    datetime.strptime(
+                        f"{random.randint(9, max_start_hour)}:00", "%H:%M"
+                    ).time(),
                 )
 
-                # Select initial status based on dates
                 current_time = datetime.utcnow()
-                completion_time = preferred_datetime + timedelta(
-                    minutes=service.duration_minutes
+                estimated_completion = preferred_time + timedelta(
+                    minutes=service.estimated_time
                 )
 
-                if completion_time < current_time:
+                # Determine status based on time
+                if estimated_completion < current_time:
                     status = REQUEST_STATUS_COMPLETED
-                elif preferred_datetime <= current_time < completion_time:
-                    status = REQUEST_STATUS_IN_PROGRESS
-                elif (
-                    preferred_datetime > current_time and random.random() < 0.7
-                ):  # 70% chance of being accepted
+                elif preferred_time > current_time and random.random() < 0.7:
                     status = REQUEST_STATUS_ASSIGNED
                 else:
                     status = REQUEST_STATUS_CREATED
@@ -729,7 +697,7 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
                     + timedelta(hours=random.randint(1, 4))
                     if status != REQUEST_STATUS_CREATED
                     else None,
-                    date_of_completion=completion_time
+                    date_of_completion=estimated_completion
                     if status == REQUEST_STATUS_COMPLETED
                     else None,
                     remarks="Service completed successfully."
@@ -739,7 +707,7 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
                 db.session.add(service_request)
                 db.session.flush()
 
-                # Create initial request log
+                # Log request creation
                 create_activity_log(
                     customer.id,
                     ActivityLogActions.REQUEST_CREATE,
@@ -747,7 +715,7 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
                     f"Created service request for {service.name}",
                 )
 
-                # If request was assigned, log the assignment
+                # Handle assignment and completion
                 if status != REQUEST_STATUS_CREATED:
                     create_activity_log(
                         professional.id,
@@ -755,14 +723,6 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
                         service_request.id,
                         "Professional accepted the service request",
                     )
-
-                    if status in [REQUEST_STATUS_IN_PROGRESS, REQUEST_STATUS_COMPLETED]:
-                        create_activity_log(
-                            professional.id,
-                            ActivityLogActions.REQUEST_START,
-                            service_request.id,
-                            "Service work started at scheduled time",
-                        )
 
                     if status == REQUEST_STATUS_COMPLETED:
                         create_activity_log(
@@ -772,10 +732,8 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
                             "Service completed as scheduled",
                         )
 
-                        # Add review for completed services
-                        if (
-                            random.random() < 0.9
-                        ):  # 90% of completed services get reviewed
+                        # Add review (90% chance for completed services)
+                        if random.random() < 0.9:
                             review_template = random.choice(review_templates)
                             review = Review(
                                 service_request_id=service_request.id,
@@ -785,12 +743,13 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
                                 report_reason=review_template[3]
                                 if len(review_template) > 3
                                 else None,
-                                created_at=completion_time
+                                created_at=estimated_completion
                                 + timedelta(days=random.randint(1, 3)),
                             )
                             db.session.add(review)
                             db.session.flush()
 
+                            # Log review creation and handle reports
                             create_activity_log(
                                 customer.id,
                                 ActivityLogActions.REVIEW_SUBMIT,
@@ -798,7 +757,6 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
                                 f"Submitted {review.rating}-star review",
                             )
 
-                            # Handle reported reviews
                             if review.is_reported:
                                 create_activity_log(
                                     professional.id,
@@ -807,7 +765,7 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
                                     f"Review reported: {review.report_reason}",
                                 )
 
-                                # Admin actions on reported reviews
+                                # Admin review action
                                 if random.random() < 0.6:
                                     create_activity_log(
                                         admin_id,
@@ -823,7 +781,7 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
                                         "Review removed after investigation",
                                     )
 
-                            # Update professional's average rating
+                            # Update professional's rating
                             prof_reviews = (
                                 Review.query.join(ServiceRequest)
                                 .filter(
@@ -837,8 +795,8 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
                                     total_ratings / len(prof_reviews), 1
                                 )
 
-                # Simulate cancelled requests (only for CREATED or ASSIGNED status)
-                if should_cancel() and status in [
+                # Handle cancellations (30% chance)
+                if random.random() < 0.3 and status in [
                     REQUEST_STATUS_CREATED,
                     REQUEST_STATUS_ASSIGNED,
                 ]:
@@ -853,7 +811,6 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
                     )
 
         db.session.commit()
-        logger.info("Created service requests, reviews, and activity logs")
 
     except Exception as e:
         logger.error(f"Error creating requests and reviews: {str(e)}")

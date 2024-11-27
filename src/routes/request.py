@@ -1,8 +1,7 @@
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request
 from marshmallow import ValidationError
 from http import HTTPStatus
-from datetime import datetime, timedelta
-from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime
 
 from src import db
 
@@ -20,7 +19,6 @@ from src.constants import (
     REQUEST_STATUS_CREATED,
     REQUEST_STATUS_ASSIGNED,
     REQUEST_STATUS_COMPLETED,
-    REQUEST_STATUS_IN_PROGRESS,  # noqa
 )
 
 from src.schemas.request import (
@@ -37,29 +35,21 @@ from src.utils.request import check_booking_availability
 
 request_bp = Blueprint("request", __name__)
 
-scheduler = BackgroundScheduler()
-scheduler.start()
-
 
 @request_bp.route("/requests", methods=["POST"])
 @token_required
 @role_required("customer")
 def create_service_request(current_user):
+    """Create a new service request"""
     try:
         data = service_request_input_schema.load(request.get_json())
 
-        # Get service for duration info
-        service = Service.query.get_or_404(data["service_id"])
-
-        # Calculate estimated completion time
-        estimated_completion = data["preferred_time"] + timedelta(
-            minutes=service.duration_minutes
-        )
+        # Verify service exists
+        Service.query.get_or_404(data["service_id"])
 
         service_request = ServiceRequest(
             service_id=data["service_id"],
             customer_id=current_user.customer_profile.id,
-            date_of_request=datetime.utcnow(),
             preferred_time=data["preferred_time"],
             description=data.get("description"),
             status=REQUEST_STATUS_CREATED,
@@ -67,21 +57,6 @@ def create_service_request(current_user):
 
         db.session.add(service_request)
         db.session.flush()
-
-        # Schedule status updates
-        scheduler.add_job(
-            update_request_status,
-            "date",
-            run_date=data["preferred_time"],
-            args=[service_request.id, REQUEST_STATUS_IN_PROGRESS],
-        )
-
-        scheduler.add_job(
-            update_request_status,
-            "date",
-            run_date=estimated_completion,
-            args=[service_request.id, REQUEST_STATUS_COMPLETED],
-        )
 
         # Create activity log
         log = ActivityLog(
@@ -441,11 +416,11 @@ def accept_request(current_user, request_id):
                 "Service type mismatch", HTTPStatus.BAD_REQUEST, "ServiceMismatch"
             )
 
-        # Check for booking availability
+        # Check for booking availability using duration in minutes
         is_available, error_message = check_booking_availability(
             professional.id,
             service_request.preferred_time,
-            service_request.service.duration_minutes,
+            service_request.service.estimated_time,  # Now in minutes
         )
 
         if not is_available:
@@ -478,59 +453,6 @@ def accept_request(current_user, request_id):
         )
 
 
-@request_bp.route("/requests/<int:request_id>/start", methods=["POST"])
-@token_required
-@role_required("professional")
-def start_service(current_user, request_id):
-    """Mark a service request as started"""
-    try:
-        professional = ProfessionalProfile.query.filter_by(
-            user_id=current_user.id
-        ).first()
-        if not professional:
-            return APIResponse.error(
-                "Professional profile not found",
-                HTTPStatus.NOT_FOUND,
-                "ProfileNotFound",
-            )
-
-        service_request = ServiceRequest.query.get_or_404(request_id)
-
-        if service_request.professional_id != professional.id:
-            return APIResponse.error(
-                "Unauthorized access", HTTPStatus.FORBIDDEN, "UnauthorizedAccess"
-            )
-
-        if service_request.status != REQUEST_STATUS_ASSIGNED:
-            return APIResponse.error(
-                "Cannot start service in current status",
-                HTTPStatus.BAD_REQUEST,
-                "InvalidStatus",
-            )
-
-        service_request.status = "in_progress"
-
-        log = ActivityLog(
-            user_id=current_user.id,
-            action=ActivityLogActions.REQUEST_START,
-            entity_id=request_id,
-            description=f"Started service for request {request_id}",
-        )
-        db.session.add(log)
-        db.session.commit()
-
-        return APIResponse.success(
-            data=service_request_output_schema.dump(service_request),
-            message="Service started successfully",
-        )
-    except Exception as e:
-        return APIResponse.error(
-            f"Error starting service: {str(e)}",
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            "DatabaseError",
-        )
-
-
 @request_bp.route("/requests/<int:request_id>/complete", methods=["POST"])
 @token_required
 @role_required("professional")
@@ -554,9 +476,9 @@ def complete_service(current_user, request_id):
                 "Unauthorized access", HTTPStatus.FORBIDDEN, "UnauthorizedAccess"
             )
 
-        if service_request.status != "in_progress":
+        if service_request.status != REQUEST_STATUS_ASSIGNED:
             return APIResponse.error(
-                "Cannot complete service in current status",
+                "Only assigned requests can be completed",
                 HTTPStatus.BAD_REQUEST,
                 "InvalidStatus",
             )
@@ -594,42 +516,6 @@ def complete_service(current_user, request_id):
         )
 
 
-def update_request_status(request_id: int, new_status: str):
-    """Background job to update request status"""
-    with current_app.app_context():
-        try:
-            service_request = ServiceRequest.query.get(request_id)
-            if not service_request:
-                return
-
-            # Only update if current status matches expected flow
-            valid_transitions = {
-                REQUEST_STATUS_ASSIGNED: REQUEST_STATUS_IN_PROGRESS,
-                REQUEST_STATUS_IN_PROGRESS: REQUEST_STATUS_COMPLETED,
-            }
-
-            if (
-                service_request.status in valid_transitions
-                and valid_transitions[service_request.status] == new_status
-            ):
-                service_request.status = new_status
-
-                if new_status == REQUEST_STATUS_COMPLETED:
-                    service_request.date_of_completion = datetime.utcnow()
-
-                log = ActivityLog(
-                    action=f"request_{new_status.lower()}",
-                    entity_id=request_id,
-                    description=f"Request automatically moved to {new_status} status",
-                )
-                db.session.add(log)
-                db.session.commit()
-
-        except Exception as e:
-            current_app.logger.error(f"Error updating request status: {str(e)}")
-            db.session.rollback()
-
-
 @request_bp.route("/professionals/<int:professional_id>/availability", methods=["GET"])
 @token_required
 def check_professional_availability(current_user, professional_id):
@@ -645,7 +531,7 @@ def check_professional_availability(current_user, professional_id):
                 "InvalidDateFormat",
             )
 
-        # Get the service duration
+        # Get the service type
         service_id = request.args.get("service_id", type=int)
         if not service_id:
             return APIResponse.error(
@@ -654,9 +540,11 @@ def check_professional_availability(current_user, professional_id):
 
         service = Service.query.get_or_404(service_id)
 
-        # Check availability
+        # Check availability using duration in minutes
         is_available, error_message = check_booking_availability(
-            professional_id, preferred_time, service.duration_minutes
+            professional_id,
+            preferred_time,
+            service.estimated_time,  # Now in minutes
         )
 
         return APIResponse.success(

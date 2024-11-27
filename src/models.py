@@ -135,7 +135,7 @@ class Service(db.Model, TimestampMixin):
     name = db.Column(db.String(100), nullable=False, unique=True)
     description = db.Column(db.Text, nullable=False)
     base_price = db.Column(db.Float, nullable=False)
-    duration_minutes = db.Column(db.Integer, nullable=False)
+    estimated_time = db.Column(db.Integer, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
 
     # Relationships with cascade
@@ -172,13 +172,13 @@ class ServiceRequest(db.Model, TimestampMixin):
         ),
     )
 
-    date_of_request = db.Column(db.DateTime, nullable=False)
-    preferred_time = db.Column(db.String(50))
-    description = db.Column(db.Text)
+    date_of_request = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    preferred_time = db.Column(db.DateTime, nullable=False)
+    description = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), nullable=False, default=REQUEST_STATUS_CREATED)
     date_of_assignment = db.Column(db.DateTime)
     date_of_completion = db.Column(db.DateTime)
-    remarks = db.Column(db.Text)
+    remarks = db.Column(db.Text, nullable=False)
 
     # Relationships with cascade
     service = relationship("Service", back_populates="service_requests")

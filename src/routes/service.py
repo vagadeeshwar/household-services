@@ -46,7 +46,7 @@ def create_service(current_user):
             name=data["name"],
             description=data["description"],
             base_price=data["base_price"],
-            duration_minutes=data["duration_minutes"],
+            estimated_time=data["estimated_time"],
             is_active=True,
         )
         db.session.add(service)

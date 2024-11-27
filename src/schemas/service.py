@@ -8,7 +8,7 @@ class ServiceInputSchema(BaseSchema):
     name = fields.Str(required=True, validate=validate.Length(min=4, max=100))
     description = fields.Str(required=True, validate=validate.Length(min=1, max=1000))
     base_price = fields.Float(required=True, validate=validate.Range(min=0))
-    duration_minutes = fields.Int(required=True, validate=validate.Range(min=1))
+    estimated_time = fields.Int(required=True, validate=validate.Range(min=1))
     is_active = fields.Bool(dump_only=True)
 
 
@@ -18,7 +18,7 @@ class ServiceUpdateSchema(BaseSchema):
     name = fields.Str(validate=validate.Length(min=4, max=100))
     description = fields.Str(validate=validate.Length(min=1, max=1000))
     base_price = fields.Float(validate=validate.Range(min=0))
-    duration_minutes = fields.Int(validate=validate.Range(min=1))
+    estimated_time = fields.Int(validate=validate.Range(min=1))
 
 
 class ServiceOutputSchema(Schema):
@@ -28,7 +28,7 @@ class ServiceOutputSchema(Schema):
     name = fields.Str(required=True)
     description = fields.Str(required=True)
     base_price = fields.Float(required=True)
-    duration_minutes = fields.Int(required=True)
+    estimated_time = fields.Int(required=True)
     is_active = fields.Bool(required=True)
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)

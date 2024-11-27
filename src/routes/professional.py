@@ -19,8 +19,8 @@ from src.models import (
 from src.constants import (
     ActivityLogActions,
     USER_ROLE_PROFESSIONAL,
+    REQUEST_STATUS_CREATED,
     REQUEST_STATUS_ASSIGNED,
-    REQUEST_STATUS_IN_PROGRESS,
 )
 
 from src.schemas.professional import (
@@ -334,9 +334,7 @@ def update_verification_document(current_user):
         has_active_requests = (
             ServiceRequest.query.filter(
                 ServiceRequest.professional_id == current_user.professional_profile.id,
-                ServiceRequest.status.in_(
-                    [REQUEST_STATUS_ASSIGNED, REQUEST_STATUS_IN_PROGRESS]
-                ),
+                ServiceRequest.status.in_([REQUEST_STATUS_ASSIGNED]),
             ).first()
             is not None
         )
@@ -413,9 +411,7 @@ def update_service_type(current_user):
         has_active_requests = (
             ServiceRequest.query.filter(
                 ServiceRequest.professional_id == current_user.professional_profile.id,
-                ServiceRequest.status.in_(
-                    [REQUEST_STATUS_ASSIGNED, REQUEST_STATUS_IN_PROGRESS]
-                ),
+                ServiceRequest.status.in_([REQUEST_STATUS_ASSIGNED]),
             ).first()
             is not None
         )
@@ -486,11 +482,11 @@ def get_professional_dashboard(current_user):
                 professional_id=professional_id
             ).count(),
             "completed_requests": ServiceRequest.query.filter_by(
-                professional_id=professional_id, status="completed"
+                professional_id=professional_id, status=REQUEST_STATUS_CREATED
             ).count(),
             "active_requests": ServiceRequest.query.filter(
                 ServiceRequest.professional_id == professional_id,
-                ServiceRequest.status.in_(["assigned", "in_progress"]),
+                ServiceRequest.status.in_([REQUEST_STATUS_ASSIGNED]),
             ).count(),
             "average_rating": db.session.query(func.avg(Review.rating))
             .join(ServiceRequest)

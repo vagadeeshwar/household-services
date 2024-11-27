@@ -10,6 +10,8 @@ from src.models import (
     Review,
 )
 
+from src.constants import REQUEST_STATUS_CREATED, REQUEST_STATUS_COMPLETED
+
 from src.schemas.admin import (
     dashboard_stats_schema,
 )
@@ -41,11 +43,12 @@ def get_dashboard_stats(current_user):
             "reported_reviews": Review.query.filter_by(is_reported=True).count(),
             "service_requests": {
                 "total": ServiceRequest.query.count(),
-                "pending": ServiceRequest.query.filter_by(status="requested").count(),
-                "in_progress": ServiceRequest.query.filter_by(
-                    status="in_progress"
+                "pending": ServiceRequest.query.filter_by(
+                    status=REQUEST_STATUS_CREATED
                 ).count(),
-                "completed": ServiceRequest.query.filter_by(status="completed").count(),
+                "completed": ServiceRequest.query.filter_by(
+                    status=REQUEST_STATUS_COMPLETED
+                ).count(),
             },
         }
 
