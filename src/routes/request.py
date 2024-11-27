@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from marshmallow import ValidationError
 from http import HTTPStatus
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from src import db
 
@@ -44,15 +44,51 @@ def create_service_request(current_user):
     try:
         data = service_request_input_schema.load(request.get_json())
 
-        # Verify service exists
-        Service.query.get_or_404(data["service_id"])
+        # Verify service exists and is active
+        service = Service.query.get_or_404(data["service_id"])
+        if not service.is_active:
+            return APIResponse.error(
+                "Selected service is not currently available",
+                HTTPStatus.BAD_REQUEST,
+                "InactiveService",
+            )
 
+        # Check if service can be completed by 6 PM
+        service_end_time = data["preferred_time"] + timedelta(
+            minutes=service.estimated_time
+        )
+        end_time_limit = datetime.combine(
+            data["preferred_time"].date(), datetime.strptime("18:00", "%H:%M").time()
+        )
+        if service_end_time > end_time_limit:
+            return APIResponse.error(
+                "Service cannot be completed by 6 PM with the selected start time",
+                HTTPStatus.BAD_REQUEST,
+                "InvalidTimeSlot",
+            )
+
+        # Verify customer profile exists
+        if not current_user.customer_profile:
+            return APIResponse.error(
+                "Customer profile not found", HTTPStatus.NOT_FOUND, "ProfileNotFound"
+            )
+
+        # Check if customer has any pending payments (if implementing payments)
+        # if has_pending_payments(current_user.customer_profile.id):
+        #     return APIResponse.error(
+        #         "Cannot create new request with pending payments",
+        #         HTTPStatus.FORBIDDEN,
+        #         "PendingPayments"
+        #     )
+
+        # Create service request
         service_request = ServiceRequest(
             service_id=data["service_id"],
             customer_id=current_user.customer_profile.id,
             preferred_time=data["preferred_time"],
-            description=data.get("description"),
+            description=data.get("description", ""),
             status=REQUEST_STATUS_CREATED,
+            date_of_request=datetime.utcnow(),
         )
 
         db.session.add(service_request)
@@ -63,7 +99,7 @@ def create_service_request(current_user):
             user_id=current_user.id,
             action=ActivityLogActions.REQUEST_CREATE,
             entity_id=service_request.id,
-            description=f"Created service request for service {service_request.service_id}",
+            description=f"Created service request for {service.name}",
         )
         db.session.add(log)
         db.session.commit()
@@ -73,7 +109,12 @@ def create_service_request(current_user):
             message="Service request created successfully",
             status_code=HTTPStatus.CREATED,
         )
+    except ValidationError as err:
+        return APIResponse.error(
+            str(err.messages), HTTPStatus.BAD_REQUEST, "ValidationError"
+        )
     except Exception as e:
+        db.session.rollback()
         return APIResponse.error(
             f"Error creating service request: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -81,7 +122,7 @@ def create_service_request(current_user):
         )
 
 
-@request_bp.route("/requests/customer", methods=["GET"])
+@request_bp.route("/customer/requests", methods=["GET"])
 @token_required
 @role_required("customer")
 def list_customer_requests(current_user):
@@ -139,7 +180,7 @@ def list_customer_requests(current_user):
 @token_required
 @role_required("customer")
 def cancel_request(current_user, request_id):
-    """Cancel a service request"""
+    """Cancel a service request by deleting it"""
     try:
         customer_profile = CustomerProfile.query.filter_by(
             user_id=current_user.id
@@ -153,32 +194,38 @@ def cancel_request(current_user, request_id):
 
         if service_request.customer_id != customer_profile.id:
             return APIResponse.error(
-                "Unauthorized access", HTTPStatus.FORBIDDEN, "UnauthorizedAccess"
+                "Cannot access others requests",
+                HTTPStatus.FORBIDDEN,
+                "UnauthorizedAccess",
             )
 
-        if service_request.status not in [
-            REQUEST_STATUS_CREATED,
-            REQUEST_STATUS_ASSIGNED,
-        ]:
+        # Only allow cancellation of created or assigned requests
+        if service_request.status not in [REQUEST_STATUS_CREATED]:
             return APIResponse.error(
-                "Cannot cancel request in current status",
+                "Cannot cancel completed or assigned requests",
                 HTTPStatus.BAD_REQUEST,
                 "InvalidStatus",
             )
 
-        service_request.status = "cancelled"
-
+        # Create activity log before deletion
         log = ActivityLog(
             user_id=current_user.id,
             action=ActivityLogActions.REQUEST_CANCEL,
             entity_id=request_id,
-            description=f"Cancelled service request {request_id}",
+            description=(f"Cancelled service request {request_id}"),
         )
         db.session.add(log)
+
+        # Delete the service request
+        db.session.delete(service_request)
         db.session.commit()
 
-        return APIResponse.success(message="Service request cancelled successfully")
+        return APIResponse.success(
+            message="Service request cancelled successfully",
+            data={},
+        )
     except Exception as e:
+        db.session.rollback()
         return APIResponse.error(
             f"Error cancelling request: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -209,7 +256,9 @@ def submit_review(current_user, request_id):
 
         if service_request.customer_id != customer_profile.id:
             return APIResponse.error(
-                "Unauthorized access", HTTPStatus.FORBIDDEN, "UnauthorizedAccess"
+                "Cannot access others requests",
+                HTTPStatus.FORBIDDEN,
+                "UnauthorizedAccess",
             )
 
         if service_request.status != REQUEST_STATUS_COMPLETED:
@@ -265,12 +314,11 @@ def submit_review(current_user, request_id):
         )
 
 
-# Professional endpoints
-@request_bp.route("/requests/available", methods=["GET"])
+@request_bp.route("/professional/requests", methods=["GET"])
 @token_required
 @role_required("professional")
-def list_available_requests(current_user):
-    """List service requests available for assignment"""
+def list_professional_requests(current_user):
+    """List service requests based on type (available/ongoing/completed/all)"""
     try:
         professional = ProfessionalProfile.query.filter_by(
             user_id=current_user.id
@@ -287,15 +335,46 @@ def list_available_requests(current_user):
                 "Account not verified yet", HTTPStatus.FORBIDDEN, "UnverifiedAccount"
             )
 
-        # Get pagination parameters
+        # Get query parameters
+        request_type = request.args.get("type", "all").lower()
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 10, type=int)
 
-        # Build query
-        query = ServiceRequest.query.filter_by(
-            service_id=professional.service_type_id,
-            status=REQUEST_STATUS_CREATED,
-        ).order_by(ServiceRequest.date_of_request.asc())
+        # Build base query
+        if request_type == "available":
+            # Available requests - matching service type and unassigned
+            query = ServiceRequest.query.filter_by(
+                service_id=professional.service_type_id, status=REQUEST_STATUS_CREATED
+            ).order_by(ServiceRequest.preferred_time.asc())
+
+        elif request_type == "ongoing":
+            # Ongoing requests - assigned to this professional
+            query = ServiceRequest.query.filter_by(
+                professional_id=professional.id, status=REQUEST_STATUS_ASSIGNED
+            ).order_by(ServiceRequest.date_of_assignment.desc())
+
+        elif request_type == "completed":
+            # Completed requests by this professional
+            query = ServiceRequest.query.filter_by(
+                professional_id=professional.id, status=REQUEST_STATUS_COMPLETED
+            ).order_by(ServiceRequest.date_of_completion.desc())
+
+        elif request_type == "all":
+            # All requests - either available for their service type or assigned/completed by them
+            query = ServiceRequest.query.filter(
+                (
+                    (ServiceRequest.service_id == professional.service_type_id)
+                    & (ServiceRequest.status == REQUEST_STATUS_CREATED)
+                )
+                | (ServiceRequest.professional_id == professional.id)
+            ).order_by(ServiceRequest.date_of_request.desc())
+
+        else:
+            return APIResponse.error(
+                "Invalid request type. Must be one of: available, ongoing, completed, all",
+                HTTPStatus.BAD_REQUEST,
+                "InvalidRequestType",
+            )
 
         # Apply pagination
         try:
@@ -307,7 +386,7 @@ def list_available_requests(current_user):
 
         return APIResponse.success(
             data=service_requests_output_schema.dump(paginated.items),
-            message="Available requests retrieved successfully",
+            message=f"Requests retrieved successfully (type: {request_type})",
             pagination={
                 "total": paginated.total,
                 "pages": paginated.pages,
@@ -319,63 +398,7 @@ def list_available_requests(current_user):
         )
     except Exception as e:
         return APIResponse.error(
-            f"Error retrieving available requests: {str(e)}",
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            "DatabaseError",
-        )
-
-
-@request_bp.route("/requests/professional", methods=["GET"])
-@token_required
-@role_required("professional")
-def list_professional_assignments(current_user):
-    """List all assigned service requests for the professional"""
-    try:
-        professional = ProfessionalProfile.query.filter_by(
-            user_id=current_user.id
-        ).first()
-        if not professional:
-            return APIResponse.error(
-                "Professional profile not found",
-                HTTPStatus.NOT_FOUND,
-                "ProfileNotFound",
-            )
-
-        # Get query parameters
-        status = request.args.get("status")
-        page = request.args.get("page", 1, type=int)
-        per_page = request.args.get("per_page", 10, type=int)
-
-        # Build query
-        query = ServiceRequest.query.filter_by(professional_id=professional.id)
-        if status:
-            query = query.filter_by(status=status)
-
-        # Apply pagination
-        try:
-            paginated = query.order_by(ServiceRequest.date_of_request.desc()).paginate(
-                page=page, per_page=per_page, error_out=False
-            )
-        except Exception as e:
-            return APIResponse.error(
-                f"Pagination error: {str(e)}", HTTPStatus.BAD_REQUEST, "PaginationError"
-            )
-
-        return APIResponse.success(
-            data=service_requests_output_schema.dump(paginated.items),
-            message="Assignments retrieved successfully",
-            pagination={
-                "total": paginated.total,
-                "pages": paginated.pages,
-                "current_page": paginated.page,
-                "per_page": paginated.per_page,
-                "has_next": paginated.has_next,
-                "has_prev": paginated.has_prev,
-            },
-        )
-    except Exception as e:
-        return APIResponse.error(
-            f"Error retrieving assignments: {str(e)}",
+            f"Error retrieving requests: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
         )
@@ -402,7 +425,7 @@ def accept_request(current_user, request_id):
                 "Account not verified yet", HTTPStatus.FORBIDDEN, "UnverifiedAccount"
             )
 
-        service_request = ServiceRequest.query.get_or_404(request_id)
+        service_request = ServiceRequest.query.join(Service).get_or_404(request_id)
 
         if service_request.status != REQUEST_STATUS_CREATED:
             return APIResponse.error(
@@ -416,11 +439,11 @@ def accept_request(current_user, request_id):
                 "Service type mismatch", HTTPStatus.BAD_REQUEST, "ServiceMismatch"
             )
 
-        # Check for booking availability using duration in minutes
+        # Check for booking availability using the service's estimated time
         is_available, error_message = check_booking_availability(
             professional.id,
             service_request.preferred_time,
-            service_request.service.estimated_time,  # Now in minutes
+            service_request.service.estimated_time,
         )
 
         if not is_available:

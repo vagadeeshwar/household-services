@@ -11,49 +11,53 @@ from src.models import ServiceRequest, ProfessionalProfile, Service
 
 
 def check_booking_availability(
-    professional_id: int, preferred_time: datetime, estimated_time: int
+    professional_id: int, preferred_time: datetime, service_duration: int
 ) -> Tuple[bool, Optional[str]]:
     """
     Check if a professional is available for a booking time slot.
     Args:
         professional_id: ID of the professional
         preferred_time: Requested start time
-        estimated_time: Service duration in minutes
+        service_duration: Service duration in minutes
 
     Returns:
         Tuple of (is_available, error_message)
     """
     # Calculate the end time of the requested booking
-    booking_end_time = preferred_time + timedelta(minutes=estimated_time)
+    booking_end_time = preferred_time + timedelta(minutes=service_duration)
 
     # Find any overlapping bookings
-    overlapping_requests = ServiceRequest.query.filter(
-        ServiceRequest.professional_id == professional_id,
-        ServiceRequest.status == REQUEST_STATUS_ASSIGNED,
-        or_(
-            # Case 1: New booking starts during an existing booking
-            and_(
-                ServiceRequest.preferred_time <= preferred_time,
-                ServiceRequest.preferred_time
-                + timedelta(minutes=ServiceRequest.service.estimated_time)
-                > preferred_time,
+    overlapping_requests = (
+        ServiceRequest.query.join(Service)
+        .filter(
+            ServiceRequest.professional_id == professional_id,
+            ServiceRequest.status == REQUEST_STATUS_ASSIGNED,
+            or_(
+                # Case 1: New booking starts during an existing booking
+                and_(
+                    ServiceRequest.preferred_time <= preferred_time,
+                    ServiceRequest.preferred_time
+                    + timedelta(minutes=Service.estimated_time)
+                    > preferred_time,
+                ),
+                # Case 2: New booking ends during an existing booking
+                and_(
+                    ServiceRequest.preferred_time < booking_end_time,
+                    ServiceRequest.preferred_time
+                    + timedelta(minutes=Service.estimated_time)
+                    >= booking_end_time,
+                ),
+                # Case 3: New booking completely encompasses an existing booking
+                and_(
+                    ServiceRequest.preferred_time >= preferred_time,
+                    ServiceRequest.preferred_time
+                    + timedelta(minutes=Service.estimated_time)
+                    <= booking_end_time,
+                ),
             ),
-            # Case 2: New booking ends during an existing booking
-            and_(
-                ServiceRequest.preferred_time < booking_end_time,
-                ServiceRequest.preferred_time
-                + timedelta(minutes=ServiceRequest.service.estimated_time)
-                >= booking_end_time,
-            ),
-            # Case 3: New booking completely encompasses an existing booking
-            and_(
-                ServiceRequest.preferred_time >= preferred_time,
-                ServiceRequest.preferred_time
-                + timedelta(minutes=ServiceRequest.service.estimated_time)
-                <= booking_end_time,
-            ),
-        ),
-    ).first()
+        )
+        .first()
+    )
 
     if overlapping_requests:
         return False, "Professional has an overlapping booking during this time slot"

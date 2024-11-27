@@ -178,7 +178,7 @@ class ServiceRequest(db.Model, TimestampMixin):
     status = db.Column(db.String(20), nullable=False, default=REQUEST_STATUS_CREATED)
     date_of_assignment = db.Column(db.DateTime)
     date_of_completion = db.Column(db.DateTime)
-    remarks = db.Column(db.Text, nullable=False)
+    remarks = db.Column(db.Text)
 
     # Relationships with cascade
     service = relationship("Service", back_populates="service_requests")
