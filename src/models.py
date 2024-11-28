@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy.schema import CheckConstraint
+from sqlalchemy.schema import CheckConstraint, Index
 
 from src import db
 
@@ -57,6 +57,10 @@ class User(db.Model, TimestampMixin):
 
     __table_args__ = (
         CheckConstraint(f"role IN {tuple(USER_ROLES)}", name="valid_role_types"),
+        Index("idx_user_username", username, unique=True),
+        Index("idx_user_email", email, unique=True),
+        Index("idx_user_role_active", role, is_active),
+        Index("idx_user_pincode", pin_code),
     )
 
     def set_password(self, password):
@@ -105,6 +109,11 @@ class ProfessionalProfile(db.Model, TimestampMixin):
         "ServiceRequest", back_populates="professional", cascade="all, delete-orphan"
     )
 
+    __table_args__ = (
+        Index("idx_prof_verified_service", is_verified, service_type_id),
+        Index("idx_prof_rating", average_rating),
+    )
+
 
 class CustomerProfile(db.Model, TimestampMixin):
     """Profile for customers"""
@@ -146,6 +155,11 @@ class Service(db.Model, TimestampMixin):
     )
     service_requests = relationship(
         "ServiceRequest", back_populates="service", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        Index("idx_service_active_name", is_active, name),
+        Index("idx_service_price", base_price),
     )
 
 
@@ -197,6 +211,9 @@ class ServiceRequest(db.Model, TimestampMixin):
         CheckConstraint(
             f"status IN {tuple(REQUEST_STATUSES)}", name="valid_status_types"
         ),
+        Index("idx_request_prof_status", professional_id, status),
+        Index("idx_request_customer_status", customer_id, status),
+        Index("idx_request_dates", preferred_time, date_of_completion),
     )
 
 
@@ -222,6 +239,11 @@ class Review(db.Model, TimestampMixin):
     # Relationships with cascade
     service_request = relationship("ServiceRequest", back_populates="review")
 
+    __table_args__ = (
+        Index("idx_review_rating", rating),
+        Index("idx_review_reported", is_reported),
+    )
+
 
 class ActivityLog(db.Model, TimestampMixin):
     """Audit trail for important activities"""
@@ -239,11 +261,15 @@ class ActivityLog(db.Model, TimestampMixin):
     )
     description = db.Column(db.Text, nullable=False)
 
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
     __table_args__ = (
         db.CheckConstraint(
             f"action IN {tuple(ActivityLogActions.get_all_actions())}",
             name="valid_action_types",
         ),
+        Index("idx_activity_action_time", action, created_at),
+        Index("idx_activity_user", user_id),
     )
 
     def __repr__(self):

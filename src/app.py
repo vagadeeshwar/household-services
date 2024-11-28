@@ -28,8 +28,8 @@ def create_app():
     db.init_app(app)
     ma.init_app(app)
 
-    # with app.app_context():
-    #     setup_database()
+    with app.app_context():
+        setup_database()
 
     # Register blueprints
     from src.routes.user import user_bp
@@ -37,7 +37,7 @@ def create_app():
     from src.routes.professional import professional_bp
     from src.routes.auth import auth_bp
     from src.routes.service import service_bp
-    from src.routes.admin import admin_bp
+    from src.routes.dashboard import dashboard_bp
     from src.routes.request import request_bp
 
     app.register_blueprint(user_bp, url_prefix="/api")
@@ -45,7 +45,7 @@ def create_app():
     app.register_blueprint(professional_bp, url_prefix="/api")
     app.register_blueprint(auth_bp, url_prefix="/api")
     app.register_blueprint(service_bp, url_prefix="/api")
-    app.register_blueprint(admin_bp, url_prefix="/api")
+    app.register_blueprint(dashboard_bp, url_prefix="/api")
     app.register_blueprint(request_bp, url_prefix="/api")
 
     # Register error handler
