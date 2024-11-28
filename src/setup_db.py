@@ -150,7 +150,8 @@ def create_professionals(services, admin_id):
         os.path.dirname(os.path.dirname(__file__)), "static/uploads/verification_docs"
     )
 
-    # Create uploads directory if it doesn't exist
+    # Clear existing files and create directory
+    clear_static_directory()
     os.makedirs(doc_directory, exist_ok=True)
 
     service_descriptions = {
@@ -815,4 +816,26 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
     except Exception as e:
         logger.error(f"Error creating requests and reviews: {str(e)}")
         db.session.rollback()
+        raise
+
+
+def clear_static_directory():
+    """Clear all files from the verification documents upload directory"""
+    doc_directory = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "static/uploads/verification_docs"
+    )
+
+    try:
+        if os.path.exists(doc_directory):
+            # Remove all files in the directory
+            for filename in os.listdir(doc_directory):
+                file_path = os.path.join(doc_directory, filename)
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+            logger.info(f"Cleared all files from {doc_directory}")
+        else:
+            logger.info(f"Upload directory {doc_directory} does not exist yet")
+
+    except Exception as e:
+        logger.error(f"Error clearing static directory: {str(e)}")
         raise

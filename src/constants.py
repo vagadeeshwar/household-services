@@ -39,6 +39,7 @@ SERVICE_RESTORE = "service_restore"
 # Request Management Actions
 REQUEST_CREATE = "request_create"
 REQUEST_ASSIGN = "request_assign"
+REQUEST_UPDATE = "request_update"
 REQUEST_COMPLETE = "request_complete"
 REQUEST_REVIEWED = "request_reviewed"
 REQUEST_CANCEL = "request_cancel"
@@ -95,8 +96,10 @@ class ActivityLogActions:
     # Request Management
     REQUEST_CREATE = REQUEST_CREATE
     REQUEST_ASSIGN = REQUEST_ASSIGN
+    REQUEST_UPDATE = REQUEST_UPDATE
     REQUEST_COMPLETE = REQUEST_COMPLETE
     REQUEST_CANCEL = REQUEST_CANCEL
+    REQUEST_REVIEWED = REQUEST_REVIEWED
 
     # Review Management
     REVIEW_SUBMIT = REVIEW_SUBMIT

@@ -490,53 +490,80 @@ def accept_request(current_user, request_id):
 
 @request_bp.route("/requests/<int:request_id>/complete", methods=["POST"])
 @token_required
-@role_required("professional")
+@role_required("customer", "professional")
 def complete_service(current_user, request_id):
-    """Mark a service request as completed"""
+    """Mark a service request as completed with permissions for both customer and professional"""
     try:
-        professional = ProfessionalProfile.query.filter_by(
-            user_id=current_user.id
-        ).first()
-        if not professional:
-            return APIResponse.error(
-                "Professional profile not found",
-                HTTPStatus.NOT_FOUND,
-                "ProfileNotFound",
-            )
-
+        # Get the service request
         service_request = ServiceRequest.query.get_or_404(request_id)
 
-        if service_request.professional_id != professional.id:
-            return APIResponse.error(
-                "Cannot access others requests",
-                HTTPStatus.FORBIDDEN,
-                "UnauthorizedAccess",
-            )
+        # Verify authorization based on role
+        if current_user.role == "customer":
+            if (
+                not current_user.customer_profile
+                or service_request.customer_id != current_user.customer_profile.id
+            ):
+                return APIResponse.error(
+                    "Cannot access others requests",
+                    HTTPStatus.FORBIDDEN,
+                    "UnauthorizedAccess",
+                )
+        else:  # Professional
+            if (
+                not current_user.professional_profile
+                or service_request.professional_id
+                != current_user.professional_profile.id
+            ):
+                return APIResponse.error(
+                    "Cannot access others requests",
+                    HTTPStatus.FORBIDDEN,
+                    "UnauthorizedAccess",
+                )
 
+        # Validate request status
         if service_request.status != REQUEST_STATUS_ASSIGNED:
             return APIResponse.error(
-                "Cannot complete already completed service",
+                "Cannot complete already completed/unassigned service",
                 HTTPStatus.BAD_REQUEST,
                 "InvalidStatus",
             )
 
-        remarks = request.get_json().get("remarks")
-        if not remarks:
+        # Check if enough time has passed based on estimated completion time
+        estimated_completion_time = service_request.preferred_time + timedelta(
+            minutes=service_request.service.estimated_time
+        )
+        current_time = datetime.utcnow()
+
+        if current_time < estimated_completion_time:
+            remaining_minutes = int(
+                (estimated_completion_time - current_time).total_seconds() / 60
+            )
+            return APIResponse.error(
+                f"Service cannot be completed yet. {remaining_minutes} minutes remaining based on estimated duration.",
+                HTTPStatus.BAD_REQUEST,
+                "EarlyCompletion",
+            )
+
+        # Validate request body
+        data = request.get_json()
+        if not data or not data.get("remarks"):
             return APIResponse.error(
                 "Remarks are required for completion",
                 HTTPStatus.BAD_REQUEST,
                 "MissingRemarks",
             )
 
+        # Update service request
         service_request.status = REQUEST_STATUS_COMPLETED
-        service_request.date_of_completion = datetime.utcnow()
-        service_request.remarks = remarks
+        service_request.date_of_completion = current_time
+        service_request.remarks = data["remarks"]
 
+        # Create activity log
         log = ActivityLog(
             user_id=current_user.id,
             action=ActivityLogActions.REQUEST_COMPLETE,
             entity_id=request_id,
-            description=f"Completed service for request {request_id}",
+            description=f"Service request {request_id} marked as completed by {current_user.role}",
         )
         db.session.add(log)
         db.session.commit()
@@ -546,8 +573,102 @@ def complete_service(current_user, request_id):
             message="Service marked as completed successfully",
         )
     except Exception as e:
+        db.session.rollback()
         return APIResponse.error(
             f"Error completing service: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
+
+
+@request_bp.route("/requests/<int:request_id>", methods=["PUT"])
+@token_required
+@role_required("customer")
+def edit_service_request(current_user, request_id):
+    """Edit an existing service request"""
+    try:
+        # Validate request body
+        data = service_request_input_schema.load(request.get_json())
+
+        # Verify customer profile and request
+        customer_profile = CustomerProfile.query.filter_by(
+            user_id=current_user.id
+        ).first()
+        if not customer_profile:
+            return APIResponse.error(
+                "Customer profile not found", HTTPStatus.NOT_FOUND, "ProfileNotFound"
+            )
+
+        service_request = ServiceRequest.query.get_or_404(request_id)
+
+        # Check ownership
+        if service_request.customer_id != customer_profile.id:
+            return APIResponse.error(
+                "Cannot access others requests",
+                HTTPStatus.FORBIDDEN,
+                "UnauthorizedAccess",
+            )
+
+        # Only allow editing of unassigned requests
+        if service_request.status != REQUEST_STATUS_CREATED:
+            return APIResponse.error(
+                "Cannot edit requests that have been assigned or completed",
+                HTTPStatus.BAD_REQUEST,
+                "InvalidStatus",
+            )
+
+        # Verify service exists and is active
+        service = Service.query.get_or_404(data["service_id"])
+        if not service.is_active:
+            return APIResponse.error(
+                "Selected service is not currently available",
+                HTTPStatus.BAD_REQUEST,
+                "InactiveService",
+            )
+
+        # Check if service can be completed by 6 PM
+        service_end_time = data["preferred_time"] + timedelta(
+            minutes=service.estimated_time
+        )
+        end_time_limit = datetime.combine(
+            data["preferred_time"].date(), datetime.strptime("18:00", "%H:%M").time()
+        )
+        if service_end_time > end_time_limit:
+            return APIResponse.error(
+                "Service cannot be completed by 6 PM with the selected start time",
+                HTTPStatus.BAD_REQUEST,
+                "InvalidTimeSlot",
+            )
+
+        # Update request fields
+        service_request.service_id = data["service_id"]
+        service_request.preferred_time = data["preferred_time"]
+        service_request.description = data.get(
+            "description", service_request.description
+        )
+
+        # Create activity log
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=ActivityLogActions.REQUEST_UPDATE,
+            entity_id=request_id,
+            description=f"Updated service request {request_id} details",
+        )
+        db.session.add(log)
+        db.session.commit()
+
+        return APIResponse.success(
+            data=service_request_output_schema.dump(service_request),
+            message="Service request updated successfully",
+        )
+    except ValidationError as err:
+        return APIResponse.error(
+            str(err.messages), HTTPStatus.BAD_REQUEST, "ValidationError"
+        )
+    except Exception as e:
+        db.session.rollback()
+        return APIResponse.error(
+            f"Error updating service request: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
         )
