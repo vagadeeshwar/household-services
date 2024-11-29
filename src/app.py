@@ -9,6 +9,8 @@ from src.setup_db import setup_database  # noqa
 
 from src.utils.api import register_error_handlers
 from src.utils.file import UPLOAD_FOLDER
+from src.utils.cache import init_cache
+from src.utils.notification import mail
 
 
 def create_app():
@@ -24,12 +26,25 @@ def create_app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "your-secret-key-here")
 
+    app.config.update(
+        MAIL_SERVER="smtp.gmail.com",
+        MAIL_PORT=587,
+        MAIL_USE_TLS=True,
+        MAIL_USERNAME=os.getenv("MAIL_USERNAME"),
+        MAIL_PASSWORD=os.getenv("MAIL_PASSWORD"),
+        MAIL_DEFAULT_SENDER=os.getenv(
+            "MAIL_DEFAULT_SENDER", "noreply@householdservices.com"
+        ),
+    )
+
     # Initialize extensions
     db.init_app(app)
     ma.init_app(app)
+    init_cache(app)
+    mail.init_app(app)
 
-    with app.app_context():
-        setup_database()
+    # with app.app_context():
+    #     setup_database()
 
     # Register blueprints
     from src.routes.user import user_bp

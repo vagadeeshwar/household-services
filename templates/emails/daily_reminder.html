@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <h2>Daily Service Requests Update</h2>
+    <p>Dear {{ name }},</p>
+    {% if pending_requests %}
+    <p>You have {{ pending_requests|length }} pending service requests:</p>
+    <ul>
+        {% for request in pending_requests %}
+        <li>
+            {{ request.service.name }} - {{ request.preferred_time.strftime('%Y-%m-%d %H:%M') }}
+            <br>Location: {{ request.customer.user.address }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>You have no pending service requests today.</p>
+    {% endif %}
+    <p>Best regards,<br>Household Services Team</p>
+</body>
+
+</html>

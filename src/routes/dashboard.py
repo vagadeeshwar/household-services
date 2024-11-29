@@ -34,12 +34,14 @@ from src.schemas.service import services_output_schema
 
 from src.utils.auth import token_required
 from src.utils.api import APIResponse
+from src.utils.cache import cached_with_auth
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
 
 @dashboard_bp.route("/dashboard-stats", methods=["GET"])
 @token_required
+@cached_with_auth(timeout=60)
 def get_dashboard_stats(current_user):
     """Get role-specific dashboard statistics"""
     try:

@@ -1,153 +1,153 @@
-// frontend/src/views/admin/Dashboard.vue
+<!-- src/views/admin/DashboardOverview.vue -->
 <template>
-    <div class="dashboard">
-        <!-- Platform Overview Stats -->
+    <div class="dashboard-overview">
+        <!-- Stats Cards Row -->
         <div class="row g-4 mb-4">
-            <!-- Total Professionals -->
+            <!-- Professionals Card -->
             <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm">
+                <div class="card h-100 border-0 shadow-sm">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
                             <div class="bg-primary bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-person-badge fs-4 text-primary"></i>
+                                <i class="bi bi-people fs-4 text-primary"></i>
                             </div>
                             <div class="ms-3">
-                                <h6 class="mb-0">Total Professionals</h6>
+                                <h6 class="mb-0">Service Professionals</h6>
                                 <small class="text-muted">
                                     {{ stats.verified_professionals }} verified
                                 </small>
                             </div>
                         </div>
-                        <h3 class="mb-0">{{ stats.total_professionals || 0 }}</h3>
+                        <h3 class="mb-0">{{ stats.total_professionals }}</h3>
                     </div>
                 </div>
             </div>
 
-            <!-- Total Customers -->
+            <!-- Customers Card -->
             <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm">
+                <div class="card h-100 border-0 shadow-sm">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
                             <div class="bg-success bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-people fs-4 text-success"></i>
+                                <i class="bi bi-person-check fs-4 text-success"></i>
                             </div>
                             <div class="ms-3">
-                                <h6 class="mb-0">Total Customers</h6>
+                                <h6 class="mb-0">Active Customers</h6>
                                 <small class="text-muted">
-                                    {{ stats.active_customers }} active
+                                    Past 30 days
                                 </small>
                             </div>
                         </div>
-                        <h3 class="mb-0">{{ stats.total_customers || 0 }}</h3>
+                        <h3 class="mb-0">{{ stats.total_customers }}</h3>
                     </div>
                 </div>
             </div>
 
-            <!-- Service Requests -->
+            <!-- Service Requests Card -->
             <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm">
+                <div class="card h-100 border-0 shadow-sm">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
                             <div class="bg-info bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-calendar2-check fs-4 text-info"></i>
+                                <i class="bi bi-clipboard-check fs-4 text-info"></i>
                             </div>
                             <div class="ms-3">
                                 <h6 class="mb-0">Service Requests</h6>
                                 <small class="text-muted">
-                                    {{ stats.service_requests?.pending }} pending
+                                    {{ stats.pending_requests }} pending
                                 </small>
                             </div>
                         </div>
-                        <h3 class="mb-0">{{ stats.service_requests?.total || 0 }}</h3>
+                        <h3 class="mb-0">{{ stats.total_requests }}</h3>
                     </div>
                 </div>
             </div>
 
-            <!-- Pending Actions -->
+            <!-- Actions Required Card -->
             <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm">
+                <div class="card h-100 border-0 shadow-sm">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
                             <div class="bg-warning bg-opacity-10 p-3 rounded">
                                 <i class="bi bi-exclamation-circle fs-4 text-warning"></i>
                             </div>
                             <div class="ms-3">
-                                <h6 class="mb-0">Pending Actions</h6>
-                                <small class="text-muted">Requires attention</small>
+                                <h6 class="mb-0">Actions Required</h6>
+                                <small class="text-muted">Needs attention</small>
                             </div>
                         </div>
-                        <h3 class="mb-0">
-                            {{ stats.pending_verifications + stats.reported_reviews || 0 }}
-                        </h3>
+                        <h3 class="mb-0">{{ pendingActions }}</h3>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Alert for errors -->
+        <div v-if="error" class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            {{ error }}
+            <button type="button" class="btn-close" @click="error = null"></button>
+        </div>
 
+        <!-- Main Content Row -->
         <div class="row g-4">
-            <!-- Main Content Area -->
+            <!-- Left Column -->
             <div class="col-lg-8">
                 <!-- Pending Verifications -->
                 <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-transparent border-0">
-                        <div class="d-flex align-items-center justify-content-between">
+                    <div class="card-header bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">
                                 Pending Verifications
                                 <span class="badge bg-warning ms-2">
                                     {{ stats.pending_verifications }}
                                 </span>
                             </h5>
-                            <router-link to="/admin/professionals?verified=false" class="btn btn-sm btn-primary">
+                            <router-link to="/admin/verifications" class="btn btn-sm btn-primary">
                                 View All
                             </router-link>
                         </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         <div v-if="loading" class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status">
+                            <div class="spinner-border text-primary">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
                         </div>
-
-                        <div v-else-if="pendingVerifications.length === 0" class="text-center py-4">
-                            <i class="bi bi-patch-check fs-1 text-muted"></i>
+                        <div v-else-if="!pendingVerifications.length" class="text-center py-4">
+                            <i class="bi bi-check-circle fs-1 text-muted"></i>
                             <p class="mt-2 mb-0">No pending verifications</p>
                         </div>
-
                         <div v-else class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
                                     <tr>
                                         <th>Professional</th>
                                         <th>Service Type</th>
                                         <th>Experience</th>
-                                        <th>Registered</th>
+                                        <th>Date Applied</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="prof in pendingVerifications" :key="prof.id">
+                                    <tr v-for="prof in pendingVerifications" :key="prof?.id">
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div>
-                                                    <div class="fw-bold">{{ prof.user.full_name }}</div>
-                                                    <small class="text-muted">{{ prof.user.email }}</small>
+                                                    <div class="fw-medium">
+                                                        {{ prof?.user?.full_name || 'Unknown' }}
+                                                    </div>
+                                                    <small class="text-muted">
+                                                        {{ prof?.user?.email || 'No email' }}
+                                                    </small>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>{{ prof.service_type.name }}</td>
-                                        <td>{{ prof.experience_years }} years</td>
-                                        <td>{{ formatDate(prof.created_at) }}</td>
+                                        <td>{{ prof?.service_type?.name || 'Unknown Service' }}</td>
+                                        <td>{{ prof?.experience_years || 0 }} years</td>
+                                        <td>{{ formatDate(prof?.created_at) }}</td>
                                         <td>
-                                            <button class="btn btn-sm btn-success me-2"
-                                                @click="verifyProfessional(prof.id)" :disabled="verifying === prof.id">
-                                                <span v-if="verifying === prof.id"
-                                                    class="spinner-border spinner-border-sm me-1">
-                                                </span>
-                                                Verify
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-primary" @click="viewDocuments(prof)">
-                                                Documents
+                                            <button class="btn btn-sm btn-primary" @click="viewDocuments(prof)"
+                                                :disabled="!prof?.verification_documents">
+                                                Review
                                             </button>
                                         </td>
                                     </tr>
@@ -159,29 +159,27 @@
 
                 <!-- Recent Service Requests -->
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0">
-                        <div class="d-flex align-items-center justify-content-between">
+                    <div class="card-header bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">Recent Service Requests</h5>
                             <router-link to="/admin/requests" class="btn btn-sm btn-primary">
                                 View All
                             </router-link>
                         </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         <div v-if="loading" class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status">
+                            <div class="spinner-border text-primary">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
                         </div>
-
-                        <div v-else-if="recentRequests.length === 0" class="text-center py-4">
-                            <i class="bi bi-calendar-x fs-1 text-muted"></i>
-                            <p class="mt-2 mb-0">No service requests</p>
+                        <div v-else-if="!recentRequests.length" class="text-center py-4">
+                            <i class="bi bi-inbox fs-1 text-muted"></i>
+                            <p class="mt-2 mb-0">No recent service requests</p>
                         </div>
-
                         <div v-else class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
                                     <tr>
                                         <th>Customer</th>
                                         <th>Service</th>
@@ -191,11 +189,11 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="request in recentRequests" :key="request.id">
-                                        <td>{{ request.customer.user.full_name }}</td>
-                                        <td>{{ request.service.name }}</td>
+                                    <tr v-for="request in recentRequests" :key="request?.id">
+                                        <td>{{ request?.customer?.user?.full_name || 'Unknown' }}</td>
+                                        <td>{{ request?.service?.name || 'Unknown Service' }}</td>
                                         <td>
-                                            <span v-if="request.professional">
+                                            <span v-if="request?.professional?.user?.full_name">
                                                 {{ request.professional.user.full_name }}
                                             </span>
                                             <span v-else class="text-muted">Not assigned</span>
@@ -204,15 +202,15 @@
                                             <span :class="[
                                                 'badge',
                                                 {
-                                                    'bg-warning': request.status === 'created',
-                                                    'bg-primary': request.status === 'assigned',
-                                                    'bg-success': request.status === 'completed'
+                                                    'bg-warning': request?.status === 'created',
+                                                    'bg-primary': request?.status === 'assigned',
+                                                    'bg-success': request?.status === 'completed'
                                                 }
                                             ]">
-                                                {{ request.status }}
+                                                {{ request?.status || 'Unknown' }}
                                             </span>
                                         </td>
-                                        <td>{{ formatDate(request.preferred_time) }}</td>
+                                        <td>{{ formatDate(request?.created_at) }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -221,131 +219,131 @@
                 </div>
             </div>
 
-            <!-- Sidebar Content -->
+            <!-- Right Column -->
             <div class="col-lg-4">
-                <!-- Reported Reviews -->
+                <!-- Quick Actions -->
                 <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-transparent border-0">
-                        <div class="d-flex align-items-center justify-content-between">
+                    <div class="card-header bg-transparent">
+                        <h5 class="mb-0">Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" @click="openNewServiceModal">
+                                <i class="bi bi-plus-circle me-2"></i>
+                                Add New Service
+                            </button>
+                            <router-link to="/admin/export" class="btn btn-outline-primary">
+                                <i class="bi bi-download me-2"></i>
+                                Export Reports
+                            </router-link>
+                            <router-link to="/admin/settings" class="btn btn-outline-secondary">
+                                <i class="bi bi-gear me-2"></i>
+                                Platform Settings
+                            </router-link>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reported Reviews -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">
                                 Reported Reviews
                                 <span class="badge bg-danger ms-2">
                                     {{ stats.reported_reviews }}
                                 </span>
                             </h5>
-                            <router-link to="/admin/reviews?reported=true" class="btn btn-sm btn-primary">
+                            <router-link to="/admin/reviews" class="btn btn-sm btn-primary">
                                 View All
                             </router-link>
                         </div>
                     </div>
                     <div class="card-body">
                         <div v-if="loading" class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status">
+                            <div class="spinner-border text-primary">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
                         </div>
-
-                        <div v-else-if="reportedReviews.length === 0" class="text-center py-4">
-                            <i class="bi bi-shield-check fs-1 text-muted"></i>
+                        <div v-else-if="!reportedReviews.length" class="text-center py-4">
+                            <i class="bi bi-check-circle fs-1 text-muted"></i>
                             <p class="mt-2 mb-0">No reported reviews</p>
                         </div>
-
                         <div v-else>
-                            <div v-for="review in reportedReviews" :key="review.id"
+                            <div v-for="review in reportedReviews" :key="review?.id"
                                 class="review-card p-3 mb-3 bg-light rounded">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <div>
-                                        <div class="rating text-warning">
-                                            <i v-for="n in 5" :key="n"
-                                                :class="['bi', n <= review.rating ? 'bi-star-fill' : 'bi-star']">
-                                            </i>
-                                        </div>
-                                        <small class="text-muted d-block">
-                                            {{ formatDate(review.created_at) }}
-                                        </small>
+                                    <div class="rating text-warning">
+                                        <i v-for="n in 5" :key="n"
+                                            :class="['bi', n <= (review?.rating || 0) ? 'bi-star-fill' : 'bi-star']">
+                                        </i>
                                     </div>
                                     <span class="badge bg-danger">Reported</span>
                                 </div>
-                                <p class="mb-2">{{ review.comment }}</p>
+                                <p class="mb-2">{{ review?.comment || 'No comment provided' }}</p>
                                 <div class="report-reason mb-2">
                                     <small class="text-danger">
                                         <i class="bi bi-exclamation-triangle me-1"></i>
-                                        {{ review.report_reason }}
+                                        {{ review?.report_reason || 'No reason provided' }}
                                     </small>
                                 </div>
-                                <div class="review-meta text-muted small">
-                                    <div>Service: {{ review.service_request.service.name }}</div>
-                                    <div>Professional: {{ review.service_request.professional.user.full_name }}</div>
-                                    <div>Customer: {{ review.service_request.customer.user.full_name }}</div>
-                                </div>
-                                <div class="mt-3 d-flex gap-2">
-                                    <button class="btn btn-sm btn-danger" @click="removeReview(review.id)"
-                                        :disabled="removingReview === review.id">
-                                        Remove Review
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-secondary" @click="dismissReport(review.id)"
-                                        :disabled="dismissingReport === review.id">
-                                        Dismiss Report
-                                    </button>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <small class="text-muted">
+                                        {{ formatDate(review?.created_at) }}
+                                    </small>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-danger me-2"
+                                            @click="handleRemoveReview(review?.id)" :disabled="!review?.id">
+                                            Remove
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary"
+                                            @click="handleDismissReview(review?.id)" :disabled="!review?.id">
+                                            Dismiss
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Quick Stats -->
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0">
-                        <h5 class="mb-0">Platform Statistics</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas ref="statsChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Document Preview Modal -->
+        <!-- Document Review Modal -->
         <div class="modal fade" id="documentModal" tabindex="-1" ref="documentModal">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Verification Documents</h5>
+                        <h5 class="modal-title">Review Verification Documents</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <div v-if="selectedProfessional" class="p-3">
-                            <div class="mb-4">
-                                <h6>Professional Details</h6>
-                                <div class="table-responsive">
-                                    <table class="table table-borderless">
-                                        <tbody>
-                                            <tr>
-                                                <th style="width: 150px">Name:</th>
-                                                <td>{{ selectedProfessional.user.full_name }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Service Type:</th>
-                                                <td>{{ selectedProfessional.service_type.name }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Experience:</th>
-                                                <td>{{ selectedProfessional.experience_years }} years</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Description:</th>
-                                                <td>{{ selectedProfessional.description }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                        <!-- Professional Details -->
+                        <div v-if="selectedProfessional" class="mb-4">
+                            <h6>Professional Details</h6>
+                            <div class="table-responsive">
+                                <table class="table table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <th style="width: 150px">Name:</th>
+                                            <td>{{ selectedProfessional.user.full_name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Service Type:</th>
+                                            <td>{{ selectedProfessional.service_type.name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Experience:</th>
+                                            <td>{{ selectedProfessional.experience_years }} years</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <div>
-                                <h6>Verification Document</h6>
-                                <div class="document-preview bg-light p-3 rounded">
-                                    <iframe v-if="documentUrl" :src="documentUrl" class="w-100"
-                                        style="height: 500px;"></iframe>
-                                </div>
+                            <!-- Document Preview -->
+                            <h6>Verification Documents</h6>
+                            <div class="document-preview bg-light p-3 rounded">
+                                <iframe v-if="documentUrl" :src="documentUrl" class="w-100" style="height: 500px;">
+                                </iframe>
                             </div>
                         </div>
                     </div>
@@ -365,217 +363,203 @@
                 </div>
             </div>
         </div>
+
+        <!-- New Service Modal -->
+        <div class="modal fade" id="newServiceModal" tabindex="-1" ref="newServiceModal">
+            <!-- Modal content here -->
+        </div>
     </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
-import { Modal } from 'bootstrap'
-import Chart from 'chart.js/auto'
-import moment from 'moment'
-import axios from 'axios'
+import { ref, computed, onMounted } from 'vue';
+import { Modal } from 'bootstrap';
+import moment from 'moment';
+import axios from 'axios';
 
 export default {
-    name: 'AdminDashboard',
+    name: 'DashboardOverview',
 
     setup() {
-        const loading = ref(true)
-        const stats = ref({})
-        const pendingVerifications = ref([])
-        const recentRequests = ref([])
-        const reportedReviews = ref([])
-        const verifying = ref(null)
-        const removingReview = ref(null)
-        const dismissingReport = ref(null)
-        const documentModal = ref(null)
-        const selectedProfessional = ref(null)
-        const documentUrl = ref('')
-        const statsChart = ref(null)
-        let chart = null
+        // Initialize with proper data structures
+        const loading = ref(true);
+        const error = ref(null);
+        const stats = ref({
+            total_professionals: 0,
+            verified_professionals: 0,
+            total_customers: 0,
+            active_customers: 0,
+            pending_verifications: 0,
+            reported_reviews: 0,
+            service_requests: {
+                total: 0,
+                pending: 0,
+                completed: 0
+            }
+        });
+
+        const pendingVerifications = ref([]);
+        const recentRequests = ref([]);
+        const reportedReviews = ref([]);
+        const selectedProfessional = ref(null);
+        const verifying = ref(null);
+        const documentUrl = ref('');
+        const documentModal = ref(null);
+        const newServiceModal = ref(null);
 
         const fetchDashboardData = async () => {
             try {
-                loading.value = true
-                const [
-                    statsRes,
-                    verificationsRes,
-                    requestsRes,
-                    reviewsRes
-                ] = await Promise.all([
+                loading.value = true;
+                error.value = null;
+
+                const [statsRes, verificationsRes, requestsRes, reviewsRes] = await Promise.all([
                     axios.get('/api/dashboard-stats'),
                     axios.get('/api/detailed-stats?stat_type=pending_verifications'),
                     axios.get('/api/detailed-stats?stat_type=recent_requests'),
                     axios.get('/api/detailed-stats?stat_type=reported_reviews')
-                ])
+                ]);
 
-                stats.value = statsRes.data.data
-                pendingVerifications.value = verificationsRes.data.data
-                recentRequests.value = requestsRes.data.data
-                reportedReviews.value = reviewsRes.data.data
-
-                initializeChart()
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error)
-            } finally {
-                loading.value = false
-            }
-        }
-
-        const initializeChart = () => {
-            if (chart) {
-                chart.destroy()
-            }
-
-            const ctx = statsChart.value.getContext('2d')
-            chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Professionals', 'Customers', 'Active Requests', 'Completed'],
-                    datasets: [{
-                        label: 'Platform Statistics',
-                        data: [
-                            stats.value.total_professionals || 0,
-                            stats.value.total_customers || 0,
-                            stats.value.service_requests?.active || 0,
-                            stats.value.service_requests?.completed || 0
-                        ],
-                        backgroundColor: [
-                            'rgba(13, 110, 253, 0.5)',  // primary
-                            'rgba(25, 135, 84, 0.5)',   // success
-                            'rgba(13, 202, 240, 0.5)',  // info
-                            'rgba(25, 135, 84, 0.5)'    // success
-                        ],
-                        borderColor: [
-                            'rgb(13, 110, 253)',
-                            'rgb(25, 135, 84)',
-                            'rgb(13, 202, 240)',
-                            'rgb(25, 135, 84)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
+                // Validate responses before assignment
+                if (statsRes.data?.data) {
+                    stats.value = statsRes.data.data;
                 }
-            })
-        }
+
+                if (verificationsRes.data?.data) {
+                    pendingVerifications.value = verificationsRes.data.data;
+                }
+
+                if (requestsRes.data?.data) {
+                    recentRequests.value = requestsRes.data.data;
+                }
+
+                if (reviewsRes.data?.data) {
+                    reportedReviews.value = reviewsRes.data.data;
+                }
+
+            } catch (err) {
+                console.error('Error fetching dashboard data:', err);
+                error.value = err.response?.data?.message || 'Error loading dashboard data';
+            } finally {
+                loading.value = false;
+            }
+        };
+
+        const formatDate = (date) => {
+            if (!date) return 'N/A';
+            return moment(date).format('MMM D, YYYY');
+        };
+
+        const viewDocuments = (professional) => {
+            if (!professional) return;
+            selectedProfessional.value = professional;
+
+            if (professional.verification_documents) {
+                documentUrl.value = `/api/static/uploads/verification_docs/${professional.verification_documents}`;
+                const modal = new Modal(document.getElementById('documentModal'));
+                modal?.show();
+            }
+        };
 
         const verifyProfessional = async (professionalId) => {
             try {
-                verifying.value = professionalId
-                await axios.post(`/api/professionals/${professionalId}/verify`)
-                await fetchDashboardData()
-
-                if (documentModal.value) {
-                    const modal = Modal.getInstance(documentModal.value)
-                    modal?.hide()
-                }
+                verifying.value = professionalId;
+                await axios.post(`/api/professionals/${professionalId}/verify`);
+                await fetchDashboardData();
+                documentModal.value.hide();
             } catch (error) {
-                console.error('Error verifying professional:', error)
+                console.error('Error verifying professional:', error);
             } finally {
-                verifying.value = null
+                verifying.value = null;
             }
-        }
+        };
 
-        const viewDocuments = async (professional) => {
-            selectedProfessional.value = professional
-            documentUrl.value = `/api/static/uploads/verification_docs/${professional.verification_documents}`
-            const modal = new Modal(documentModal.value)
-            modal.show()
-        }
+        const openNewServiceModal = () => {
+            if (!newServiceModal.value) {
+                newServiceModal.value = new Modal(document.getElementById('newServiceModal'));
+            }
+            newServiceModal.value.show();
+        };
 
-        const removeReview = async (reviewId) => {
-            if (!confirm('Are you sure you want to remove this review?')) return
+        const handleDismissReview = async (reviewId) => {
+            try {
+                await axios.post(`/api/reviews/${reviewId}/dismiss`);
+                await fetchDashboardData();
+            } catch (error) {
+                console.error('Error dismissing review:', error);
+            }
+        };
+
+        const handleRemoveReview = async (reviewId) => {
+            if (!confirm('Are you sure you want to remove this review?')) return;
 
             try {
-                removingReview.value = reviewId
-                await axios.delete(`/api/reviews/${reviewId}`)
-                await fetchDashboardData()
+                await axios.delete(`/api/reviews/${reviewId}`);
+                await fetchDashboardData();
             } catch (error) {
-                console.error('Error removing review:', error)
-            } finally {
-                removingReview.value = null
+                console.error('Error removing review:', error);
             }
-        }
+        };
 
-        const dismissReport = async (reviewId) => {
-            try {
-                dismissingReport.value = reviewId
-                await axios.post(`/api/reviews/${reviewId}/dismiss-report`)
-                await fetchDashboardData()
-            } catch (error) {
-                console.error('Error dismissing report:', error)
-            } finally {
-                dismissingReport.value = null
-            }
-        }
+        const pendingActions = computed(() => {
+            return (stats.value.pending_verifications || 0) + (stats.value.reported_reviews || 0);
+        });
 
-        const formatDate = (date) => {
-            return moment(date).format('MMM D, YYYY h:mm A')
-        }
-
+        // Lifecycle hooks
         onMounted(() => {
-            fetchDashboardData()
-        })
+            fetchDashboardData().catch(err => {
+                console.error('Error during component mount:', err);
+                error.value = 'Failed to initialize dashboard';
+            });
+        });
 
         return {
             loading,
             stats,
+            error,
             pendingVerifications,
             recentRequests,
             reportedReviews,
-            verifying,
-            removingReview,
-            dismissingReport,
-            documentModal,
             selectedProfessional,
+            verifying,
             documentUrl,
-            statsChart,
-            verifyProfessional,
+            documentModal,
+            newServiceModal,
+            pendingActions,
             viewDocuments,
-            removeReview,
-            dismissReport,
+            verifyProfessional,
+            openNewServiceModal,
+            handleDismissReview,
+            handleRemoveReview,
             formatDate
-        }
+        };
     }
-}
+};
 </script>
-
 <style scoped>
-.dashboard {
+.dashboard-overview {
     padding: 1.5rem;
 }
 
 .card {
-    transition: transform 0.2s;
+    transition: box-shadow 0.3s ease-in-out, transform 0.2s ease;
 }
 
 .card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
 }
 
 .review-card {
-    transition: all 0.2s;
+    transition: background-color 0.2s ease;
 }
 
 .review-card:hover {
-    background-color: #f8f9fa !important;
+    background-color: #f0f0f0 !important;
 }
 
-.report-reason {
-    padding: 0.5rem;
-    background-color: #fff;
-    border-radius: 0.25rem;
+.rating i {
+    font-size: 0.875rem;
+    margin-right: 1px;
 }
 
 .table th {
@@ -584,5 +568,45 @@ export default {
 
 .document-preview {
     border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+}
+
+.table-hover>tbody>tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Custom scrollbar for reviews section */
+.card-body {
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+}
+
+.card-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.card-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.card-body::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.card-body::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Loading spinner colors */
+.spinner-border {
+    --bs-spinner-width: 1.5rem;
+    --bs-spinner-height: 1.5rem;
+    --bs-spinner-border-width: 0.15em;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
 }
 </style>

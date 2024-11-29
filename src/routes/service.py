@@ -1,6 +1,7 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, current_app
 from marshmallow import ValidationError
 from http import HTTPStatus
+import jwt
 
 from src import db
 
@@ -19,6 +20,8 @@ from src.schemas.service import (
 
 from src.utils.auth import token_required, role_required
 from src.utils.api import APIResponse
+from src.utils.cache import cached_with_auth, cache_invalidate
+
 
 service_bp = Blueprint("service", __name__)
 
@@ -26,6 +29,7 @@ service_bp = Blueprint("service", __name__)
 @service_bp.route("/services", methods=["POST"])
 @token_required
 @role_required("admin")
+@cache_invalidate("view/services*")
 def create_service(current_user):
     """Create a new service"""
     try:
@@ -76,16 +80,37 @@ def create_service(current_user):
 
 @service_bp.route("/services", methods=["GET"])
 @service_bp.route("/services/<int:service_id>", methods=["GET"])
-@token_required
-def list_services(current_user, service_id=None):
+@cached_with_auth(timeout=300)
+def list_services(service_id=None):
     """List all services or get a specific service"""
     try:
+        # Get authentication token if present
+        token = None
+        if "Authorization" in request.headers:
+            auth_header = request.headers["Authorization"]
+            try:
+                token = auth_header.split(" ")[1]
+            except IndexError:
+                token = None
+
+        # Check if user is admin
+        is_admin = False
+        if token:
+            try:
+                data = jwt.decode(
+                    current_app.config["SECRET_KEY"], algorithms=["HS256"]
+                )
+                current_user = User.query.get(data["user_id"])
+                is_admin = current_user and current_user.role == "admin"
+            except (jwt.InvalidTokenError, Exception):
+                pass
+
         if service_id is not None:
             # Single service retrieval
             service = Service.query.get_or_404(service_id)
 
             # If not admin, only return active services
-            if current_user.role != "admin" and not service.is_active:
+            if not is_admin and not service.is_active:
                 return APIResponse.error(
                     "Service not found", HTTPStatus.NOT_FOUND, "NotFound"
                 )
@@ -100,7 +125,7 @@ def list_services(current_user, service_id=None):
         query = Service.query
 
         # Non-admin users can only see active services
-        if current_user.role != "admin":
+        if not is_admin:
             query = query.filter_by(is_active=True)
         elif params.get("is_active") is not None:
             query = query.filter_by(is_active=params["is_active"])
@@ -109,7 +134,6 @@ def list_services(current_user, service_id=None):
         paginated = query.paginate(
             page=params["page"], per_page=params["per_page"], error_out=False
         )
-
 
         return APIResponse.success(
             data=services_output_schema.dump(paginated.items),
@@ -136,6 +160,7 @@ def list_services(current_user, service_id=None):
 
 @service_bp.route("/services/<int:service_id>", methods=["PUT"])
 @token_required
+@cache_invalidate("view/services*")
 @role_required("admin")
 def update_service(current_user, service_id):
     """Update an existing service"""

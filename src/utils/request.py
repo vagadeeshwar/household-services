@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict, List
 from sqlalchemy import func
 
 from src.constants import (
@@ -8,6 +8,19 @@ from src.constants import (
 )
 
 from src.models import ServiceRequest, ProfessionalProfile, Service
+from src.utils.cache import cache
+
+
+def _get_cache_key_availability(professional_id: int, date: datetime.date) -> str:
+    """Generate cache key for professional availability"""
+    return f"availability:{professional_id}:{date.isoformat()}"
+
+
+def _get_cache_key_schedule(
+    professional_id: int, start_date: datetime.date, end_date: datetime.date
+) -> str:
+    """Generate cache key for professional schedule"""
+    return f"schedule:{professional_id}:{start_date.isoformat()}:{end_date.isoformat()}"
 
 
 def check_booking_availability(
@@ -23,8 +36,20 @@ def check_booking_availability(
     Returns:
         Tuple of (is_available, error_message)
     """
-    # Ensure service_duration is an integer
+    # Generate cache key for the day
+    cache_key = _get_cache_key_availability(professional_id, preferred_time.date())
+
+    # Try to get cached availability data
+    cached_data = cache.get(cache_key)
+
+    if cached_data is not None:
+        # Use cached data to check availability
+        return _check_availability_from_cached_data(
+            cached_data, preferred_time, service_duration
+        )
+
     try:
+        # Ensure service_duration is an integer
         duration_minutes = int(service_duration)
     except (TypeError, ValueError):
         return False, "Invalid service duration"
@@ -43,6 +68,22 @@ def check_booking_availability(
         )
         .all()
     )
+
+    # Prepare availability data for caching
+    availability_data = []
+    for request in assigned_requests:
+        start = request.preferred_time
+        end = start + timedelta(minutes=int(request.service.estimated_time))
+        availability_data.append(
+            {
+                "start": start.isoformat(),
+                "end": end.isoformat(),
+                "request_id": request.id,
+            }
+        )
+
+    # Cache the availability data for 15 minutes
+    cache.set(cache_key, availability_data, timeout=900)
 
     # Check for overlaps
     for existing_request in assigned_requests:
@@ -74,6 +115,37 @@ def check_booking_availability(
     )
     if booking_end_time > end_time_limit:
         return False, "Service cannot extend beyond 6 PM"
+
+    return True, None
+
+
+def _check_availability_from_cached_data(
+    cached_data: List[Dict], preferred_time: datetime, service_duration: int
+) -> Tuple[bool, Optional[str]]:
+    """Check availability using cached data"""
+    booking_end_time = preferred_time + timedelta(minutes=service_duration)
+
+    # Check business hours first
+    end_time_limit = datetime.combine(
+        preferred_time.date(), datetime.strptime("18:00", "%H:%M").time()
+    )
+    if booking_end_time > end_time_limit:
+        return False, "Service cannot extend beyond 6 PM"
+
+    # Check overlaps with cached bookings
+    for booking in cached_data:
+        existing_start = datetime.fromisoformat(booking["start"])
+        existing_end = datetime.fromisoformat(booking["end"])
+
+        if (
+            (existing_start <= preferred_time < existing_end)
+            or (existing_start < booking_end_time <= existing_end)
+            or (preferred_time <= existing_start and booking_end_time >= existing_end)
+        ):
+            return (
+                False,
+                "Professional has an overlapping booking during this time slot",
+            )
 
     return True, None
 
@@ -117,6 +189,13 @@ def get_professional_schedule(
     service_id: Optional[int] = None,
 ) -> dict:
     """Get professional's schedule including booked and available slots"""
+
+    # Try to get cached schedule
+    cache_key = _get_cache_key_schedule(professional_id, start_date, end_date)
+    cached_schedule = cache.get(cache_key)
+
+    if cached_schedule is not None:
+        return cached_schedule
 
     # Get professional's service duration
     professional = ProfessionalProfile.query.get_or_404(professional_id)
@@ -197,5 +276,8 @@ def get_professional_schedule(
             1 for day in schedule.values() if day["available_slots"] > 0
         ),
     }
+
+    # Cache the schedule for 5 minutes
+    cache.set(cache_key, response, timeout=300)
 
     return response

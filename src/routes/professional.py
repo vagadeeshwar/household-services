@@ -40,7 +40,8 @@ from src.utils.file import (
     UPLOAD_FOLDER,
 )
 from src.utils.user import check_existing_user
-
+from src.utils.cache import cached_with_auth
+from src.utils.notification import NotificationService
 
 professional_bp = Blueprint("professional", __name__)
 
@@ -141,6 +142,7 @@ def register_professional():
 @professional_bp.route("/professionals", methods=["GET"])
 @professional_bp.route("/professionals/<int:profile_id>", methods=["GET"])
 @token_required
+@cached_with_auth(timeout=120)
 @role_required("admin", "customer")
 def list_professionals(current_user, profile_id=None):
     try:
@@ -275,6 +277,8 @@ def verify_professional(current_user, profile_id):
         )
         db.session.add(log)
         db.session.commit()
+
+        NotificationService.send_verification_approved(profile)
 
         return APIResponse.success(
             data=professional_output_schema.dump(user),

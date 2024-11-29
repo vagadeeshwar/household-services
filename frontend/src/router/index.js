@@ -84,6 +84,43 @@ const routes = [
     component: ProfessionalRegisterForm,
     meta: { guestOnly: true }
   },
+
+  {
+    path: '/services',
+    name: 'Services',
+    component: () => import('../views/public/ServicesPage.vue'),
+    meta: { guestOnly: false } // Both guests and authenticated users can view
+  },
+  {
+    path: '/profile/:id?',
+    name: 'Profile',
+    component: () => import('@/views/profile/ProfilePage.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/about',
+    name: 'About',
+    component: () => import('../views/public/AboutPage.vue'),
+    meta: { guestOnly: false }
+  },
+  {
+    path: '/contact',
+    name: 'Contact',
+    component: () => import('../views/public/ContactPage.vue'),
+    meta: { guestOnly: false }
+  },
+  {
+    path: '/terms',
+    name: 'Terms',
+    component: () => import('../views/public/TermsPage.vue'),
+    meta: { guestOnly: false }
+  },
+  {
+    path: '/privacy',
+    name: 'Privacy',
+    component: () => import('../views/public/PrivacyPage.vue'),
+    meta: { guestOnly: false }
+  },
   {
     path: '/admin',
     name: 'Admin',
