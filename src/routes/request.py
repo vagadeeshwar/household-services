@@ -32,6 +32,7 @@ from src.schemas.request import (
 from src.utils.auth import token_required, role_required
 from src.utils.api import APIResponse
 from src.utils.request import check_booking_availability
+from src.utils.notification import NotificationService
 
 request_bp = Blueprint("request", __name__)
 
@@ -474,6 +475,8 @@ def accept_request(current_user, request_id):
         )
         db.session.add(log)
         db.session.commit()
+
+        NotificationService.send_service_request_notification(service_request)
 
         return APIResponse.success(
             data=service_request_output_schema.dump(service_request),

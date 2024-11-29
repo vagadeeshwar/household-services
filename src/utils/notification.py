@@ -1,5 +1,3 @@
-# src/utils/notification.py
-
 from flask import current_app, render_template
 from flask_mail import Mail, Message
 from typing import List, Optional, Dict, Any
@@ -11,8 +9,6 @@ class EmailTemplate:
     """Email template constants"""
 
     VERIFICATION_APPROVED = "emails/verification_approved.html"
-    VERIFICATION_REJECTED = "emails/verification_rejected.html"
-    SERVICE_REQUEST_CREATED = "emails/service_request_created.html"
     SERVICE_REQUEST_ASSIGNED = "emails/service_request_assigned.html"
     SERVICE_REQUEST_COMPLETED = "emails/service_request_completed.html"
     MONTHLY_REPORT = "emails/monthly_report.html"
@@ -34,6 +30,10 @@ class NotificationService:
         Returns: True if successful, False otherwise
         """
         try:
+            current_app.logger.info(f"Attempting to send email to {to}")
+            current_app.logger.info(f"Template: {template}")
+            current_app.logger.info(f"Template data: {data}")
+
             msg = Message(
                 subject,
                 sender=current_app.config["MAIL_DEFAULT_SENDER"],
@@ -42,13 +42,53 @@ class NotificationService:
                 bcc=bcc,
             )
 
-            # Render template with data
-            msg.html = render_template(template, **data)
+            try:
+                # Try rendering the template
+                msg.html = render_template(template, **data)
+                current_app.logger.info("Template rendered successfully")
+            except Exception as template_error:
+                current_app.logger.error(
+                    f"Template rendering error: {str(template_error)}"
+                )
+                # Fallback to a basic email without template
+                msg.body = f"""
+                Export Complete
+
+                Your service requests export has been completed.
+
+                Filename: {data.get('filename')}
+                Total Records: {data.get('total_records')}
+
+                You can download the export file from the admin dashboard.
+
+                Best regards,
+                Household Services Team
+                """
+                current_app.logger.info("Using fallback plain text email")
+
+            # Debug mail configuration
+            current_app.logger.info("Mail Configuration:")
+            current_app.logger.info(
+                f"MAIL_SERVER: {current_app.config.get('MAIL_SERVER')}"
+            )
+            current_app.logger.info(f"MAIL_PORT: {current_app.config.get('MAIL_PORT')}")
+            current_app.logger.info(
+                f"MAIL_USE_TLS: {current_app.config.get('MAIL_USE_TLS')}"
+            )
+            current_app.logger.info(
+                f"MAIL_USERNAME: {current_app.config.get('MAIL_USERNAME')}"
+            )
+            current_app.logger.info(
+                f"MAIL_DEFAULT_SENDER: {current_app.config.get('MAIL_DEFAULT_SENDER')}"
+            )
 
             mail.send(msg)
+            current_app.logger.info(f"Email sent successfully to {to}")
             return True
+
         except Exception as e:
             current_app.logger.error(f"Failed to send email: {str(e)}")
+            current_app.logger.error("Exception details:", exc_info=True)
             return False
 
     @classmethod
@@ -62,16 +102,6 @@ class NotificationService:
                 "name": professional.user.full_name,
                 "service": professional.service_type.name,
             },
-        )
-
-    @classmethod
-    def send_verification_rejected(cls, professional, reason: str):
-        """Send verification rejection email"""
-        return cls.send_email(
-            to=professional.user.email,
-            subject="Professional Verification Update",
-            template=EmailTemplate.VERIFICATION_REJECTED,
-            data={"name": professional.user.full_name, "reason": reason},
         )
 
     @classmethod

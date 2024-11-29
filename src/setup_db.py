@@ -99,7 +99,7 @@ def create_dummy_data():
         # Create admin user
         admin = User(
             username="admin",
-            email="admin@example.com",
+            email="vagadeeshwarganesan@gmail.com",
             full_name="Admin User",
             phone="9876543210",
             address="Admin Office, Main Street, Central District",

@@ -1,0 +1,21 @@
+{# templates/emails/export_complete.html #}
+<!DOCTYPE html>
+<html>
+
+<body>
+    <h2>Export Complete</h2>
+    <p>Dear {{ name }},</p>
+    <p>Your service requests export has been completed successfully.</p>
+
+    <h3>Export Details:</h3>
+    <ul>
+        <li>Filename: {{ filename }}</li>
+        <li>Total Records: {{ total_records }}</li>
+    </ul>
+
+    <p>You can download the export file from the admin dashboard.</p>
+
+    <p>Best regards,<br>Household Services Team</p>
+</body>
+
+</html>
