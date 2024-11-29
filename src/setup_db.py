@@ -1,6 +1,6 @@
 import logging
 from faker import Faker
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import random
 import uuid
 import os
@@ -171,6 +171,35 @@ def create_professionals(services, admin_id):
         ("blocked", "Multiple customer complaints"),
         ("resubmitted", "Updated documents after initial rejection"),
     ]
+
+    user = User(
+        username="shubhaganesan",
+        email="shubhaganesan@gmail.com",
+        full_name=generate_valid_name(),
+        phone=generate_valid_phone(),
+        address=generate_valid_address(),
+        pin_code=generate_valid_pincode(),
+        role=USER_ROLE_PROFESSIONAL,
+        is_active=0,
+        last_login=datetime.utcnow()
+        - timedelta(days=90)
+        - timedelta(days=random.randint(0, 30)),
+    )
+    user.set_password("Shubhaganesan@123")
+    db.session.add(user)
+    db.session.flush()
+
+    profile = ProfessionalProfile(
+        user_id=user.id,
+        service_type_id=1,
+        experience_years=random.randint(2, 15),
+        description="hi",
+        is_verified=False,  # Start with unverified status
+        verification_documents="",
+        average_rating=None,  # Initially no rating
+    )
+    db.session.add(profile)
+    db.session.flush()
 
     try:
         base_date = datetime.utcnow() - timedelta(days=90)
@@ -346,6 +375,25 @@ def create_professionals(services, admin_id):
 def create_customers():
     customers = []
     base_date = datetime.utcnow() - timedelta(days=90)
+    user = User(
+        username="hamsanadam",
+        email="hamsanadamdevotional@gmail.com",
+        full_name=generate_valid_name(),
+        phone=generate_valid_phone(),
+        address=generate_valid_address(),
+        pin_code=generate_valid_pincode(),
+        role=USER_ROLE_CUSTOMER,
+        is_active=1,
+        created_at=base_date + timedelta(days=random.randint(0, 30)),
+        last_login=datetime.utcnow() - timedelta(days=random.randint(0, 30)),
+    )
+    user.set_password("Hamsanadam@123")
+    db.session.add(user)
+    db.session.flush()
+
+    profile = CustomerProfile(user_id=user.id)
+    db.session.add(profile)
+    db.session.flush()
 
     try:
         for i in range(15):  # Increased number for more variety
@@ -648,6 +696,23 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
         ("Below expectations, multiple issues. {}", 2, True, "Service quality issues"),
         ("Very disappointing service. {}", 1, True, "Multiple issues reported"),
     ]
+
+    service_request = ServiceRequest(
+        service_id=1,
+        customer_id=1,
+        professional_id=None,
+        date_of_request=datetime.utcnow(),
+        preferred_time=datetime.combine(
+            (datetime.utcnow() + timedelta(days=1)).date(), time(16, 0)
+        ),
+        description="Need ",
+        status="created",
+        date_of_assignment=None,
+        date_of_completion=None,
+        remarks=None,
+    )
+    db.session.add(service_request)
+    db.session.flush()
 
     try:
         base_date = datetime.utcnow() - timedelta(days=90)

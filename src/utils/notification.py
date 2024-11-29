@@ -25,10 +25,7 @@ class NotificationService:
         cc: Optional[List[str]] = None,
         bcc: Optional[List[str]] = None,
     ) -> bool:
-        """
-        Send an email using a template
-        Returns: True if successful, False otherwise
-        """
+        """Send an email using a template"""
         try:
             current_app.logger.info(f"Attempting to send email to {to}")
             current_app.logger.info(f"Template: {template}")
@@ -43,44 +40,21 @@ class NotificationService:
             )
 
             try:
-                # Try rendering the template
                 msg.html = render_template(template, **data)
                 current_app.logger.info("Template rendered successfully")
             except Exception as template_error:
                 current_app.logger.error(
                     f"Template rendering error: {str(template_error)}"
                 )
-                # Fallback to a basic email without template
-                msg.body = f"""
-                Export Complete
-
-                Your service requests export has been completed.
-
-                Filename: {data.get('filename')}
-                Total Records: {data.get('total_records')}
-
-                You can download the export file from the admin dashboard.
-
-                Best regards,
-                Household Services Team
-                """
-                current_app.logger.info("Using fallback plain text email")
-
-            # Debug mail configuration
-            current_app.logger.info("Mail Configuration:")
-            current_app.logger.info(
-                f"MAIL_SERVER: {current_app.config.get('MAIL_SERVER')}"
-            )
-            current_app.logger.info(f"MAIL_PORT: {current_app.config.get('MAIL_PORT')}")
-            current_app.logger.info(
-                f"MAIL_USE_TLS: {current_app.config.get('MAIL_USE_TLS')}"
-            )
-            current_app.logger.info(
-                f"MAIL_USERNAME: {current_app.config.get('MAIL_USERNAME')}"
-            )
-            current_app.logger.info(
-                f"MAIL_DEFAULT_SENDER: {current_app.config.get('MAIL_DEFAULT_SENDER')}"
-            )
+                # Generate appropriate fallback content based on template type
+                fallback_content = NotificationService._get_fallback_content(
+                    template, data
+                )
+                if fallback_content:
+                    msg.body = fallback_content
+                    current_app.logger.info("Using fallback plain text email")
+                else:
+                    raise template_error
 
             mail.send(msg)
             current_app.logger.info(f"Email sent successfully to {to}")
@@ -90,6 +64,71 @@ class NotificationService:
             current_app.logger.error(f"Failed to send email: {str(e)}")
             current_app.logger.error("Exception details:", exc_info=True)
             return False
+
+    @staticmethod
+    def _get_fallback_content(template: str, data: Dict[str, Any]) -> Optional[str]:
+        """Generate fallback content based on template type"""
+        if "export_complete" in template.lower():
+            return f"""
+            Export Complete
+
+            Your service requests export has been completed.
+
+            Filename: {data.get('filename')}
+            Total Records: {data.get('total_records')}
+
+            You can download the export file from the admin dashboard.
+
+            Best regards,
+            Household Services Team
+            """
+        elif template == EmailTemplate.VERIFICATION_APPROVED:
+            return f"""
+            Dear {data.get('name')},
+
+            Congratulations! Your professional verification for {data.get('service')} has been approved. 
+            You can now start accepting service requests.
+
+            Best regards,
+            Household Services Team
+            """
+        elif template == EmailTemplate.SERVICE_REQUEST_ASSIGNED:
+            return f"""
+            Dear {data.get('customer_name')},
+
+            A professional has been assigned to your service request:
+            Service: {data.get('service_name')}
+            Date: {data.get('date')}
+            Professional: {data.get('professional_name')}
+            Request ID: {data.get('request_id')}
+
+            Best regards,
+            Household Services Team
+            """
+        elif template == EmailTemplate.DAILY_REMINDER:
+            pending_count = len(data.get("pending_requests", []))
+            return f"""
+            Dear {data.get('name')},
+
+            You have {pending_count} pending service requests for today.
+            Please check your dashboard for details.
+
+            Best regards,
+            Household Services Team
+            """
+        elif template == EmailTemplate.MONTHLY_REPORT:
+            return f"""
+            Dear {data.get('name')},
+
+            Here is your activity report for {data.get('month')}:
+            Total Requests: {data.get('total_requests')}
+            Completed Requests: {data.get('completed_requests')}
+            Average Rating: {data.get('average_rating')}
+
+            Best regards,
+            Household Services Team
+            """
+        return None
 
     @classmethod
     def send_verification_approved(cls, professional):
