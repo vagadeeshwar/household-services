@@ -113,6 +113,12 @@ export default {
       try {
         await store.dispatch('auth/login', form)
 
+        window.showToast({
+          type: 'success',
+          title: 'Login Successful',
+          message: 'You are logged in successfully.'
+        })
+
         // Redirect based on user role
         const role = store.getters['auth/userRole']
         switch (role) {

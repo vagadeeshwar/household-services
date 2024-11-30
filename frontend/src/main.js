@@ -5,19 +5,26 @@ import router from './router'
 import store from './store'
 import axios from 'axios'
 
-// Import Bootstrap and Bootstrap Icons CSS
-import 'bootstrap/dist/css/bootstrap.min.css'
-import 'bootstrap-icons/font/bootstrap-icons.css'
-
 // Import Bootstrap JavaScript with Popper.js
-import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+// import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+
+import * as bootstrap from 'bootstrap'
 
 
-// main.js
+// Import Bootstrap and Bootstrap Icons CSS
+// import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap-icons/font/bootstrap-icons.css'
+import './assets/styles.scss'
+
+
+// Import global components
 import Loading from '@/components/shared/Loading.vue'
 import Toast from '@/components/shared/Toast.vue'
 import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
 import FormNavigationGuard from '@/components/shared/FormNavigationGuard.vue'
+
+// Create Vue app instance
+const app = createApp(App)
 
 // Register global components
 app.component('Loading', Loading)
@@ -46,9 +53,12 @@ axios.interceptors.response.use(
     }
 )
 
-const app = createApp(App)
-
+// Use plugins
 app.use(router)
 app.use(store)
 
+// Mount the app
 app.mount('#app')
+
+// Export the app instance if needed
+export default app

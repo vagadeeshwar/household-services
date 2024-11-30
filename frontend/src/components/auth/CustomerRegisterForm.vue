@@ -2,6 +2,7 @@
 <template>
     <div class="container mt-5">
         <div class="row justify-content-center">
+            <!-- Main form content remains the same until the end -->
             <div class="col-md-8 col-lg-6">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white text-center py-3">
@@ -109,7 +110,6 @@
                                         {{ v$.form.confirm_password.$errors[0]?.$message }}
                                     </div>
                                 </div>
-
                                 <!-- Submit Button -->
                                 <div class="col-12">
                                     <div class="d-grid gap-2">
@@ -133,27 +133,36 @@
                 </div>
             </div>
         </div>
+        <FormNavigationGuard v-if="shouldShowNavigationGuard" :is-dirty="isFormDirty"
+            @proceed="handleNavigationConfirm" />
     </div>
+    <ConfirmDialog id="navigationConfirmDialog" title="Unsaved Changes"
+        message="You have unsaved changes. Are you sure you want to leave?" type="warning" confirm-text="Leave"
+        cancel-text="Stay" @confirm="handleNavigationConfirm" />
 </template>
-
 <script>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { useVuelidate } from '@vuelidate/core'
-import { required, email, minLength, sameAs, helpers } from '@vuelidate/validators'
+import { required, email, minLength, helpers } from '@vuelidate/validators'
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
+import { useFormNavigation } from '@/mixins/formNavigation'
 
 export default {
     name: 'CustomerRegisterForm',
-
+    components: {
+        ConfirmDialog
+    },
     setup() {
         const store = useStore()
         const router = useRouter()
         const isLoading = ref(false)
         const error = ref('')
         const showPassword = ref(false)
+        const isRegistered = ref(false)
 
-        const form = reactive({
+        const initialForm = {
             username: '',
             email: '',
             full_name: '',
@@ -162,7 +171,47 @@ export default {
             address: '',
             password: '',
             confirm_password: ''
+        }
+
+        const form = reactive({ ...initialForm })
+
+        const isFormDirty = computed(() => {
+            return Object.keys(form).some(key => form[key] !== initialForm[key])
         })
+
+        const shouldShowNavigationGuard = computed(() => {
+            return isFormDirty.value && !isRegistered.value
+        })
+
+        const resetForm = () => {
+            Object.keys(form).forEach(key => {
+                form[key] = initialForm[key]
+            })
+        }
+
+        // Use the form navigation mixin
+        const handleNavigationConfirm = () => {
+            resetForm()
+            hideModal()
+            // Let the router continue with navigation
+            router.push(router.currentRoute.value.query.redirect || '/login')
+        }
+
+        const hideModal = () => {
+            if (!modalInstance.value) {
+                modalInstance.value = Modal.getInstance(document.getElementById('navigationConfirmDialog'))
+            }
+            if (modalInstance.value) {
+                modalInstance.value.hide()
+                // Clean up backdrop
+                const backdrop = document.querySelector('.modal-backdrop')
+                if (backdrop) {
+                    backdrop.remove()
+                }
+                document.body.classList.remove('modal-open')
+                document.body.style.removeProperty('padding-right')
+            }
+        }
 
         const rules = {
             form: {
@@ -183,6 +232,7 @@ export default {
                 phone: {
                     required,
                     validPhone: helpers.regex(/^[1-9]\d{9}$/),
+
                 },
                 pin_code: {
                     required,
@@ -206,7 +256,10 @@ export default {
                 },
                 confirm_password: {
                     required,
-                    sameAsPassword: sameAs('password'),
+                    sameAsPassword: helpers.withMessage(
+                        'Passwords must match',
+                        value => value === form.password
+                    )
                 }
             }
         }
@@ -216,20 +269,27 @@ export default {
         const handleSubmit = async () => {
             error.value = ''
 
-            // Validate form
             const isValid = await v$.value.$validate()
             if (!isValid) return
 
             isLoading.value = true
 
             try {
-                const registrationData = {
-                    ...form,
-                    role: 'customer'
-                }
+                const { confirm_password, ...formData } = form
+                await store.dispatch('auth/register', {
+                    role: 'customer',
+                    data: formData
+                })
 
-                await store.dispatch('auth/register', registrationData)
-                // Show success message and redirect to login
+                // Set registration success flag
+                isRegistered.value = true
+
+                window.showToast({
+                    type: 'success',
+                    title: 'Registration Successful',
+                    message: 'Your account has been created successfully. Please login to continue.'
+                })
+
                 router.push({
                     path: '/login',
                     query: { registered: 'true' }
@@ -251,7 +311,11 @@ export default {
             isLoading,
             error,
             showPassword,
+            isFormDirty,
+            isRegistered,
+            shouldShowNavigationGuard,
             handleSubmit,
+            handleNavigationConfirm,
             togglePassword
         }
     }

@@ -1,11 +1,13 @@
+// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
-import store from '../store'; // Import the Vuex store directly
+import store from '../store';
 
 // Import components
 import CustomerRegisterForm from '../components/auth/CustomerRegisterForm.vue';
 import ProfessionalRegisterForm from '../components/auth/ProfessionalRegisterForm.vue';
 import LoginForm from '../components/auth/LoginForm.vue';
 import NotFound from '../views/NotFound.vue';
+import ServicesPage from '../views/public/ServicesPage.vue';
 
 // Route Guards
 function requireAuth(to, from, next) {
@@ -25,10 +27,7 @@ function requireAdmin(to, from, next) {
 }
 
 function requireProfessional(to, from, next) {
-  if (
-    !store.getters['auth/isLoggedIn'] ||
-    store.getters['auth/userRole'] !== 'professional'
-  ) {
+  if (!store.getters['auth/isLoggedIn'] || store.getters['auth/userRole'] !== 'professional') {
     next({ name: 'NotFound' });
   } else {
     next();
@@ -36,10 +35,7 @@ function requireProfessional(to, from, next) {
 }
 
 function requireCustomer(to, from, next) {
-  if (
-    !store.getters['auth/isLoggedIn'] ||
-    store.getters['auth/userRole'] !== 'customer'
-  ) {
+  if (!store.getters['auth/isLoggedIn'] || store.getters['auth/userRole'] !== 'customer') {
     next({ name: 'NotFound' });
   } else {
     next();
@@ -53,7 +49,6 @@ const routes = [
     redirect: to => {
       if (!store.getters['auth/isLoggedIn']) return { name: 'Login' };
 
-      // Redirect based on user role
       switch (store.getters['auth/userRole']) {
         case 'admin':
           return { name: 'AdminDashboard' };
@@ -84,12 +79,11 @@ const routes = [
     component: ProfessionalRegisterForm,
     meta: { guestOnly: true }
   },
-
   {
     path: '/services',
-    name: 'Services',
-    component: () => import('../views/public/ServicesPage.vue'),
-    meta: { guestOnly: false } // Both guests and authenticated users can view
+    name: 'PublicServices',
+    component: ServicesPage,
+    meta: { guestOnly: false }
   },
   {
     path: '/profile/:id?',
@@ -132,7 +126,6 @@ const routes = [
         name: 'AdminDashboard',
         component: () => import('../views/admin/Dashboard.vue')
       }
-      // Add other admin routes here
     ]
   },
   {
@@ -146,7 +139,6 @@ const routes = [
         name: 'ProfessionalDashboard',
         component: () => import('../views/professional/Dashboard.vue')
       }
-      // Add other professional routes here
     ]
   },
   {
@@ -162,7 +154,7 @@ const routes = [
       },
       {
         path: 'services',
-        name: 'Services',
+        name: 'CustomerServices',
         component: () => import('../views/customer/ServiceBrowser.vue'),
         meta: {
           requiresAuth: true,
@@ -178,7 +170,6 @@ const routes = [
           roles: ['customer']
         }
       }
-      // Add other customer routes here
     ]
   },
   {

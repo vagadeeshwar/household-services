@@ -1,7 +1,6 @@
 from functools import wraps
-from flask import request
+from flask import request, current_app
 from flask_caching import Cache
-import hashlib
 
 # Initialize cache
 cache = Cache()
@@ -35,33 +34,45 @@ def clear_cache_by_pattern(pattern):
             cache._client.delete(key)
 
 
-# Cache decorators
 def cached_with_auth(timeout=300):
-    """Cache decorator that includes user authentication in cache key"""
+    """A more resilient caching decorator that won't fail if Redis is unavailable"""
 
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            # Get auth token from request
+            # Get auth token for cache key
             auth_token = request.headers.get("Authorization", "")
 
-            # Create unique cache key including auth info
-            key_parts = [
-                request.path,
-                str(hash(frozenset(request.args.items()))),
-                hashlib.md5(auth_token.encode()).hexdigest(),
-            ]
-            cache_key = "view/" + "-".join(key_parts)
+            try:
+                # Try to use the cache
+                from src.utils.cache import cache
 
-            # Try to get response from cache
-            rv = cache.get(cache_key)
-            if rv is not None:
-                return rv
+                cache_key = (
+                    f"view/services/{auth_token}/{request.path}/{str(request.args)}"
+                )
 
-            # If not in cache, generate response and cache it
-            rv = f(*args, **kwargs)
-            cache.set(cache_key, rv, timeout=timeout)
-            return rv
+                # Attempt to get from cache
+                cached_response = cache.get(cache_key)
+                if cached_response is not None:
+                    return cached_response
+
+                # If not in cache, generate response
+                response = f(*args, **kwargs)
+
+                # Try to cache the response
+                try:
+                    cache.set(cache_key, response, timeout=timeout)
+                except Exception as cache_error:
+                    current_app.logger.warning(
+                        f"Failed to set cache: {str(cache_error)}"
+                    )
+
+                return response
+
+            except Exception as e:
+                # If any cache operation fails, log and execute function normally
+                current_app.logger.warning(f"Cache operation failed: {str(e)}")
+                return f(*args, **kwargs)
 
         return decorated_function
 

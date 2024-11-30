@@ -212,19 +212,31 @@
                 </div>
             </div>
         </div>
+        <FormNavigationGuard v-if="shouldShowNavigationGuard" :is-dirty="isFormDirty"
+            @proceed="handleNavigationConfirm" />
     </div>
+    <ConfirmDialog id="navigationConfirmDialog" title="Unsaved Changes"
+        message="You have unsaved changes. Are you sure you want to leave?" type="warning" confirm-text="Leave"
+        cancel-text="Stay" @confirm="handleNavigationConfirm" />
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { useVuelidate } from '@vuelidate/core'
-import { required, email, minLength, sameAs, helpers, numeric, between } from '@vuelidate/validators'
+import { required, email, minLength, helpers, between, numeric } from '@vuelidate/validators'
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue'
+import FormNavigationGuard from '@/components/shared/FormNavigationGuard.vue'
+import { Modal } from 'bootstrap'
 import axios from 'axios'
 
 export default {
     name: 'ProfessionalRegisterForm',
+    components: {
+        ConfirmDialog,
+        FormNavigationGuard
+    },
 
     setup() {
         const store = useStore()
@@ -233,8 +245,10 @@ export default {
         const error = ref('')
         const showPassword = ref(false)
         const services = ref([])
+        const isRegistered = ref(false)
+        const modalInstance = ref(null)
 
-        const form = reactive({
+        const initialForm = {
             username: '',
             email: '',
             full_name: '',
@@ -247,7 +261,54 @@ export default {
             verification_document: null,
             password: '',
             confirm_password: ''
+        }
+
+        const form = reactive({ ...initialForm })
+
+        // Computed properties
+        const isFormDirty = computed(() => {
+            return Object.keys(form).some(key => {
+                if (key === 'verification_document') {
+                    return form[key] !== null
+                }
+                return form[key] !== initialForm[key]
+            })
         })
+
+        // Only show navigation guard when form is dirty and not registered
+        const shouldShowNavigationGuard = computed(() => {
+            return isFormDirty.value && !isRegistered.value
+        })
+
+        // Form handling methods
+        const resetForm = () => {
+            Object.keys(form).forEach(key => {
+                form[key] = initialForm[key]
+            })
+        }
+
+        const hideModal = () => {
+            if (!modalInstance.value) {
+                modalInstance.value = Modal.getInstance(document.getElementById('navigationConfirmDialog'))
+            }
+            if (modalInstance.value) {
+                modalInstance.value.hide()
+                // Clean up backdrop
+                const backdrop = document.querySelector('.modal-backdrop')
+                if (backdrop) {
+                    backdrop.remove()
+                }
+                document.body.classList.remove('modal-open')
+                document.body.style.removeProperty('padding-right')
+            }
+        }
+
+        const handleNavigationConfirm = () => {
+            resetForm()
+            hideModal()
+            // Let the router continue with navigation
+            router.push(router.currentRoute.value.query.redirect || '/login')
+        }
 
         const rules = {
             form: {
@@ -313,27 +374,20 @@ export default {
                 },
                 confirm_password: {
                     required,
-                    sameAsPassword: sameAs('password'),
+                    sameAsPassword: helpers.withMessage(
+                        'Passwords must match',
+                        value => value === form.password
+                    )
                 }
             }
         }
 
         const v$ = useVuelidate(rules, { form })
 
-        // Fetch available services when component mounts
-        onMounted(async () => {
-            try {
-                const response = await axios.get('/api/services')
-                services.value = response.data.data
-            } catch (err) {
-                error.value = 'Failed to load available services'
-            }
-        })
-
+        // File handling
         const handleFileChange = (event) => {
             const file = event.target.files[0]
             if (file) {
-                // Validate file type
                 const validTypes = ['image/jpeg', 'image/png', 'application/pdf']
                 if (!validTypes.includes(file.type)) {
                     error.value = 'Invalid file type. Please upload PDF, JPG, or PNG files only.'
@@ -341,7 +395,6 @@ export default {
                     return
                 }
 
-                // Validate file size (5MB max)
                 if (file.size > 5 * 1024 * 1024) {
                     error.value = 'File size too large. Maximum size is 5MB.'
                     event.target.value = ''
@@ -352,39 +405,41 @@ export default {
             }
         }
 
+        // Form submission
         const handleSubmit = async () => {
             error.value = ''
 
-            // Validate form
             const isValid = await v$.value.$validate()
             if (!isValid) return
 
             isLoading.value = true
 
             try {
-                // Create FormData for multipart/form-data submission
                 const formData = new FormData()
-
-                // Append all form fields except confirm_password
                 Object.keys(form).forEach(key => {
                     if (key !== 'confirm_password') {
                         formData.append(key, form[key])
                     }
                 })
 
-                await axios.post('/api/register/professional', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
+                await store.dispatch('auth/register', {
+                    role: 'professional',
+                    data: formData
                 })
 
-                // Show success message and redirect to login
+                // Set registration success flag before navigation
+                isRegistered.value = true
+
+                window.showToast({
+                    type: 'success',
+                    title: 'Registration Successful',
+                    message: 'Your professional account has been created. Please wait for verification.'
+                })
+
+                // Navigate after successful registration
                 router.push({
                     path: '/login',
-                    query: {
-                        registered: 'true',
-                        type: 'professional'
-                    }
+                    query: { registered: 'true', type: 'professional' }
                 })
             } catch (err) {
                 error.value = err.response?.data?.detail || 'An error occurred during registration'
@@ -392,6 +447,15 @@ export default {
                 isLoading.value = false
             }
         }
+        onMounted(async () => {
+            try {
+                const response = await axios.get('/api/services')
+                services.value = response.data.data
+            } catch (err) {
+                console.log(err)
+                error.value = 'Failed to load available services'
+            }
+        })
 
         const togglePassword = () => {
             showPassword.value = !showPassword.value
@@ -404,8 +468,12 @@ export default {
             error,
             showPassword,
             services,
+            isFormDirty,
+            isRegistered,
+            shouldShowNavigationGuard,
             handleSubmit,
             handleFileChange,
+            handleNavigationConfirm,
             togglePassword
         }
     }

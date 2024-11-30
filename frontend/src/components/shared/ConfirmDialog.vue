@@ -1,4 +1,4 @@
-# src/components/shared/ConfirmDialog.vue
+// src/components/shared/ConfirmDialog.vue
 <template>
     <div class="modal fade" :id="id" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog" :class="{ 'modal-sm': size === 'sm', 'modal-lg': size === 'lg' }">
@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { Modal } from 'bootstrap'
 
 export default {
@@ -65,10 +65,11 @@ export default {
         }
     },
 
-    emits: ['confirm'],
+    emits: ['confirm', 'hidden.bs.modal'],
 
     setup(props, { emit }) {
         const loading = ref(false)
+        let modalInstance = null
 
         const handleConfirm = async () => {
             try {
@@ -76,10 +77,28 @@ export default {
                 await emit('confirm')
             } finally {
                 loading.value = false
-                const modal = Modal.getInstance(document.getElementById(props.id))
-                if (modal) modal.hide()
+                hideModal()
             }
         }
+
+        const hideModal = () => {
+            if (!modalInstance) {
+                modalInstance = Modal.getInstance(document.getElementById(props.id))
+            }
+            if (modalInstance) {
+                modalInstance.hide()
+            }
+        }
+
+        // Clean up when component is unmounted
+        onUnmounted(() => {
+            const backdrop = document.querySelector('.modal-backdrop')
+            if (backdrop) {
+                backdrop.remove()
+            }
+            document.body.classList.remove('modal-open')
+            document.body.style.removeProperty('padding-right')
+        })
 
         return {
             loading,

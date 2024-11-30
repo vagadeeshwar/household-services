@@ -19,7 +19,7 @@ const actions = {
     try {
       const response = await axios.post('/api/login', credentials)
       const { token } = response.data.data
-      
+
       // Get user profile
       const userResponse = await axios.get('/api/profile', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -29,10 +29,10 @@ const actions = {
       // Save to store and localStorage
       commit('setToken', token)
       commit('setUser', user)
-      
+
       // Set default auth header
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      
+
       return Promise.resolve(user)
     } catch (error) {
       commit('clearAuth')
@@ -40,10 +40,10 @@ const actions = {
     }
   },
 
-  async register({ commit }, registrationData) {
+  async register({ commit }, { role, data }) {
     try {
-      const endpoint = `/api/register/${registrationData.role}`
-      const response = await axios.post(endpoint, registrationData)
+      const endpoint = `/api/register/${role}`
+      const response = await axios.post(endpoint, data)
       return Promise.resolve(response.data)
     } catch (error) {
       return Promise.reject(error.response.data)

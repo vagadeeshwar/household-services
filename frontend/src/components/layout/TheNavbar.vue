@@ -1,5 +1,6 @@
 # src/components/layout/TheNavbar.vue
 <template>
+
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <!-- Brand -->
@@ -232,9 +233,9 @@
         </div>
     </nav>
 </template>
-
+# src/components/layout/TheNavbar.vue
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { Modal } from 'bootstrap'
@@ -283,7 +284,6 @@ export default {
             }
         }
 
-
         // Toggle notifications
         const toggleNotifications = () => {
             if (!notificationsCanvas.value) {
@@ -291,6 +291,7 @@ export default {
             }
             notificationsCanvas.value.show()
         }
+
 
         return {
             isLoggedIn,
