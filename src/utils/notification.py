@@ -13,6 +13,7 @@ class EmailTemplate:
     SERVICE_REQUEST_COMPLETED = "emails/service_request_completed.html"
     MONTHLY_REPORT = "emails/monthly_report.html"
     DAILY_REMINDER = "emails/daily_reminder.html"
+    CONTACT_FORM = "emails/contact_form.html"
 
 
 class NotificationService:
@@ -39,22 +40,8 @@ class NotificationService:
                 bcc=bcc,
             )
 
-            try:
-                msg.html = render_template(template, **data)
-                current_app.logger.info("Template rendered successfully")
-            except Exception as template_error:
-                current_app.logger.error(
-                    f"Template rendering error: {str(template_error)}"
-                )
-                # Generate appropriate fallback content based on template type
-                fallback_content = NotificationService._get_fallback_content(
-                    template, data
-                )
-                if fallback_content:
-                    msg.body = fallback_content
-                    current_app.logger.info("Using fallback plain text email")
-                else:
-                    raise template_error
+            msg.html = render_template(template, **data)
+            current_app.logger.info("Template rendered successfully")
 
             mail.send(msg)
             current_app.logger.info(f"Email sent successfully to {to}")
@@ -64,71 +51,6 @@ class NotificationService:
             current_app.logger.error(f"Failed to send email: {str(e)}")
             current_app.logger.error("Exception details:", exc_info=True)
             return False
-
-    @staticmethod
-    def _get_fallback_content(template: str, data: Dict[str, Any]) -> Optional[str]:
-        """Generate fallback content based on template type"""
-        if "export_complete" in template.lower():
-            return f"""
-            Export Complete
-
-            Your service requests export has been completed.
-
-            Filename: {data.get('filename')}
-            Total Records: {data.get('total_records')}
-
-            You can download the export file from the admin dashboard.
-
-            Best regards,
-            Household Services Team
-            """
-        elif template == EmailTemplate.VERIFICATION_APPROVED:
-            return f"""
-            Dear {data.get('name')},
-
-            Congratulations! Your professional verification for {data.get('service')} has been approved. 
-            You can now start accepting service requests.
-
-            Best regards,
-            Household Services Team
-            """
-        elif template == EmailTemplate.SERVICE_REQUEST_ASSIGNED:
-            return f"""
-            Dear {data.get('customer_name')},
-
-            A professional has been assigned to your service request:
-            Service: {data.get('service_name')}
-            Date: {data.get('date')}
-            Professional: {data.get('professional_name')}
-            Request ID: {data.get('request_id')}
-
-            Best regards,
-            Household Services Team
-            """
-        elif template == EmailTemplate.DAILY_REMINDER:
-            pending_count = len(data.get("pending_requests", []))
-            return f"""
-            Dear {data.get('name')},
-
-            You have {pending_count} pending service requests for today.
-            Please check your dashboard for details.
-
-            Best regards,
-            Household Services Team
-            """
-        elif template == EmailTemplate.MONTHLY_REPORT:
-            return f"""
-            Dear {data.get('name')},
-
-            Here is your activity report for {data.get('month')}:
-            Total Requests: {data.get('total_requests')}
-            Completed Requests: {data.get('completed_requests')}
-            Average Rating: {data.get('average_rating')}
-
-            Best regards,
-            Household Services Team
-            """
-        return None
 
     @classmethod
     def send_verification_approved(cls, professional):

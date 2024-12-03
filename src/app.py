@@ -15,7 +15,12 @@ from src.utils.notification import mail
 
 def create_app():
     # Initialize Flask app
-    app = Flask(__name__, static_folder="../build", static_url_path="")
+    app = Flask(
+        __name__,
+        static_folder="../build",
+        static_url_path="",
+        template_folder="../templates",
+    )
     CORS(app)
     load_dotenv()
 
@@ -56,6 +61,7 @@ def create_app():
     from src.routes.dashboard import dashboard_bp
     from src.routes.request import request_bp
     from src.routes.export import export_bp
+    from src.routes.contact import contact_bp
 
     app.register_blueprint(user_bp, url_prefix="/api")
     app.register_blueprint(customer_bp, url_prefix="/api")
@@ -65,6 +71,7 @@ def create_app():
     app.register_blueprint(dashboard_bp, url_prefix="/api")
     app.register_blueprint(request_bp, url_prefix="/api")
     app.register_blueprint(export_bp, url_prefix="/api")
+    app.register_blueprint(contact_bp, url_prefix="/api")
 
     # Register error handler
     register_error_handlers(app)

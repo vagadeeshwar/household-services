@@ -43,6 +43,12 @@ def login():
         return APIResponse.error(
             "Account is deactivated", HTTPStatus.FORBIDDEN, "InactiveAccount"
         )
+    if user.role == "professional" and not user.professional_profile.is_verified:
+        return APIResponse.error(
+            "Professional profile is not verified",
+            HTTPStatus.FORBIDDEN,
+            "UnverifiedProfessional",
+        )
 
     try:
         user.last_login = datetime.utcnow()

@@ -43,6 +43,7 @@ frontend/.eslintcache
 frontend/.cache
 frontend/public/js
 frontend/public/css
+frontend/frontend.txt
 
 # Backend (Flask) specific ignores
 *.pyc

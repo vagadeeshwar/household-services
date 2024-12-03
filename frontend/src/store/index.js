@@ -1,11 +1,23 @@
-// frontend/src/store/index.js
 import { createStore } from 'vuex'
+
 import auth from './modules/auth'
-import profile from './modules/profile'
+import services from './modules/services'
+import requests from './modules/requests'
+import professionals from './modules/professionals'
+import customers from './modules/customers'
+import stats from './modules/stats'
+import exports from './modules/exports'
 
 export default createStore({
-    modules: {
-        auth,
-        profile
-    }
+  modules: {
+    auth,
+    services,
+    requests,
+    professionals,
+    customers,
+    stats,
+    exports,
+  },
+  // Enable strict mode in development
+  strict: true,
 })

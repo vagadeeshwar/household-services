@@ -253,7 +253,7 @@ def create_professionals(services, admin_id):
                 service_type_id=service.id,
                 experience_years=random.randint(2, 15),
                 description=service_descriptions[service.name],
-                is_verified=False,  # Start with unverified status
+                is_verified=is_active,  # Start with unverified status
                 verification_documents=doc_filename,
                 average_rating=None,  # Initially no rating
             )
@@ -275,6 +275,7 @@ def create_professionals(services, admin_id):
                         f"Verification rejected for {username}: {reason}",
                     )
                     user.is_active = False
+                    profile.is_verified = False
 
                 elif status == "resubmitted":
                     # Simulate document update
@@ -307,6 +308,7 @@ def create_professionals(services, admin_id):
 
                 elif status == "blocked":
                     user.is_active = False
+                    user.is_verified = True
                     create_activity_log(
                         admin_id,
                         ActivityLogActions.PROFESSIONAL_BLOCK,
