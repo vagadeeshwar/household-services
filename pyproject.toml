@@ -1,31 +1,100 @@
-[tool.poetry]
-
+[project]
 name = "household-services"
 version = "0.1.0"
-description = ""
-authors = ["Vagadeeshwar G <21f1005494@ds.study.iitm.ac.in>"]
+description = "Add your description here"
 readme = "README.md"
-# package-mode = false
+requires-python = ">=3.11"
+dependencies = [
+    "celery>=5.4.0",
+    "flask>=3.1.0",
+    "flask-caching>=2.3.1",
+    "flask-cors>=5.0.1",
+    "flask-mail>=0.10.0",
+    "flask-marshmallow>=1.3.0",
+    "flask-restful>=0.3.10",
+    "flask-sqlalchemy>=3.1.1",
+    "flower>=2.0.1",
+    "marshmallow-sqlalchemy>=1.4.1",
+    "pyjwt>=2.10.1",
+    "python-dotenv>=1.0.1",
+    "redis>=5.2.1",
+]
 
-[tool.poetry.dependencies]
-python = "^3.12"
-flask = "^3.0.3"
-python-dotenv = "^1.0.1"
-flask-sqlalchemy = "^3.1.1"
-flask-restful = "^0.3.10"
-flask-cors = "^5.0.0"
-flask-marshmallow = "^1.2.1"
-pyjwt = "^2.10.0"
-marshmallow-sqlalchemy = "^1.1.0"
-redis = "^5.2.0"
-flask-caching = "^2.3.0"
-celery = "^5.4.0"
-flower = "^2.0.1"
-flask-mail = "^0.10.0"
+[dependency-groups]
+dev = [
+    "faker>=36.1.1",
+    "pre-commit>=4.1.0",
+    "ruff>=0.9.9",
+]
 
-[tool.poetry.group.dev.dependencies]
-faker = "^33.0.0"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+# Enable Pyflakes 'F' and 'E' codes by default
+select = ["E", "F", "I", "N", "W", "B", "A", "C4", "SIM", "ERA"]
+ignore = [
+    "B008",   # Do not perform function calls in argument defaults
+    "B904",   # Within an except clause, raise exceptions with raise ... from err
+    "E501",   # Line too long
+    "ERA001", # Found commented-out code
+    "N805",   # First argument of a method should be named 'self'
+    "N806",   # Variable in function should be lowercase
+    "SIM102", # Use a single if statement instead of nested if statements
+    "SIM117", # Use multiple context managers in a single with statement
+    "SIM118", # Use 'key in dict' instead of 'key in dict.keys()'
+]
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 10
+
+[tool.ruff.isort]
+known-first-party = ["app"]
+combine-as-imports = true
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+split-on-trailing-comma = true
+
+
+[tool.ruff.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.format]
+quote-style = "double" # Use double quotes for strings
+indent-style = "space" # Use spaces for indentation
+line-ending = "lf"     # Use Unix-style line endings

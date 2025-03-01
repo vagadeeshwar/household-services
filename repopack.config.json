@@ -1,0 +1,28 @@
+{
+  "output": {
+    "filePath": "backend.txt",
+    "removeEmptyLines": true
+  },
+  "ignore": {
+    "customPatterns": [
+      "migrations",
+      ".env",
+      "alembic.ini",
+      "*.db",
+      "README.md",
+      "certs",
+      ".gitignore",
+      "assets",
+      "repopack.config.json",
+      "tests",
+      ".pre-commit-config.yaml",
+      "uv.lock",
+      ".python-version",
+      ".dockerignore",
+      "nohup.out",
+
+      "requirements.txt",
+      "frontend"
+    ]
+  }
+}
