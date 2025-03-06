@@ -1,4 +1,3 @@
-// src/services/api.js
 import axios from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import store from '@/store'

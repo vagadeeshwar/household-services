@@ -7,6 +7,7 @@ import professionals from './modules/professionals'
 import customers from './modules/customers'
 import stats from './modules/stats'
 import exports from './modules/exports'
+import apiCache from './modules/apiCache'
 
 export default createStore({
   modules: {
@@ -17,6 +18,7 @@ export default createStore({
     customers,
     stats,
     exports,
+    apiCache
   },
   // Enable strict mode in development
   strict: true,

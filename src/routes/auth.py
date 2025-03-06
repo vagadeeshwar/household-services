@@ -1,25 +1,22 @@
-from flask import Blueprint, request
 from datetime import datetime
-from marshmallow import ValidationError
 from http import HTTPStatus
 
+from flask import Blueprint, request
+from marshmallow import ValidationError
+
 from src import db
-
-from src.models import (
-    User,
-    ActivityLog,
-)
-
 from src.constants import (
     ActivityLogActions,
 )
-
+from src.models import (
+    ActivityLog,
+    User,
+)
 from src.schemas.auth import (
     login_schema,
     token_schema,
 )
-
-from src.utils.auth import generate_token, APIResponse
+from src.utils.auth import APIResponse, generate_token
 
 auth_bp = Blueprint("auth", __name__)
 

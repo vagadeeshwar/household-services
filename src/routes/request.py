@@ -1,38 +1,35 @@
+from datetime import datetime, timedelta
+from http import HTTPStatus
+
 from flask import Blueprint, request
 from marshmallow import ValidationError
-from http import HTTPStatus
-from datetime import datetime, timedelta
 
 from src import db
-
+from src.constants import (
+    REQUEST_STATUS_ASSIGNED,
+    REQUEST_STATUS_COMPLETED,
+    REQUEST_STATUS_CREATED,
+    ActivityLogActions,
+)
 from src.models import (
-    ServiceRequest,
+    ActivityLog,
     CustomerProfile,
     ProfessionalProfile,
     Review,
     Service,
-    ActivityLog,
+    ServiceRequest,
 )
-
-from src.constants import (
-    ActivityLogActions,
-    REQUEST_STATUS_CREATED,
-    REQUEST_STATUS_ASSIGNED,
-    REQUEST_STATUS_COMPLETED,
-)
-
 from src.schemas.request import (
+    ReviewInputSchema,
+    review_output_schema,
     service_request_input_schema,
     service_request_output_schema,
     service_requests_output_schema,
-    review_output_schema,
-    ReviewInputSchema,
 )
-
-from src.utils.auth import token_required, role_required
 from src.utils.api import APIResponse
+from src.utils.auth import role_required, token_required
+from src.utils.notification import EmailTemplate, NotificationService
 from src.utils.request import check_booking_availability
-from src.utils.notification import NotificationService, EmailTemplate
 
 request_bp = Blueprint("request", __name__)
 

@@ -23,7 +23,7 @@
           <div>{{ error }}</div>
         </div>
         <div class="text-center mt-3">
-          <button @click="fetchServices" class="btn btn-primary">
+          <button @click="fetchActiveServices" class="btn btn-primary">
             Try Again
           </button>
         </div>
@@ -68,64 +68,63 @@
   </div>
 </template>
 <script>
-import { ref, computed, onMounted } from 'vue'
-import { useStore } from 'vuex'
-import { service } from '@/services' // Import the service directly
+import { service } from '@/services'; // Import the service directly
+import { computed, onMounted, ref } from 'vue';
+import { useStore } from 'vuex';
 
 export default {
   name: 'ServicesPage',
 
   setup() {
-    const store = useStore()
-    const services = ref([])
-    const loading = ref(true)
-    const error = ref(null)
+    const store = useStore();
+    const services = ref([]);
+    const loading = ref(true);
+    const error = ref(null);
 
-    const isAuthenticated = computed(() => store.getters['auth/isLoggedIn'])
+    const isAuthenticated = computed(() => store.getters['auth/isLoggedIn']);
 
-    const fetchServices = async () => {
+    const fetchActiveServices = async () => {
       try {
-        loading.value = true
-        error.value = null
+        loading.value = true;
+        error.value = null;
 
         // Call the API service directly instead of using store
-        const response = await service.getAll({
-          is_active: true,
+        const response = await service.getActive({
           page: 1,
-          per_page: 50 // Adjust as needed
-        })
+          per_page: 9
+        });
 
         if (response?.data) {
-          services.value = response.data
+          services.value = response.data;
         } else {
-          throw new Error('Invalid response format')
+          throw new Error('Invalid response format');
         }
       } catch (err) {
-        console.error('Service fetch error:', err)
-        error.value = err.response?.data?.message || 'Failed to load services. Please try again.'
+        console.error('Service fetch error:', err);
+        error.value = err.response?.data?.message || 'Failed to load services. Please try again.';
         window.showToast({
           type: 'error',
           title: 'Error',
           message: error.value
-        })
+        });
       } finally {
-        loading.value = false
+        loading.value = false;
       }
-    }
+    };
 
     onMounted(() => {
-      fetchServices()
-    })
+      fetchActiveServices();
+    });
 
     return {
       services,
       loading,
       error,
       isAuthenticated,
-      fetchServices
-    }
+      fetchActiveServices
+    };
   }
-}
+};
 </script>
 
 <style scoped>

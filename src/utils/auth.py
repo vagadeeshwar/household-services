@@ -1,8 +1,10 @@
-from functools import wraps
-from flask import request, current_app
-from http import HTTPStatus
-import jwt
 from datetime import datetime, timedelta
+from functools import wraps
+from http import HTTPStatus
+
+import jwt
+from flask import current_app, request
+
 from src.models import User
 from src.utils.api import APIResponse
 
@@ -42,8 +44,8 @@ def token_required(f):
             )
 
         try:
-            data = jwt.decode(
-                token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
+            data = jwt.decode(token,
+                current_app.config["SECRET_KEY"], algorithms=["HS256"]
             )
             current_user = User.query.get(data["user_id"])
             if not current_user or not current_user.is_active:

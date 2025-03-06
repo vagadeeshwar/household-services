@@ -1,27 +1,21 @@
-from flask import Blueprint, request, current_app
-from marshmallow import ValidationError
 from http import HTTPStatus
-import jwt
+
+from flask import Blueprint, request
+from marshmallow import ValidationError
 
 from src import db
-
-from src.models import Service, ProfessionalProfile, ActivityLog, User
-
 from src.constants import ActivityLogActions
-
+from src.models import ActivityLog, ProfessionalProfile, Service, User
 from src.schemas.service import (
-    service_output_schema,
-    services_output_schema,
     service_input_schema,
+    service_output_schema,
     service_query_schema,
     service_update_schema,
+    services_output_schema,
 )
-
-
-from src.utils.auth import token_required, role_required
 from src.utils.api import APIResponse
-from src.utils.cache import cached_with_auth, cache_invalidate
-
+from src.utils.auth import role_required, token_required
+from src.utils.cache import cache_invalidate, cached_with_auth
 
 service_bp = Blueprint("service", __name__)
 
@@ -78,39 +72,67 @@ def create_service(current_user):
         )
 
 
+@service_bp.route("/services/all", methods=["GET"])
+@service_bp.route("/services/all/<int:service_id>", methods=["GET"])
+@token_required
+@role_required("admin")
+@cached_with_auth(timeout=300)
+def list_all_services(current_user, service_id=None):
+    """List all services or get a specific service"""
+    try:
+        if service_id is not None:
+            # Single service retrieval
+            service = Service.query.get_or_404(service_id)
+
+            return APIResponse.success(
+                data=service_output_schema.dump(service),
+                message="Service retrieved successfully",
+            )
+
+        # List services with filtering and pagination
+        params = service_query_schema.load(request.args)
+        query = Service.query
+
+        # Apply pagination
+        paginated = query.paginate(
+            page=params["page"], per_page=params["per_page"], error_out=False
+        )
+
+        return APIResponse.success(
+            data=services_output_schema.dump(paginated.items),
+            message="Services retrieved successfully",
+            pagination={
+                "total": paginated.total,
+                "pages": paginated.pages,
+                "current_page": paginated.page,
+                "per_page": paginated.per_page,
+                "has_next": paginated.has_next,
+                "has_prev": paginated.has_prev,
+            },
+        )
+
+    except ValidationError as err:
+        return APIResponse.error(str(err.messages))
+    except Exception as e:
+        return APIResponse.error(
+            f"Error retrieving services: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
+
+
 @service_bp.route("/services", methods=["GET"])
 @service_bp.route("/services/<int:service_id>", methods=["GET"])
 @cached_with_auth(timeout=300)
 def list_services(service_id=None):
-    """List all services or get a specific service"""
+    """List all active services or get a specific active service"""
     try:
-        # Get authentication token if present
-        token = None
-        if "Authorization" in request.headers:
-            auth_header = request.headers["Authorization"]
-            try:
-                token = auth_header.split(" ")[1]
-            except IndexError:
-                token = None
-
-        # Check if user is admin
-        is_admin = False
-        if token:
-            try:
-                data = jwt.decode(
-                    current_app.config["SECRET_KEY"], algorithms=["HS256"]
-                )
-                current_user = User.query.get(data["user_id"])
-                is_admin = current_user and current_user.role == "admin"
-            except (jwt.InvalidTokenError, Exception):
-                pass
-
         if service_id is not None:
             # Single service retrieval
             service = Service.query.get_or_404(service_id)
 
             # If not admin, only return active services
-            if not is_admin and not service.is_active:
+            if not service.is_active:
                 return APIResponse.error(
                     "Service not found", HTTPStatus.NOT_FOUND, "NotFound"
                 )
@@ -124,11 +146,7 @@ def list_services(service_id=None):
         params = service_query_schema.load(request.args)
         query = Service.query
 
-        # Non-admin users can only see active services
-        if not is_admin:
-            query = query.filter_by(is_active=True)
-        elif params.get("is_active") is not None:
-            query = query.filter_by(is_active=params["is_active"])
+        query = query.filter_by(is_active=True)
 
         # Apply pagination
         paginated = query.paginate(

@@ -23,8 +23,9 @@
                 <div class="col-12">
                   <label for="username" class="form-label">Username</label>
                   <input type="text" id="username" v-model="form.username"
-                    :class="['form-control', { 'is-invalid': v$.form.username.$error }]" :disabled="isLoading"
-                    @input="v$.form.username.$touch()" @blur="v$.form.username.$touch()" />
+                    :class="['form-control', { 'is-invalid': v$.form.username.$error }]"
+                    :disabled="isLoading" @input="v$.form.username.$touch()"
+                    @blur="v$.form.username.$touch()" />
                   <div class="invalid-feedback" v-if="v$.form.username.$error">
                     {{ v$.form.username.$errors[0]?.$message }}
                   </div>
@@ -37,8 +38,8 @@
                 <div class="col-12">
                   <label for="email" class="form-label">Email</label>
                   <input type="email" id="email" v-model="form.email"
-                    :class="['form-control', { 'is-invalid': v$.form.email.$error }]" :disabled="isLoading"
-                    @input="v$.form.email.$touch()" />
+                    :class="['form-control', { 'is-invalid': v$.form.email.$error }]"
+                    :disabled="isLoading" @input="v$.form.email.$touch()" />
                   <div class="invalid-feedback" v-if="v$.form.email.$error">
                     {{ v$.form.email.$errors[0]?.$message }}
                   </div>
@@ -53,8 +54,9 @@
                 <div class="col-12">
                   <label for="fullName" class="form-label">Full Name</label>
                   <input type="text" id="fullName" v-model="form.fullName"
-                    :class="['form-control', { 'is-invalid': v$.form.fullName.$error }]" :disabled="isLoading"
-                    @input="v$.form.fullName.$touch()" @blur="v$.form.fullName.$touch()" />
+                    :class="['form-control', { 'is-invalid': v$.form.fullName.$error }]"
+                    :disabled="isLoading" @input="v$.form.fullName.$touch()"
+                    @blur="v$.form.fullName.$touch()" />
                   <div class="invalid-feedback" v-if="v$.form.fullName.$error">
                     {{ v$.form.fullName.$errors[0]?.$message }}
                   </div>
@@ -66,8 +68,9 @@
                   <div class="input-group">
                     <span class="input-group-text">+91</span>
                     <input type="tel" id="phone" v-model="form.phone"
-                      :class="['form-control', { 'is-invalid': v$.form.phone.$error }]" :disabled="isLoading"
-                      @input="v$.form.phone.$touch()" @blur="v$.form.phone.$touch()" maxlength="10" />
+                      :class="['form-control', { 'is-invalid': v$.form.phone.$error }]"
+                      :disabled="isLoading" @input="v$.form.phone.$touch()"
+                      @blur="v$.form.phone.$touch()" maxlength="10" />
                   </div>
                   <div class="invalid-feedback" v-if="v$.form.phone.$error">
                     {{ v$.form.phone.$errors[0]?.$message }}
@@ -78,8 +81,9 @@
                 <div class="col-md-6">
                   <label for="pinCode" class="form-label">PIN Code</label>
                   <input type="text" id="pinCode" v-model="form.pinCode"
-                    :class="['form-control', { 'is-invalid': v$.form.pinCode.$error }]" :disabled="isLoading"
-                    @input="v$.form.pinCode.$touch()" @blur="v$.form.pinCode.$touch()" maxlength="6" />
+                    :class="['form-control', { 'is-invalid': v$.form.pinCode.$error }]"
+                    :disabled="isLoading" @input="v$.form.pinCode.$touch()"
+                    @blur="v$.form.pinCode.$touch()" maxlength="6" />
                   <div class="invalid-feedback" v-if="v$.form.pinCode.$error">
                     {{ v$.form.pinCode.$errors[0]?.$message }}
                   </div>
@@ -89,8 +93,9 @@
                 <div class="col-12">
                   <label for="address" class="form-label">Address</label>
                   <textarea id="address" v-model="form.address"
-                    :class="['form-control', { 'is-invalid': v$.form.address.$error }]" :disabled="isLoading"
-                    @input="v$.form.address.$touch()" @blur="v$.form.address.$touch()" rows="3"></textarea>
+                    :class="['form-control', { 'is-invalid': v$.form.address.$error }]"
+                    :disabled="isLoading" @input="v$.form.address.$touch()"
+                    @blur="v$.form.address.$touch()" rows="3"></textarea>
                   <div class="invalid-feedback" v-if="v$.form.address.$error">
                     {{ v$.form.address.$errors[0]?.$message }}
                   </div>
@@ -105,8 +110,8 @@
                 <div class="col-md-6">
                   <label for="serviceType" class="form-label">Service Type</label>
                   <select id="serviceType" v-model="form.serviceTypeId"
-                    :class="['form-select', { 'is-invalid': v$.form.serviceTypeId.$error }]" :disabled="isLoading"
-                    @change="v$.form.serviceTypeId.$touch()">
+                    :class="['form-select', { 'is-invalid': v$.form.serviceTypeId.$error }]"
+                    :disabled="isLoading" @change="v$.form.serviceTypeId.$touch()">
                     <option value="">Select a service</option>
                     <option v-for="service in services" :key="service.id" :value="service.id">
                       {{ service.name }}
@@ -121,8 +126,8 @@
                 <div class="col-md-6">
                   <label for="experience" class="form-label">Years of Experience</label>
                   <input type="number" id="experience" v-model="form.experienceYears"
-                    :class="['form-control', { 'is-invalid': v$.form.experienceYears.$error }]" :disabled="isLoading"
-                    min="0" max="50" @input="v$.form.experienceYears.$touch()"
+                    :class="['form-control', { 'is-invalid': v$.form.experienceYears.$error }]"
+                    :disabled="isLoading" min="0" max="50" @input="v$.form.experienceYears.$touch()"
                     @blur="v$.form.experienceYears.$touch()" />
                   <div class="invalid-feedback" v-if="v$.form.experienceYears.$error">
                     {{ v$.form.experienceYears.$errors[0]?.$message }}
@@ -133,8 +138,9 @@
                 <div class="col-12">
                   <label for="description" class="form-label">Professional Description</label>
                   <textarea id="description" v-model="form.description"
-                    :class="['form-control', { 'is-invalid': v$.form.description.$error }]" :disabled="isLoading"
-                    @input="v$.form.description.$touch()" @blur="v$.form.description.$touch()" rows="4"
+                    :class="['form-control', { 'is-invalid': v$.form.description.$error }]"
+                    :disabled="isLoading" @input="v$.form.description.$touch()"
+                    @blur="v$.form.description.$touch()" rows="4"
                     placeholder="Describe your experience, skills, and expertise..."></textarea>
                   <div class="invalid-feedback" v-if="v$.form.description.$error">
                     {{ v$.form.description.$errors[0]?.$message }}
@@ -149,7 +155,8 @@
                   </label>
                   <input type="file" id="verificationDoc" ref="fileInput"
                     :class="['form-control', { 'is-invalid': v$.form.verificationDocument.$error }]"
-                    :disabled="isLoading" @change="handleFileChange" accept=".pdf,.jpg,.jpeg,.png" />
+                    :disabled="isLoading" @change="handleFileChange"
+                    accept=".pdf,.jpg,.jpeg,.png" />
                   <div class="invalid-feedback" v-if="v$.form.verificationDocument.$error">
                     {{ v$.form.verificationDocument.$errors[0]?.$message }}
                   </div>
@@ -168,9 +175,11 @@
                 <div class="col-md-6">
                   <label for="password" class="form-label">Password</label>
                   <div class="input-group">
-                    <input :type="showPassword ? 'text' : 'password'" id="password" v-model="form.password"
-                      :class="['form-control', { 'is-invalid': v$.form.password.$error }]" :disabled="isLoading"
-                      @input="v$.form.password.$touch()" @blur="v$.form.password.$touch()" />
+                    <input :type="showPassword ? 'text' : 'password'" id="password"
+                      v-model="form.password"
+                      :class="['form-control', { 'is-invalid': v$.form.password.$error }]"
+                      :disabled="isLoading" @input="v$.form.password.$touch()"
+                      @blur="v$.form.password.$touch()" />
                     <button class="btn btn-outline-secondary" type="button" @click="togglePassword">
                       <i :class="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
                     </button>
@@ -183,8 +192,9 @@
                 <div class="col-md-6">
                   <label for="confirmPassword" class="form-label">Confirm Password</label>
                   <input type="password" id="confirmPassword" v-model="form.confirmPassword"
-                    :class="['form-control', { 'is-invalid': v$.form.confirmPassword.$error }]" :disabled="isLoading"
-                    @input="v$.form.confirmPassword.$touch()" @blur="v$.form.confirmPassword.$touch()" />
+                    :class="['form-control', { 'is-invalid': v$.form.confirmPassword.$error }]"
+                    :disabled="isLoading" @input="v$.form.confirmPassword.$touch()"
+                    @blur="v$.form.confirmPassword.$touch()" />
                   <div class="invalid-feedback" v-if="v$.form.confirmPassword.$error">
                     {{ v$.form.confirmPassword.$errors[0]?.$message }}
                   </div>
@@ -193,8 +203,10 @@
                 <!-- Terms -->
                 <div class="col-12">
                   <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="terms" v-model="form.termsAccepted"
-                      :class="{ 'is-invalid': v$.form.termsAccepted.$error }" @change="v$.form.termsAccepted.$touch()">
+                    <input type="checkbox" class="form-check-input" id="terms"
+                      v-model="form.termsAccepted"
+                      :class="{ 'is-invalid': v$.form.termsAccepted.$error }"
+                      @change="v$.form.termsAccepted.$touch()">
                     <label class="form-check-label" for="terms">
                       I agree to the
                       <router-link to="/terms" target="_blank">Terms of Service</router-link>
@@ -209,7 +221,8 @@
 
                 <!-- Submit Button -->
                 <div class="col-12">
-                  <button type="submit" class="btn btn-success w-100" :disabled="isLoading || v$.$invalid">
+                  <button type="submit" class="btn btn-success w-100"
+                    :disabled="isLoading || v$.$invalid">
                     <span v-if="isLoading" class="spinner-border spinner-border-sm me-2"></span>
                     {{ isLoading ? 'Creating Account...' : 'Create Professional Account' }}
                   </button>
@@ -232,11 +245,11 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
-import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
-import { useVuelidate } from '@vuelidate/core'
-import { required, email, minLength, helpers, numeric, between } from '@vuelidate/validators'
+import { useVuelidate } from '@vuelidate/core';
+import { between, email, helpers, minLength, numeric, required } from '@vuelidate/validators';
+import { onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 
 const initialForm = {
   username: '',
@@ -252,21 +265,21 @@ const initialForm = {
   password: '',
   confirmPassword: '',
   termsAccepted: false
-}
+};
 
 export default {
   name: 'ProfessionalRegisterForm',
   components: {},
 
   setup() {
-    const store = useStore()
-    const router = useRouter()
-    const fileInput = ref(null)
+    const store = useStore();
+    const router = useRouter();
+    const fileInput = ref(null);
 
-    const form = reactive({ ...initialForm })
-    const services = ref([])
-    const isLoading = ref(false)
-    const showPassword = ref(false)
+    const form = reactive({ ...initialForm });
+    const services = ref([]);
+    const isLoading = ref(false);
+    const showPassword = ref(false);
 
     // Validation rules
     const rules = {
@@ -330,16 +343,16 @@ export default {
           validFileType: helpers.withMessage(
             'Please upload PDF, JPG, or PNG files only',
             value => {
-              if (!value) return true
-              const validTypes = ['application/pdf', 'image/jpeg', 'image/png']
-              return validTypes.includes(value.type)
+              if (!value) return true;
+              const validTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+              return validTypes.includes(value.type);
             }
           ),
           validFileSize: helpers.withMessage(
             'File size must be less than 5MB',
             value => {
-              if (!value) return true
-              return value.size <= 5 * 1024 * 1024 // 5MB
+              if (!value) return true;
+              return value.size <= 5 * 1024 * 1024; // 5MB
             }
           )
         },
@@ -359,14 +372,14 @@ export default {
           required: helpers.withMessage('You must accept the terms and conditions', value => value === true)
         }
       }
-    }
+    };
 
-    const v$ = useVuelidate(rules, { form })
+    const v$ = useVuelidate(rules, { form });
 
     const handleFileChange = (event) => {
-      const file = event.target.files[0]
+      const file = event.target.files[0];
       if (file) {
-        console.log('File selected:', file) // Debug log
+        console.log('File selected:', file); // Debug log
 
         // Validate file size (5MB limit)
         if (file.size > 5 * 1024 * 1024) {
@@ -374,53 +387,53 @@ export default {
             type: 'error',
             title: 'File Too Large',
             message: 'Please select a file smaller than 5MB'
-          })
-          event.target.value = '' // Reset file input
-          form.verificationDocument = null
-          return
+          });
+          event.target.value = ''; // Reset file input
+          form.verificationDocument = null;
+          return;
         }
 
         // Validate file type
-        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png']
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
         if (!allowedTypes.includes(file.type)) {
           window.showToast({
             type: 'error',
             title: 'Invalid File Type',
             message: 'Please select a PDF, JPG, or PNG file'
-          })
-          event.target.value = '' // Reset file input
-          form.verificationDocument = null
-          return
+          });
+          event.target.value = ''; // Reset file input
+          form.verificationDocument = null;
+          return;
         }
 
-        form.verificationDocument = file
-        v$.value.form.verificationDocument.$touch()
+        form.verificationDocument = file;
+        v$.value.form.verificationDocument.$touch();
       }
-    }
+    };
 
     // Form submission
     const handleSubmit = async () => {
-      const isValid = await v$.value.$validate()
-      if (!isValid) return
+      const isValid = await v$.value.$validate();
+      if (!isValid) return;
 
-      isLoading.value = true
+      isLoading.value = true;
 
       try {
-        const formData = new FormData()
+        const formData = new FormData();
         Object.keys(form).forEach(key => {
           if (key !== 'confirmPassword' && key !== 'termsAccepted') {
-            formData.append(key, form[key])
+            formData.append(key, form[key]);
           }
-        })
+        });
 
-        await store.dispatch('auth/registerProfessional', formData)
+        await store.dispatch('auth/registerProfessional', formData);
 
 
         window.showToast({
           type: 'success',
           title: 'Registration Successful',
           message: 'Your account has been created. Please wait for verification.'
-        })
+        });
 
         router.push({
           path: '/login',
@@ -429,7 +442,7 @@ export default {
             type: 'professional',
             email: form.email
           }
-        })
+        });
       } catch (error) {
 
 
@@ -437,35 +450,35 @@ export default {
           type: 'error',
           title: 'Registration Failed',
           message: error.response?.data?.message || 'Registration failed. Please try again.'
-        })
+        });
 
       } finally {
-        isLoading.value = false
+        isLoading.value = false;
       }
-    }
+    };
 
     // UI helpers
     const togglePassword = () => {
-      showPassword.value = !showPassword.value
-    }
+      showPassword.value = !showPassword.value;
+    };
 
     // Fetch services on mount
-    const fetchServices = async () => {
+    const fetchActiveServices = async () => {
       try {
-        const response = await store.dispatch('services/fetchServices')
-        services.value = response.data || []
+        const response = await store.dispatch('services/fetchActiveServices');
+        services.value = response.data || [];
       } catch {
 
         window.showToast({
           type: 'error',
           title: 'Error',
           message: 'Failed to load service types.Please refresh and try again.'
-        })
+        });
 
       }
-    }
+    };
 
-    onMounted(fetchServices)
+    onMounted(fetchActiveServices);
 
     return {
       form,
@@ -478,9 +491,9 @@ export default {
       handleFileChange,
       togglePassword,
       initialForm
-    }
+    };
   }
-}
+};
 </script>
 
 <style scoped>

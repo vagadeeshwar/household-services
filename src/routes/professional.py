@@ -1,47 +1,44 @@
-from flask import Blueprint, request, current_app
-from sqlalchemy import func
-from marshmallow import ValidationError
 import base64
-from http import HTTPStatus
 import os
+from http import HTTPStatus
+
+from flask import Blueprint, current_app, request
+from marshmallow import ValidationError
+from sqlalchemy import func
 
 from src import db
-
-from src.models import (
-    User,
-    ProfessionalProfile,
-    ActivityLog,
-    ServiceRequest,
-    Service,
-    Review,
-)
-
 from src.constants import (
-    ActivityLogActions,
-    USER_ROLE_PROFESSIONAL,
-    REQUEST_STATUS_CREATED,
     REQUEST_STATUS_ASSIGNED,
+    REQUEST_STATUS_CREATED,
+    USER_ROLE_PROFESSIONAL,
+    ActivityLogActions,
 )
-
+from src.models import (
+    ActivityLog,
+    ProfessionalProfile,
+    Review,
+    Service,
+    ServiceRequest,
+    User,
+)
 from src.schemas.professional import (
     professional_output_schema,
-    professionals_output_schema,
     professional_query_schema,
     professional_register_schema,
+    professionals_output_schema,
 )
-from src.schemas.user import block_user_schema
 from src.schemas.request import reviews_output_schema
-
-from src.utils.auth import token_required, role_required
+from src.schemas.user import block_user_schema
 from src.utils.api import APIResponse
-from src.utils.file import (
-    save_verification_document,
-    delete_verification_document,
-    UPLOAD_FOLDER,
-)
-from src.utils.user import check_existing_user
+from src.utils.auth import role_required, token_required
 from src.utils.cache import cached_with_auth
+from src.utils.file import (
+    UPLOAD_FOLDER,
+    delete_verification_document,
+    save_verification_document,
+)
 from src.utils.notification import NotificationService
+from src.utils.user import check_existing_user
 
 professional_bp = Blueprint("professional", __name__)
 
@@ -143,7 +140,6 @@ def register_professional():
 @professional_bp.route("/professionals/<int:profile_id>", methods=["GET"])
 @token_required
 @cached_with_auth(timeout=120)
-@role_required("admin", "customer")
 def list_professionals(current_user, profile_id=None):
     try:
         if profile_id is not None:

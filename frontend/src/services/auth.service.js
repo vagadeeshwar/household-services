@@ -1,9 +1,12 @@
-// src/services/auth.service.js
 import api from './api'
 
 class AuthService {
   async login(credentials) {
-    const response = await api.post('/login', credentials)
+    const response = await api.post('/login', credentials, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
     return response.data
   }
 
@@ -55,7 +58,7 @@ class AuthService {
 
   async deleteAccount(password) {
     const response = await api.delete('/delete-account', {
-      data: { password },
+      password: { password },
     })
     return response.data
   }

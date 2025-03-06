@@ -1,4 +1,3 @@
-// src/router/guards.js
 import store from '@/store'
 
 export const setupGuards = (router) => {

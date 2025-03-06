@@ -6,7 +6,7 @@
         <div class="row justify-content-center">
           <div class="col-lg-8 text-center">
             <h1 class="display-4 mb-3">Terms of Service</h1>
-            <p class="lead mb-0 opacity-75">Last Updated: March 2024</p>
+            <p class="lead mb-0 opacity-75">Last Updated: Feb 2025</p>
           </div>
         </div>
       </div>

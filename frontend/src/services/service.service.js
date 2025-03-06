@@ -1,25 +1,41 @@
-import api from './api'
+import cachedApi from '@/services/cachedApi'
+import api from '@/services/api'
 
 class Service {
   async getAll(params = {}) {
     try {
-      const response = await api.get('services', {
+      return await cachedApi.getPaginated('services/all', {
         params: {
           page: params.page,
           per_page: params.perPage,
-          is_active: params.isActive,
         },
       })
-      return response.data
     } catch (error) {
       console.error('Service API error:', error)
       throw error
     }
   }
 
-  async getById(id) {
-    const response = await api.get(`services/${id}`)
-    return response.data
+  async getActive(params = {}) {
+    try {
+      return await cachedApi.getPaginated('services', {
+        params: {
+          page: params.page,
+          per_page: params.perPage,
+        },
+      })
+    } catch (error) {
+      console.error('Service API error:', error)
+      throw error
+    }
+  }
+
+  async getActiveById(id) {
+    return await cachedApi.getById(`services/${id}`)
+  }
+
+  async getAllById(id) {
+    return await cachedApi.getById(`services/all/${id}`)
   }
 
   async create(data) {

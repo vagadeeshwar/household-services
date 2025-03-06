@@ -1,7 +1,8 @@
 {
   "output": {
-    "filePath": "backend.txt",
-    "removeEmptyLines": true
+    "filePath": "frontend.txt",
+    "removeEmptyLines": true,
+    "style": "xml"
   },
   "ignore": {
     "customPatterns": [
@@ -13,7 +14,7 @@
       "certs",
       ".gitignore",
       "assets",
-      "repopack.config.json",
+      "repomix.config.json",
       "tests",
       ".pre-commit-config.yaml",
       "uv.lock",
@@ -21,8 +22,13 @@
       ".dockerignore",
       "nohup.out",
 
-      "requirements.txt",
-      "frontend"
+      ".editorconfig",
+      ".prettierrc.json",
+      "eslint.config.js",
+      "jsconfig.json",
+      "src/views/customer",
+      "src/views/professional",
+      "src/views/public"
     ]
   }
 }

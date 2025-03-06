@@ -1,4 +1,3 @@
-// src/views/public/Login.vue
 <template>
   <div class="container py-5">
     <div class="row justify-content-center">

@@ -1,15 +1,14 @@
 import os
+
+from dotenv import load_dotenv
 from flask import Flask, send_from_directory
 from flask_cors import CORS
-from dotenv import load_dotenv
 
 from src import db, ma
-
-from src.setup_db import setup_database  # noqa
-
+from src.setup_db import setup_database  # type: ignore # noqa
 from src.utils.api import register_error_handlers
-from src.utils.file import UPLOAD_FOLDER
 from src.utils.cache import init_cache
+from src.utils.file import UPLOAD_FOLDER
 from src.utils.notification import mail
 
 
@@ -53,22 +52,20 @@ def create_app():
     #     setup_database()
 
     # Register blueprints
-    from src.routes.user import user_bp
-    from src.routes.customer import customer_bp
-    from src.routes.professional import professional_bp
     from src.routes.auth import auth_bp
-    from src.routes.service import service_bp
-    from src.routes.dashboard import dashboard_bp
-    from src.routes.request import request_bp
-    from src.routes.export import export_bp
     from src.routes.contact import contact_bp
+    from src.routes.customer import customer_bp
+    from src.routes.export import export_bp
+    from src.routes.professional import professional_bp
+    from src.routes.request import request_bp
+    from src.routes.service import service_bp
+    from src.routes.user import user_bp
 
     app.register_blueprint(user_bp, url_prefix="/api")
     app.register_blueprint(customer_bp, url_prefix="/api")
     app.register_blueprint(professional_bp, url_prefix="/api")
     app.register_blueprint(auth_bp, url_prefix="/api")
     app.register_blueprint(service_bp, url_prefix="/api")
-    app.register_blueprint(dashboard_bp, url_prefix="/api")
     app.register_blueprint(request_bp, url_prefix="/api")
     app.register_blueprint(export_bp, url_prefix="/api")
     app.register_blueprint(contact_bp, url_prefix="/api")

@@ -1,5 +1,7 @@
 from http import HTTPStatus
+
 from flask import jsonify
+
 from src import db
 
 

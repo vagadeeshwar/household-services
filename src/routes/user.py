@@ -1,27 +1,20 @@
-from flask import Blueprint, request
-from marshmallow import ValidationError
 from http import HTTPStatus
 
+from flask import Blueprint, request
+from marshmallow import ValidationError
+
 from src import db
-
-from src.models import (
-    User,
-    ServiceRequest,
-    ActivityLog,
-)
-
 from src.constants import (
-    USER_ROLE_PROFESSIONAL,
-    USER_ROLE_CUSTOMER,
-    ActivityLogActions,
     REQUEST_STATUS_ASSIGNED,
     REQUEST_STATUS_CREATED,
+    USER_ROLE_CUSTOMER,
+    USER_ROLE_PROFESSIONAL,
+    ActivityLogActions,
 )
-
-from src.schemas.user import (
-    password_update_schema,
-    delete_account_schema,
-    admin_output_schema,
+from src.models import (
+    ActivityLog,
+    ServiceRequest,
+    User,
 )
 from src.schemas.customer import (
     customer_output_schema,
@@ -31,9 +24,16 @@ from src.schemas.professional import (
     professional_output_schema,
     professional_update_schema,
 )
-
-
-from src.utils.auth import token_required, APIResponse, role_required
+from src.schemas.user import (
+    activity_log_query_schema,
+    activity_logs_schema,
+    admin_output_schema,
+    delete_account_schema,
+    password_update_schema,
+)
+from src.utils.api import APIResponse
+from src.utils.auth import role_required, token_required
+from src.utils.cache import cached_with_auth
 from src.utils.file import delete_verification_document
 
 user_bp = Blueprint("user", __name__)
@@ -216,6 +216,107 @@ def delete_account(current_user):
     except Exception as e:
         return APIResponse.error(
             f"Error deleting account: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
+
+
+@user_bp.route("/activity-logs", methods=["GET"])
+@token_required
+@cached_with_auth(300)
+def get_activity_logs(current_user):
+    """Get role-specific paginated activity logs"""
+    try:
+        params = activity_log_query_schema.load(request.args)
+        query = ActivityLog.query
+
+        query = query.filter(ActivityLog.user_id == current_user.id)
+
+        # Apply common filters
+        if params.get("action") and params["action"] != "all":
+            query = query.filter(ActivityLog.action == params["action"])
+        if params.get("start_date"):
+            query = query.filter(ActivityLog.created_at >= params["start_date"])
+        if params.get("end_date"):
+            query = query.filter(ActivityLog.created_at <= params["end_date"])
+
+        # Always order by latest first
+        query = query.order_by(ActivityLog.created_at.desc())
+
+        # Apply pagination
+        paginated = query.paginate(
+            page=params["page"], per_page=params["per_page"], error_out=False
+        )
+
+        return APIResponse.success(
+            data=activity_logs_schema.dump(paginated.items),
+            message="Activity logs retrieved successfully",
+            pagination={
+                "total": paginated.total,
+                "pages": paginated.pages,
+                "current_page": paginated.page,
+                "per_page": paginated.per_page,
+                "has_next": paginated.has_next,
+                "has_prev": paginated.has_prev,
+            },
+        )
+
+    except ValidationError as err:
+        return APIResponse.error(str(err.messages))
+    except Exception as e:
+        return APIResponse.error(
+            f"Error retrieving activity logs: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
+
+
+@user_bp.route("/activity-logs/<int:user_id>", methods=["GET"])
+@token_required
+@role_required("admin")
+@cached_with_auth(300)
+def get_activity_logs_by_user(current_user, user_id):
+    """Get role-specific paginated activity logs"""
+    try:
+        params = activity_log_query_schema.load(request.args)
+        query = ActivityLog.query
+
+        query = query.filter(ActivityLog.user_id == current_user.id)
+
+        # Apply common filters
+        if params.get("action") and params["action"] != "all":
+            query = query.filter(ActivityLog.action == params["action"])
+        if params.get("start_date"):
+            query = query.filter(ActivityLog.created_at >= params["start_date"])
+        if params.get("end_date"):
+            query = query.filter(ActivityLog.created_at <= params["end_date"])
+
+        # Always order by latest first
+        query = query.order_by(ActivityLog.created_at.desc())
+
+        # Apply pagination
+        paginated = query.paginate(
+            page=params["page"], per_page=params["per_page"], error_out=False
+        )
+
+        return APIResponse.success(
+            data=activity_logs_schema.dump(paginated.items),
+            message="Activity logs retrieved successfully",
+            pagination={
+                "total": paginated.total,
+                "pages": paginated.pages,
+                "current_page": paginated.page,
+                "per_page": paginated.per_page,
+                "has_next": paginated.has_next,
+                "has_prev": paginated.has_prev,
+            },
+        )
+
+    except ValidationError as err:
+        return APIResponse.error(str(err.messages))
+    except Exception as e:
+        return APIResponse.error(
+            f"Error retrieving activity logs: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
         )

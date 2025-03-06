@@ -1,13 +1,13 @@
-# src/tasks.py
-from celery.schedules import crontab
-from datetime import datetime, timedelta
-import os
 import csv
+import os
 import traceback
+from datetime import datetime, timedelta
+
+from celery.schedules import crontab
 
 from src.celery_app import celery
-from src.models import User, ServiceRequest, ProfessionalProfile, ActivityLog
 from src.constants import REQUEST_STATUS_ASSIGNED, REQUEST_STATUS_COMPLETED
+from src.models import ActivityLog, ProfessionalProfile, ServiceRequest, User
 from src.utils.notification import NotificationService
 
 

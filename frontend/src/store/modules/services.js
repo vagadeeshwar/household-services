@@ -21,7 +21,21 @@ const getters = {
 }
 
 const actions = {
-  async fetchServices({ commit }, params = {}) {
+  async fetchActiveServices({ commit }, params = {}) {
+    try {
+      commit('SET_LOADING', true)
+      const response = await service.getActive(params)
+      commit('SET_SERVICES', response.data)
+      commit('SET_PAGINATION', response.meta)
+      return response
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+  async fetchAllServices({ commit }, params = {}) {
     try {
       commit('SET_LOADING', true)
       const response = await service.getAll(params)
@@ -36,10 +50,24 @@ const actions = {
     }
   },
 
-  async fetchServiceById({ commit }, id) {
+  async fetchActiveServiceById({ commit }, id) {
     try {
       commit('SET_LOADING', true)
-      const response = await service.getById(id)
+      const response = await service.getActiveById(id)
+      commit('SET_SELECTED_SERVICE', response)
+      return response
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+
+  async fetchAllServiceById({ commit }, id) {
+    try {
+      commit('SET_LOADING', true)
+      const response = await service.getAllById(id)
       commit('SET_SELECTED_SERVICE', response)
       return response
     } catch (error) {

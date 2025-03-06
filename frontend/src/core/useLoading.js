@@ -1,4 +1,3 @@
-// composables/useLoading.js
 import { ref } from 'vue'
 
 export function useLoading() {

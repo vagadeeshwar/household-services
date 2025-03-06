@@ -1,8 +1,6 @@
 import { stats } from '@/services'
 
 const state = {
-  dashboardStats: null,
-  detailedStats: [],
   loading: false,
   error: null,
   pagination: {
@@ -13,19 +11,17 @@ const state = {
 }
 
 const getters = {
-  dashboardStats: (state) => state.dashboardStats,
-  detailedStats: (state) => state.detailedStats,
   isLoading: (state) => state.loading,
   error: (state) => state.error,
   pagination: (state) => state.pagination,
 }
 
 const actions = {
-  async fetchDashboardStats({ commit }) {
+  async fetchActivityLogs({ commit }, params = {}) {
     try {
       commit('SET_LOADING', true)
-      const response = await stats.getDashboard()
-      commit('SET_DASHBOARD_STATS', response)
+      const response = await stats.getActivityLogs(params)
+      commit('SET_PAGINATION', response.meta)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -34,12 +30,10 @@ const actions = {
       commit('SET_LOADING', false)
     }
   },
-
-  async fetchDetailedStats({ commit }, params = {}) {
+  async fetchOthersActivityLogs({ commit }, { id, ...params } = {}) {
     try {
       commit('SET_LOADING', true)
-      const response = await stats.getDetailed(params)
-      commit('SET_DETAILED_STATS', response.data)
+      const response = await stats.getOthersActivityLogs(id, params)
       commit('SET_PAGINATION', response.meta)
       return response
     } catch (error) {
@@ -52,14 +46,6 @@ const actions = {
 }
 
 const mutations = {
-  SET_DASHBOARD_STATS(state, stats) {
-    state.dashboardStats = stats
-  },
-
-  SET_DETAILED_STATS(state, stats) {
-    state.detailedStats = stats
-  },
-
   SET_LOADING(state, loading) {
     state.loading = loading
   },

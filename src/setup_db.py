@@ -1,30 +1,29 @@
 import logging
-from faker import Faker
-from datetime import datetime, timedelta, time
+import os
 import random
 import uuid
-import os
+from datetime import datetime, time, timedelta
+
+from faker import Faker
 
 from src import db
-
-from src.models import (
-    User,
-    ProfessionalProfile,
-    CustomerProfile,
-    Service,
-    ServiceRequest,
-    Review,
-    ActivityLog,
-)
-
 from src.constants import (
-    USER_ROLE_ADMIN,
-    USER_ROLE_PROFESSIONAL,
-    USER_ROLE_CUSTOMER,
-    REQUEST_STATUS_CREATED,
     REQUEST_STATUS_ASSIGNED,
     REQUEST_STATUS_COMPLETED,
+    REQUEST_STATUS_CREATED,
+    USER_ROLE_ADMIN,
+    USER_ROLE_CUSTOMER,
+    USER_ROLE_PROFESSIONAL,
     ActivityLogActions,
+)
+from src.models import (
+    ActivityLog,
+    CustomerProfile,
+    ProfessionalProfile,
+    Review,
+    Service,
+    ServiceRequest,
+    User,
 )
 
 # Set up logging

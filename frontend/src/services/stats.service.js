@@ -1,20 +1,27 @@
-import api from './api'
+import cachedApi from '@/services/cachedApi'
 
 class Stats {
-  async getDashboard() {
-    const response = await api.get('dashboard-stats')
-    return response.data
-  }
-
-  async getDetailed(params = {}) {
-    const response = await api.get('detailed-stats', {
+  async getActivityLogs(params = {}) {
+    return await cachedApi.getPaginated('activity-logs', {
       params: {
-        stat_type: params.type,
+        action: params.action,
         page: params.page,
         per_page: params.perPage,
+        start_date: params.startDate,
+        end_date: params.endDate,
       },
     })
-    return response.data
+  }
+  async getOthersActivityLogs(id, params = {}) {
+    return await cachedApi.getPaginated(`activity-logs/${id}`, {
+      params: {
+        action: params.action,
+        page: params.page,
+        per_page: params.perPage,
+        start_date: params.startDate,
+        end_date: params.endDate,
+      },
+    })
   }
 }
 

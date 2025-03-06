@@ -1,35 +1,26 @@
-import api from './api'
-
+import cachedApi from '@/services/cachedApi'
 class Professional {
   async getAll(params = {}) {
-    return api.getPaginated('professionals', {
+    return cachedApi.getPaginated('professionals', {
       ...params,
       service_type: params.serviceType,
     })
   }
 
   async getById(id) {
-    const response = await api.get(`professionals/${id}`)
-    return response.data
+    return await cachedApi.getById(`professionals/${id}`)
   }
 
   async verify(id) {
-    const response = await api.post(`professionals/${id}/verify`)
-    return response.data
+    return await cachedApi.post(`professionals/${id}/verify`)
   }
 
   async block(id, reason) {
-    const response = await api.post(`professionals/${id}/block`, { reason })
-    return response.data
-  }
-
-  async getDashboard() {
-    const response = await api.get('professionals/dashboard')
-    return response.data
+    return await cachedApi.post(`professionals/${id}/block`, { reason })
   }
 
   async getReviews(params = {}) {
-    return api.getPaginated('professionals/reviews', {
+    return cachedApi.getPaginated('professionals/reviews', {
       ...params,
       sort_by: params.sortBy,
       sort_order: params.sortOrder,
@@ -37,14 +28,13 @@ class Professional {
   }
 
   async updateDocument(document) {
-    return api.uploadFile('professionals/document', document, 'verification_document', 'PUT')
+    return cachedApi.uploadFile('professionals/document', document, 'verification_document', 'PUT')
   }
 
   async updateService(serviceTypeId) {
-    const response = await api.put('professionals/service', {
+    return await cachedApi.put('professionals/service', {
       service_type_id: serviceTypeId,
     })
-    return response.data
   }
 }
 

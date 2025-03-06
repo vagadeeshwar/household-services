@@ -41,15 +41,6 @@
       </li>
     </ul>
 
-    <!-- Right Side - Activity Logs -->
-    <ul class="navbar-nav">
-      <li class="nav-item">
-        <router-link class="nav-link" to="/admin/activity-logs">
-          <i class="bi bi-clock-history me-1"></i>
-          Activity Logs
-        </router-link>
-      </li>
-    </ul>
   </div>
 </template>
 

@@ -1,4 +1,5 @@
-from marshmallow import fields, validate, Schema
+from marshmallow import Schema, fields, validate
+
 from src.schemas.base import BaseSchema
 
 
@@ -37,7 +38,6 @@ class ServiceOutputSchema(Schema):
 class ServiceQuerySchema(Schema):
     """Schema for validating service list query parameters"""
 
-    is_active = fields.Bool(required=False)
     page = fields.Int(required=False, missing=1)
     per_page = fields.Int(required=False, missing=10)
 

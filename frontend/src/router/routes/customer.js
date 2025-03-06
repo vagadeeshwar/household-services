@@ -6,18 +6,18 @@ export default [
     meta: { title: 'Customer Dashboard', requiresAuth: true, roles: ['customer'] },
   },
 
-  // {
-  //   path: 'services',
-  //   name: 'CustomerServices',
-  //   component: () => import('@/views/customer/ServiceBrowser.vue'),
-  //   meta: { title: 'Browse Services' },
-  // },
-  // {
-  //   path: 'requests',
-  //   name: 'CustomerRequests',
-  //   component: () => import('@/views/customer/ServiceRequests.vue'),
-  //   meta: { title: 'My Requests' },
-  // },
+  {
+    path: 'services',
+    name: 'CustomerServices',
+    component: () => import('@/views/customer/ServiceBrowser.vue'),
+    meta: { title: 'Browse Services' },
+  },
+  {
+    path: 'requests',
+    name: 'CustomerRequests',
+    component: () => import('@/views/customer/ServiceRequests.vue'),
+    meta: { title: 'My Requests' },
+  },
   {
     path: 'profile',
     name: 'CustomerProfile',

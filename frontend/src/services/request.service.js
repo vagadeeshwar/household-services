@@ -1,4 +1,5 @@
-import api from './api'
+import api from '@/services/api'
+import cachedApi from '@/services/cachedApi'
 
 class Request {
   async create(data) {
@@ -11,7 +12,7 @@ class Request {
   }
 
   async getAll(params = {}) {
-    return api.getPaginated('requests', {
+    return await cachedApi.getPaginated('requests', {
       ...params,
       service_id: params.serviceId,
       professional_id: params.professionalId,
@@ -20,16 +21,15 @@ class Request {
   }
 
   async getById(id) {
-    const response = await api.get(`requests/${id}`)
-    return response.data
+    return await cachedApi.getById(`requests/${id}`)
   }
 
   async getProfessionalRequests(params = {}) {
-    return api.getPaginated('professional/requests', params)
+    return cachedApi.getPaginated('professional/requests', params)
   }
 
   async getCustomerRequests(params = {}) {
-    return api.getPaginated('customer/requests', params)
+    return cachedApi.getPaginated('customer/requests', params)
   }
 
   async accept(id) {

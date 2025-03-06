@@ -1,14 +1,14 @@
 from datetime import datetime
+
 from sqlalchemy.orm import relationship
-from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.schema import CheckConstraint, Index
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from src import db
-
 from src.constants import (
-    USER_ROLES,
-    REQUEST_STATUSES,
     REQUEST_STATUS_CREATED,
+    REQUEST_STATUSES,
+    USER_ROLES,
     ActivityLogActions,
 )
 

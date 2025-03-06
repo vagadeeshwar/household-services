@@ -1,13 +1,13 @@
-import api from './api'
+import cachedApi from '@/services/cachedApi'
+import api from '@/services/api'
 
 class Customer {
   async getAll(params = {}) {
-    return api.getPaginated('customers', params)
+    return await cachedApi.getPaginated('customers', params)
   }
 
   async getById(id) {
-    const response = await api.get(`customers/${id}`)
-    return response.data
+    return await cachedApi.getById(`customers/${id}`)
   }
 
   async block(id, reason) {

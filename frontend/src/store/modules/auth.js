@@ -1,4 +1,3 @@
-// src/store/modules/auth.js
 import { auth } from '@/services'
 
 const state = {

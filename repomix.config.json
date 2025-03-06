@@ -1,7 +1,8 @@
 {
   "output": {
-    "filePath": "frontend.txt",
-    "removeEmptyLines": true
+    "filePath": "backend.txt",
+    "removeEmptyLines": true,
+    "style": "xml"
   },
   "ignore": {
     "customPatterns": [
@@ -13,7 +14,7 @@
       "certs",
       ".gitignore",
       "assets",
-      "repopack.config.json",
+      "repomix.config.json",
       "tests",
       ".pre-commit-config.yaml",
       "uv.lock",
@@ -21,10 +22,10 @@
       ".dockerignore",
       "nohup.out",
 
-      ".editorconfig",
-      ".prettierrc.json",
-      "eslint.config.js",
-      "jsconfig.json"
+      "requirements.txt",
+      "frontend",
+      ".flaskenv",
+      "src/setup_db.py"
     ]
   }
 }
