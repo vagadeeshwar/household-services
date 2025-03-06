@@ -87,11 +87,8 @@
                 <!-- Action Filter -->
                 <div class="flex-grow-1">
                   <label class="form-label text-muted small mb-1">Filter by Action</label>
-                  <select
-                    v-model="activityFilters.action"
-                    class="form-select form-select-sm"
-                    @change="fetchActivityLogs"
-                  >
+                  <select v-model="activityFilters.action" class="form-select form-select-sm"
+                    @change="fetchActivityLogs">
                     <option v-for="action in actionTypes" :key="action.value" :value="action.value">
                       {{ action.label }}
                     </option>
@@ -100,21 +97,13 @@
                 <!-- Date Range Filter -->
                 <div class="flex-grow-1">
                   <label class="form-label text-muted small mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    class="form-control form-control-sm"
-                    v-model="activityFilters.startDate"
-                    @change="fetchActivityLogs"
-                  />
+                  <input type="date" class="form-control form-control-sm"
+                    v-model="activityFilters.startDate" @change="fetchActivityLogs" />
                 </div>
                 <div class="flex-grow-1">
                   <label class="form-label text-muted small mb-1">End Date</label>
-                  <input
-                    type="date"
-                    class="form-control form-control-sm"
-                    v-model="activityFilters.endDate"
-                    @change="fetchActivityLogs"
-                  />
+                  <input type="date" class="form-control form-control-sm"
+                    v-model="activityFilters.endDate" @change="fetchActivityLogs" />
                 </div>
                 <div class="align-self-end">
                   <button class="btn btn-sm btn-outline-secondary" @click="clearFilters">
@@ -164,18 +153,12 @@
                       Previous
                     </button>
                   </li>
-                  <li
-                    v-for="pageNum in displayedPages"
-                    :key="pageNum"
-                    class="page-item"
-                    :class="{ active: activityFilters.page === pageNum }"
-                  >
+                  <li v-for="pageNum in displayedPages" :key="pageNum" class="page-item"
+                    :class="{ active: activityFilters.page === pageNum }">
                     <button @click="changePage(pageNum)" class="page-link">{{ pageNum }}</button>
                   </li>
-                  <li
-                    class="page-item"
-                    :class="{ disabled: activityFilters.page === activityPagination.pages }"
-                  >
+                  <li class="page-item"
+                    :class="{ disabled: activityFilters.page === activityPagination.pages }">
                     <button @click="changePage(activityFilters.page + 1)" class="page-link">
                       Next
                     </button>
@@ -191,47 +174,47 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useStore } from 'vuex'
-import moment from 'moment'
+import { ref, computed, onMounted, watch } from 'vue';
+import { useStore } from 'vuex';
+import moment from 'moment';
 
 export default {
   name: 'AdminProfile',
   setup() {
-    const store = useStore()
-    const user = computed(() => store.getters['auth/currentUser'])
+    const store = useStore();
+    const user = computed(() => store.getters['auth/currentUser']);
 
     // Activity logs
-    const activityLogs = ref([])
-    const isLoadingActivity = ref(false)
-    const activityPagination = ref({})
+    const activityLogs = ref([]);
+    const isLoadingActivity = ref(false);
+    const activityPagination = ref({});
     const activityFilters = ref({
       action: 'all',
       page: 1,
       perPage: 10,
       startDate: null,
       endDate: null,
-    })
+    });
 
     // Computed properties
     const displayedPages = computed(() => {
-      const pages = []
-      const maxVisiblePages = 5
-      const totalPages = activityPagination.value?.pages || 1
+      const pages = [];
+      const maxVisiblePages = 5;
+      const totalPages = activityPagination.value?.pages || 1;
 
-      let startPage = Math.max(1, activityFilters.value.page - Math.floor(maxVisiblePages / 2))
-      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
+      let startPage = Math.max(1, activityFilters.value.page - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
       if (endPage - startPage + 1 < maxVisiblePages) {
-        startPage = Math.max(1, endPage - maxVisiblePages + 1)
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
       }
 
       for (let i = startPage; i <= endPage; i++) {
-        pages.push(i)
+        pages.push(i);
       }
 
-      return pages
-    })
+      return pages;
+    });
 
     // eslint-disable-next-line no-unused-vars
     let l = [
@@ -262,7 +245,7 @@ export default {
       'password_change',
       'profile_update',
       'user_register',
-    ]
+    ];
 
     // Action types for activity logs
     const actionTypes = [
@@ -284,21 +267,21 @@ export default {
       // { value: 'request_complete', label: 'Request Completion' },
       // { value: 'review_submit', label: 'Review Submission' },
       // { value: 'review_report', label: 'Review Report' }
-    ]
+    ];
 
     // Methods
     const formatDate = (dateString) => {
-      return dateString ? moment(dateString).format('MMM DD, YYYY hh:mm A') : 'N/A'
-    }
+      return dateString ? moment(dateString).format('MMM DD, YYYY hh:mm A') : 'N/A';
+    };
 
     const formatActivityDate = (dateString) => {
-      return dateString ? moment(dateString).fromNow() : 'N/A'
-    }
+      return dateString ? moment(dateString).fromNow() : 'N/A';
+    };
 
     const formatActionType = (action) => {
-      const found = actionTypes.find((a) => a.value === action)
-      return found ? found.label : action
-    }
+      const found = actionTypes.find((a) => a.value === action);
+      return found ? found.label : action;
+    };
 
     const getActivityIcon = (action) => {
       const iconMap = {
@@ -327,10 +310,10 @@ export default {
         review_report: 'bi-flag',
         review_dismiss: 'bi-shield-check',
         review_remove: 'bi-trash',
-      }
+      };
 
-      return iconMap[action] || 'bi-activity'
-    }
+      return iconMap[action] || 'bi-activity';
+    };
 
     const getActivityBadgeClass = (action) => {
       const actionTypeMap = {
@@ -359,87 +342,90 @@ export default {
         review_report: 'bg-danger',
         review_dismiss: 'bg-primary',
         review_remove: 'bg-danger',
-      }
+      };
 
-      return actionTypeMap[action] || 'bg-secondary'
-    }
+      return actionTypeMap[action] || 'bg-secondary';
+    };
 
     const fetchActivityLogs = async () => {
-      isLoadingActivity.value = true
+      isLoadingActivity.value = true;
       try {
         const response = await store.dispatch('stats/fetchActivityLogs', {
-          action: activityFilters.value.action,
-          page: activityFilters.value.page,
-          perPage: activityFilters.value.perPage,
-          startDate: activityFilters.value.startDate
-            ? new Date(activityFilters.value.startDate).toISOString()
-            : null,
-          endDate: activityFilters.value.endDate
-            ? new Date(activityFilters.value.endDate + 'T23:59:59').toISOString()
-            : null,
-        })
+          params: {
+            action: activityFilters.value.action,
+            page: activityFilters.value.page,
+            per_page: activityFilters.value.perPage,
+            start_date: activityFilters.value.startDate
+              ? new Date(activityFilters.value.startDate).toISOString()
+              : null,
+            end_date: activityFilters.value.endDate
+              ? new Date(activityFilters.value.endDate + 'T23:59:59').toISOString()
+              : null,
+          },
+          forceRefresh: false,
+        });
 
-        activityLogs.value = response.data || []
-        activityPagination.value = response.pagination || {}
+        activityLogs.value = response.data || [];
+        activityPagination.value = response.pagination || {};
       } catch (err) {
-        console.error('Error fetching activity logs:', err)
+        console.error('Error fetching activity logs:', err);
       } finally {
-        isLoadingActivity.value = false
+        isLoadingActivity.value = false;
       }
-    }
+    };
 
     const clearFilters = () => {
-      activityFilters.value.action = 'all'
-      activityFilters.value.startDate = null
-      activityFilters.value.endDate = null
-      activityFilters.value.page = 1
-      fetchActivityLogs()
-    }
+      activityFilters.value.action = 'all';
+      activityFilters.value.startDate = null;
+      activityFilters.value.endDate = null;
+      activityFilters.value.page = 1;
+      fetchActivityLogs();
+    };
 
     const changePage = (page) => {
-      if (page < 1 || page > activityPagination.value.pages) return
-      activityFilters.value.page = page
-      fetchActivityLogs()
-    }
+      if (page < 1 || page > activityPagination.value.pages) return;
+      activityFilters.value.page = page;
+      fetchActivityLogs();
+    };
 
     // Watch for filter changes to reset pagination
     watch(
       () => activityFilters.value.action,
       (newVal, oldVal) => {
         if (newVal !== oldVal) {
-          activityFilters.value.page = 1
-          activityFilters.value.startDate = null
-          activityFilters.value.endDate = null
+          activityFilters.value.page = 1;
+          activityFilters.value.startDate = null;
+          activityFilters.value.endDate = null;
           // No need to call fetchActivityLogs here as it's called by @change
         }
       },
-    )
+    );
 
     watch(
       () => activityFilters.value.startDate,
       (newVal, oldVal) => {
         if (newVal !== oldVal) {
-          activityFilters.value.page = 1
+          activityFilters.value.page = 1;
           // No need to call fetchActivityLogs here as it's called by @change
         }
       },
-    )
+    );
 
     watch(
       () => activityFilters.value.endDate,
       (newVal, oldVal) => {
         if (newVal !== oldVal) {
-          activityFilters.value.page = 1
+          activityFilters.value.page = 1;
           // No need to call fetchActivityLogs here as it's called by @change
         }
       },
-    )
+    );
 
     // Lifecycle hooks
     onMounted(() => {
       // Fetch activity logs
-      fetchActivityLogs()
-    })
+      fetchActivityLogs();
+    });
 
     return {
       user,
@@ -457,9 +443,9 @@ export default {
       fetchActivityLogs,
       changePage,
       clearFilters,
-    }
+    };
   },
-}
+};
 </script>
 
 <style scoped>

@@ -35,6 +35,7 @@ SERVICE_CREATE = "service_create"
 SERVICE_UPDATE = "service_update"
 SERVICE_DELETE = "service_delete"
 SERVICE_RESTORE = "service_restore"
+SERVICE_DEACTIVATE = "service_deactivate"
 
 # Request Management Actions
 REQUEST_CREATE = "request_create"
@@ -92,6 +93,7 @@ class ActivityLogActions:
     SERVICE_UPDATE = SERVICE_UPDATE
     SERVICE_DELETE = SERVICE_DELETE
     SERVICE_RESTORE = SERVICE_RESTORE
+    SERVICE_DEACTIVATE = SERVICE_DEACTIVATE
 
     # Request Management
     REQUEST_CREATE = REQUEST_CREATE

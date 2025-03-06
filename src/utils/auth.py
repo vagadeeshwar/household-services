@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from http import HTTPStatus
 
@@ -14,7 +14,7 @@ def generate_token(user_id: int, role: str) -> str:
     payload = {
         "user_id": user_id,
         "role": role,
-        "exp": datetime.utcnow() + timedelta(days=1),
+        "exp": datetime.now(timezone.utc) + timedelta(days=1),
     }
     return jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm="HS256")
 

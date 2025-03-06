@@ -197,7 +197,7 @@ def cancel_request(current_user, request_id):
                 "UnauthorizedAccess",
             )
 
-        # Only allow cancellation of created or assigned requests
+        # Only allow cancellation of created requests
         if service_request.status not in [REQUEST_STATUS_CREATED]:
             return APIResponse.error(
                 "Cannot cancel completed or assigned requests",

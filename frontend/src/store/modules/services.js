@@ -26,7 +26,7 @@ const actions = {
       commit('SET_LOADING', true)
       const response = await service.getActive(params)
       commit('SET_SERVICES', response.data)
-      commit('SET_PAGINATION', response.meta)
+      commit('SET_PAGINATION', response.pagination)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -40,7 +40,7 @@ const actions = {
       commit('SET_LOADING', true)
       const response = await service.getAll(params)
       commit('SET_SERVICES', response.data)
-      commit('SET_PAGINATION', response.meta)
+      commit('SET_PAGINATION', response.pagination)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)

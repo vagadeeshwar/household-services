@@ -2,12 +2,12 @@ import cachedApi from '@/services/cachedApi'
 import api from '@/services/api'
 
 class Customer {
-  async getAll(params = {}) {
-    return await cachedApi.getPaginated('customers', params)
+  async getAll(params = {}, forceRefresh = false) {
+    return await cachedApi.getPaginated('customers', params, { forceRefresh })
   }
 
-  async getById(id) {
-    return await cachedApi.getById(`customers/${id}`)
+  async getById(id, forceRefresh = false) {
+    return await cachedApi.getById(`customers/${id}`, { forceRefresh })
   }
 
   async block(id, reason) {

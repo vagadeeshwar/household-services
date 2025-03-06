@@ -1,27 +1,11 @@
 import cachedApi from '@/services/cachedApi'
 
 class Stats {
-  async getActivityLogs(params = {}) {
-    return await cachedApi.getPaginated('activity-logs', {
-      params: {
-        action: params.action,
-        page: params.page,
-        per_page: params.perPage,
-        start_date: params.startDate,
-        end_date: params.endDate,
-      },
-    })
+  async getActivityLogs(params = {}, forceRefresh = false) {
+    return await cachedApi.getPaginated('activity-logs', params, { forceRefresh })
   }
-  async getOthersActivityLogs(id, params = {}) {
-    return await cachedApi.getPaginated(`activity-logs/${id}`, {
-      params: {
-        action: params.action,
-        page: params.page,
-        per_page: params.perPage,
-        start_date: params.startDate,
-        end_date: params.endDate,
-      },
-    })
+  async getOthersActivityLogs(params = {}, id, forceRefresh = false) {
+    return await cachedApi.getPaginated(`activity-logs/${id}`, params, { forceRefresh })
   }
 }
 

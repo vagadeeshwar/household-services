@@ -1,9 +1,9 @@
-from marshmallow import fields, Schema, validate, post_dump
+from marshmallow import Schema, fields, post_dump, validate
 
 from src.schemas.base import (
-    BaseUserSchema,
     BaseProfileUpdateSchema,
     BaseUserInputSchema,
+    BaseUserSchema,
 )
 
 

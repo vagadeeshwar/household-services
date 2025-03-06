@@ -43,7 +43,7 @@ const actions = {
       commit('SET_LOADING', true)
       const response = await request.getAll(params)
       commit('SET_REQUESTS', response.data)
-      commit('SET_PAGINATION', response.meta)
+      commit('SET_PAGINATION', response.pagination)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -58,7 +58,7 @@ const actions = {
       commit('SET_LOADING', true)
       const response = await request.getProfessionalRequests(params)
       commit('SET_REQUESTS', response.data)
-      commit('SET_PAGINATION', response.meta)
+      commit('SET_PAGINATION', response.pagination)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -73,7 +73,7 @@ const actions = {
       commit('SET_LOADING', true)
       const response = await request.getCustomerRequests(params)
       commit('SET_REQUESTS', response.data)
-      commit('SET_PAGINATION', response.meta)
+      commit('SET_PAGINATION', response.pagination)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)

@@ -17,11 +17,11 @@ const getters = {
 }
 
 const actions = {
-  async fetchActivityLogs({ commit }, params = {}) {
+  async fetchActivityLogs({ commit }, { params = {}, forceRefresh = false }) {
     try {
       commit('SET_LOADING', true)
-      const response = await stats.getActivityLogs(params)
-      commit('SET_PAGINATION', response.meta)
+      const response = await stats.getActivityLogs(params, forceRefresh)
+      commit('SET_PAGINATION', response.pagination)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -30,11 +30,11 @@ const actions = {
       commit('SET_LOADING', false)
     }
   },
-  async fetchOthersActivityLogs({ commit }, { id, ...params } = {}) {
+  async fetchOthersActivityLogs({ commit }, { params = {}, id, forceRefresh = false }) {
     try {
       commit('SET_LOADING', true)
-      const response = await stats.getOthersActivityLogs(id, params)
-      commit('SET_PAGINATION', response.meta)
+      const response = await stats.getOthersActivityLogs(params, id, forceRefresh)
+      commit('SET_PAGINATION', response.pagination)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)

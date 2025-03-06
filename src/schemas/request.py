@@ -1,9 +1,8 @@
-from marshmallow import fields, validate, Schema, validates, ValidationError
 from datetime import datetime, timedelta
 
+from marshmallow import Schema, ValidationError, fields, validate, validates
+
 from src.models import Service
-
-
 from src.schemas.base import BaseSchema
 from src.schemas.service import ServiceOutputSchema
 

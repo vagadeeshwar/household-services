@@ -26,7 +26,7 @@ const actions = {
       commit('SET_LOADING', true)
       const response = await customer.getAll(params)
       commit('SET_CUSTOMERS', response.data)
-      commit('SET_PAGINATION', response.meta)
+      commit('SET_PAGINATION', response.pagination)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)

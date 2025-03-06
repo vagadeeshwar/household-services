@@ -1,40 +1,39 @@
 import cachedApi from '@/services/cachedApi'
+import api from '@/services/api'
+
 class Professional {
-  async getAll(params = {}) {
-    return cachedApi.getPaginated('professionals', {
-      ...params,
-      service_type: params.serviceType,
-    })
+  async getAll(params = {}, forceRefresh = false) {
+    return cachedApi.getPaginated('professionals', params, { forceRefresh })
   }
 
-  async getById(id) {
-    return await cachedApi.getById(`professionals/${id}`)
+  async getById(id, forceRefresh = false) {
+    return await cachedApi.getById(`professionals/${id}`, { forceRefresh })
   }
 
   async verify(id) {
-    return await cachedApi.post(`professionals/${id}/verify`)
+    const response = await api.post(`professionals/${id}/verify`)
+    return response.data
   }
 
-  async block(id, reason) {
-    return await cachedApi.post(`professionals/${id}/block`, { reason })
+  async block(id, params = {}) {
+    const response = await cachedApi.post(`professionals/${id}/block`, params)
+    return response.data
   }
 
-  async getReviews(params = {}) {
-    return cachedApi.getPaginated('professionals/reviews', {
-      ...params,
-      sort_by: params.sortBy,
-      sort_order: params.sortOrder,
+  async getReviews(params = {}, forceRefresh = false) {
+    return cachedApi.getPaginated('professionals/reviews', params, { forceRefresh })
+  }
+
+  async updateDocument(params = {}) {
+    const response = await api.uploadFile('professionals/document', params)
+    return response.data
+  }
+
+  async updateService(params = {}) {
+    const response = await api.put('professionals/service', {
+      params,
     })
-  }
-
-  async updateDocument(document) {
-    return cachedApi.uploadFile('professionals/document', document, 'verification_document', 'PUT')
-  }
-
-  async updateService(serviceTypeId) {
-    return await cachedApi.put('professionals/service', {
-      service_type_id: serviceTypeId,
-    })
+    return response.data
   }
 }
 

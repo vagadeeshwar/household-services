@@ -223,7 +223,7 @@ import { ref, reactive } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { useVuelidate } from '@vuelidate/core'
-import { required, email, minLength, helpers } from '@vuelidate/validators'
+import { required, email, minLength, helpers, maxLength } from '@vuelidate/validators'
 
 const initialForm = {
   username: '',
@@ -270,6 +270,7 @@ export default {
             'Please enter a valid name',
             helpers.regex(/^[a-zA-Z\s.-]+$/),
           ),
+          maxLength: helpers.withMessage('Full name is too long', maxLength(50)),
         },
         phone: {
           required: helpers.withMessage('Phone number is required', required),

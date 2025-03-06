@@ -1,13 +1,8 @@
 import api from '@/services/api'
 
 class Public {
-  async submitContact(data) {
-    const response = await api.post('contact', {
-      name: data.name,
-      email: data.email,
-      subject: data.subject,
-      message: data.message,
-    })
+  async submitContact(params = {}) {
+    const response = await api.post('contact', params)
     return response.data
   }
 }

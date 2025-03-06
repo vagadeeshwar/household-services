@@ -1,9 +1,9 @@
-from marshmallow import fields, Schema
+from marshmallow import Schema, fields
 
 from src.schemas.base import (
-    BaseUserSchema,
     BaseProfileUpdateSchema,
     BaseUserInputSchema,
+    BaseUserSchema,
 )
 
 

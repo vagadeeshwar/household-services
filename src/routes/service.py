@@ -124,7 +124,7 @@ def list_all_services(current_user, service_id=None):
 @service_bp.route("/services", methods=["GET"])
 @service_bp.route("/services/<int:service_id>", methods=["GET"])
 @cached_with_auth(timeout=300)
-def list_services(service_id=None):
+def list_active_services(service_id=None):
     """List all active services or get a specific active service"""
     try:
         if service_id is not None:
@@ -252,7 +252,7 @@ def toggle_service(current_user, service_id):
         # Toggle status
         service.is_active = not service.is_active
         action = (
-            ActivityLogActions.SERVICE_DELETE
+            ActivityLogActions.SERVICE_DEACTIVATE
             if not service.is_active
             else ActivityLogActions.SERVICE_RESTORE
         )
