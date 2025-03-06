@@ -4,15 +4,15 @@
       <div class="card shadow-lg">
         <div class="card-body p-5">
           <!-- Warning Icon Container -->
-          <div class="mx-auto d-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10"
-            style="width: 96px; height: 96px;">
-            <span style="font-size: 3rem;">⚠️</span>
+          <div
+            class="mx-auto d-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10"
+            style="width: 96px; height: 96px"
+          >
+            <span style="font-size: 3rem">⚠️</span>
           </div>
 
           <!-- Error Message -->
-          <h2 class="mt-4 fw-bold">
-            Oops! Page Not Found
-          </h2>
+          <h2 class="mt-4 fw-bold">Oops! Page Not Found</h2>
 
           <p class="mt-3 text-muted fs-5">
             The page you're looking for doesn't exist or has been moved.
@@ -28,9 +28,7 @@
 
           <!-- Error Code -->
           <div class="mt-4">
-            <p class="text-muted small">
-              Error Code: 404
-            </p>
+            <p class="text-muted small">Error Code: 404</p>
           </div>
         </div>
       </div>
@@ -39,19 +37,19 @@
 </template>
 
 <script>
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
 
 export default {
   setup() {
-    const router = useRouter();
+    const router = useRouter()
 
     const goHome = () => {
-      router.push('/');
-    };
+      router.push('/')
+    }
 
     return {
       goHome,
-    };
+    }
   },
-};
+}
 </script>

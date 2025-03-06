@@ -8,7 +8,12 @@
       </router-link>
 
       <!-- Mobile Toggle -->
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#mainNav"
+      >
         <span class="navbar-toggler-icon"></span>
       </button>
 
@@ -21,8 +26,12 @@
           <!-- User Menu -->
           <ul class="navbar-nav ms-auto">
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
-                data-bs-toggle="dropdown">
+              <a
+                class="nav-link dropdown-toggle d-flex align-items-center"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+              >
                 <div class="avatar">
                   <i class="bi bi-person-fill"></i>
                 </div>
@@ -34,7 +43,7 @@
                   <div class="fw-medium">{{ userEmail }}</div>
                 </li>
                 <li>
-                  <hr class="dropdown-divider">
+                  <hr class="dropdown-divider" />
                 </li>
                 <li>
                   <router-link class="dropdown-item" :to="profileRoute">
@@ -42,7 +51,7 @@
                   </router-link>
                 </li>
                 <li>
-                  <hr class="dropdown-divider">
+                  <hr class="dropdown-divider" />
                 </li>
                 <li>
                   <button class="dropdown-item text-danger" @click="handleLogout">
@@ -70,7 +79,9 @@ import { useRouter } from 'vue-router'
 
 // Navigation Components
 const AdminNavigation = defineAsyncComponent(() => import('./navigation/AdminNavigation.vue'))
-const ProfessionalNavigation = defineAsyncComponent(() => import('./navigation/ProfessionalNavigation.vue'))
+const ProfessionalNavigation = defineAsyncComponent(
+  () => import('./navigation/ProfessionalNavigation.vue'),
+)
 const CustomerNavigation = defineAsyncComponent(() => import('./navigation/CustomerNavigation.vue'))
 const GuestNavigation = defineAsyncComponent(() => import('./navigation/GuestNavigation.vue'))
 
@@ -97,10 +108,14 @@ export default {
     // Dynamic navigation component based on role
     const currentNavigation = computed(() => {
       switch (userRole.value) {
-        case 'admin': return AdminNavigation
-        case 'professional': return ProfessionalNavigation
-        case 'customer': return CustomerNavigation
-        default: return null
+        case 'admin':
+          return AdminNavigation
+        case 'professional':
+          return ProfessionalNavigation
+        case 'customer':
+          return CustomerNavigation
+        default:
+          return null
       }
     })
 
@@ -123,15 +138,15 @@ export default {
       userEmail,
       currentNavigation,
       profileRoute,
-      handleLogout
+      handleLogout,
     }
-  }
+  },
 }
 </script>
 
 <style scoped>
 .navbar {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .avatar {

@@ -13,20 +13,32 @@
       <div class="card-body">
         <ul class="nav nav-pills">
           <li class="nav-item">
-            <a class="nav-link" :class="{ active: activeTab === 'available' }"
-              @click.prevent="setActiveTab('available')" href="#">
+            <a
+              class="nav-link"
+              :class="{ active: activeTab === 'available' }"
+              @click.prevent="setActiveTab('available')"
+              href="#"
+            >
               <i class="bi bi-list-stars me-2"></i>Available Requests
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" :class="{ active: activeTab === 'ongoing' }"
-              @click.prevent="setActiveTab('ongoing')" href="#">
+            <a
+              class="nav-link"
+              :class="{ active: activeTab === 'ongoing' }"
+              @click.prevent="setActiveTab('ongoing')"
+              href="#"
+            >
               <i class="bi bi-arrow-repeat me-2"></i>Ongoing Services
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" :class="{ active: activeTab === 'completed' }"
-              @click.prevent="setActiveTab('completed')" href="#">
+            <a
+              class="nav-link"
+              :class="{ active: activeTab === 'completed' }"
+              @click.prevent="setActiveTab('completed')"
+              href="#"
+            >
               <i class="bi bi-check2-circle me-2"></i>Completed Services
             </a>
           </li>
@@ -46,9 +58,7 @@
     <div v-else-if="error" class="alert alert-danger" role="alert">
       <i class="bi bi-exclamation-triangle-fill me-2"></i>
       {{ error }}
-      <button @click="fetchRequests" class="btn btn-sm btn-outline-danger ms-2">
-        Retry
-      </button>
+      <button @click="fetchRequests" class="btn btn-sm btn-outline-danger ms-2">Retry</button>
     </div>
 
     <!-- Empty State -->
@@ -77,8 +87,13 @@
           </div>
           <div class="col-auto">
             <div class="input-group">
-              <input type="text" class="form-control form-control-sm" placeholder="Search..."
-                v-model="searchQuery" @input="handleSearch">
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                placeholder="Search..."
+                v-model="searchQuery"
+                @input="handleSearch"
+              />
               <button class="btn btn-sm btn-outline-secondary" type="button" @click="clearSearch">
                 <i class="bi bi-x"></i>
               </button>
@@ -102,8 +117,8 @@
                   <div class="ms-2">
                     <h6 class="mb-1">{{ request.service.name }}</h6>
                     <p class="text-muted small mb-0">
-                      <i class="bi bi-geo-alt me-1"></i>{{
-                        truncateText(request.customer.user.address, 50) }}
+                      <i class="bi bi-geo-alt me-1"></i
+                      >{{ truncateText(request.customer.user.address, 50) }}
                     </p>
                   </div>
                 </div>
@@ -113,8 +128,8 @@
                       <i class="bi bi-clock me-1"></i>{{ formatDate(request.preferred_time) }}
                     </div>
                     <div class="me-3">
-                      <i class="bi bi-hourglass-split me-1"></i>{{
-                        formatDuration(request.service.estimated_time) }}
+                      <i class="bi bi-hourglass-split me-1"></i
+                      >{{ formatDuration(request.service.estimated_time) }}
                     </div>
                     <div>
                       <i class="bi bi-currency-rupee me-1"></i>{{ request.service.base_price }}
@@ -132,8 +147,8 @@
                   <div>
                     <h6 class="mb-0 small">{{ request.customer.user.full_name }}</h6>
                     <p class="text-muted mb-0 small">
-                      <i class="bi bi-telephone me-1"></i>{{
-                        formatPhone(request.customer.user.phone) }}
+                      <i class="bi bi-telephone me-1"></i
+                      >{{ formatPhone(request.customer.user.phone) }}
                     </p>
                   </div>
                 </div>
@@ -141,20 +156,34 @@
 
               <!-- Action Column -->
               <div class="col-md-2 text-md-end mt-2 mt-md-0">
-                <button class="btn btn-sm btn-outline-primary me-1"
-                  @click="viewRequestDetails(request)">
+                <button
+                  class="btn btn-sm btn-outline-primary me-1"
+                  @click="viewRequestDetails(request)"
+                >
                   <i class="bi bi-eye"></i>
                 </button>
-                <button v-if="activeTab === 'available'" class="btn btn-sm btn-success"
-                  @click="acceptRequest(request)" :disabled="isRequestProcessing">
-                  <span v-if="processingRequestId === request.id"
-                    class="spinner-border spinner-border-sm me-1"></span>
+                <button
+                  v-if="activeTab === 'available'"
+                  class="btn btn-sm btn-success"
+                  @click="acceptRequest(request)"
+                  :disabled="isRequestProcessing"
+                >
+                  <span
+                    v-if="processingRequestId === request.id"
+                    class="spinner-border spinner-border-sm me-1"
+                  ></span>
                   Accept
                 </button>
-                <button v-if="activeTab === 'ongoing'" class="btn btn-sm btn-outline-success"
-                  @click="completeRequest(request)" :disabled="isRequestProcessing">
-                  <span v-if="processingRequestId === request.id"
-                    class="spinner-border spinner-border-sm me-1"></span>
+                <button
+                  v-if="activeTab === 'ongoing'"
+                  class="btn btn-sm btn-outline-success"
+                  @click="completeRequest(request)"
+                  :disabled="isRequestProcessing"
+                >
+                  <span
+                    v-if="processingRequestId === request.id"
+                    class="spinner-border spinner-border-sm me-1"
+                  ></span>
                   Complete
                 </button>
               </div>
@@ -172,11 +201,16 @@
           <div class="col-md-6">
             <ul class="pagination pagination-sm mb-0 justify-content-md-end">
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <a class="page-link" href="#"
-                  @click.prevent="changePage(currentPage - 1)">Previous</a>
+                <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)"
+                  >Previous</a
+                >
               </li>
-              <li v-for="pageNum in displayedPages" :key="pageNum" class="page-item"
-                :class="{ active: currentPage === pageNum }">
+              <li
+                v-for="pageNum in displayedPages"
+                :key="pageNum"
+                class="page-item"
+                :class="{ active: currentPage === pageNum }"
+              >
                 <a class="page-link" href="#" @click.prevent="changePage(pageNum)">{{ pageNum }}</a>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === totalPages }">
@@ -194,8 +228,12 @@
         <div class="modal-content" v-if="selectedRequest">
           <div class="modal-header">
             <h5 class="modal-title">Service Request Details</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <div class="row">
@@ -306,13 +344,23 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button v-if="activeTab === 'available'" type="button" class="btn btn-success"
-              @click="acceptRequestFromModal" :disabled="isRequestProcessing">
+            <button
+              v-if="activeTab === 'available'"
+              type="button"
+              class="btn btn-success"
+              @click="acceptRequestFromModal"
+              :disabled="isRequestProcessing"
+            >
               <span v-if="isRequestProcessing" class="spinner-border spinner-border-sm me-1"></span>
               Accept Request
             </button>
-            <button v-if="activeTab === 'ongoing'" type="button" class="btn btn-success"
-              @click="showCompleteModal" :disabled="isRequestProcessing">
+            <button
+              v-if="activeTab === 'ongoing'"
+              type="button"
+              class="btn btn-success"
+              @click="showCompleteModal"
+              :disabled="isRequestProcessing"
+            >
               <span v-if="isRequestProcessing" class="spinner-border spinner-border-sm me-1"></span>
               Mark as Completed
             </button>
@@ -327,17 +375,28 @@
         <div class="modal-content" v-if="selectedRequest">
           <div class="modal-header">
             <h5 class="modal-title">Complete Service Request</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <form @submit.prevent="submitCompletion">
               <div class="mb-3">
-                <label for="remarks" class="form-label">Service Remarks <span
-                    class="text-danger">*</span></label>
-                <textarea id="remarks" class="form-control" v-model="completionRemarks" rows="4"
+                <label for="remarks" class="form-label"
+                  >Service Remarks <span class="text-danger">*</span></label
+                >
+                <textarea
+                  id="remarks"
+                  class="form-control"
+                  v-model="completionRemarks"
+                  rows="4"
                   placeholder="Please provide details about the service completed..."
-                  :class="{ 'is-invalid': remarksError }" required></textarea>
+                  :class="{ 'is-invalid': remarksError }"
+                  required
+                ></textarea>
                 <div class="invalid-feedback" v-if="remarksError">
                   {{ remarksError }}
                 </div>
@@ -350,8 +409,12 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-success" @click="submitCompletion"
-              :disabled="isRequestProcessing">
+            <button
+              type="button"
+              class="btn btn-success"
+              @click="submitCompletion"
+              :disabled="isRequestProcessing"
+            >
               <span v-if="isRequestProcessing" class="spinner-border spinner-border-sm me-1"></span>
               Complete Service
             </button>
@@ -363,334 +426,343 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useStore } from 'vuex';
-import moment from 'moment';
-import * as bootstrap from 'bootstrap';
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useStore } from 'vuex'
+import moment from 'moment'
+import * as bootstrap from 'bootstrap'
 
 export default {
   name: 'ProfessionalServiceRequests',
   setup() {
-    const store = useStore();
-    const route = useRoute();
+    const store = useStore()
+    const route = useRoute()
     // eslint-disable-next-line no-unused-vars
-    const router = useRouter();
+    const router = useRouter()
 
     // Refs for modals
-    const requestDetailModal = ref(null);
-    const completeRequestModal = ref(null);
-    let bsRequestDetailModal = null;
-    let bsCompleteRequestModal = null;
+    const requestDetailModal = ref(null)
+    const completeRequestModal = ref(null)
+    let bsRequestDetailModal = null
+    let bsCompleteRequestModal = null
 
     // State
-    const activeTab = ref('available'); // available, ongoing, completed
-    const requests = ref([]);
-    const isLoading = ref(true);
-    const error = ref(null);
-    const currentPage = ref(1);
-    const searchQuery = ref('');
-    const selectedRequest = ref(null);
-    const completionRemarks = ref('');
-    const remarksError = ref('');
-    const processingRequestId = ref(null);
+    const activeTab = ref('available') // available, ongoing, completed
+    const requests = ref([])
+    const isLoading = ref(true)
+    const error = ref(null)
+    const currentPage = ref(1)
+    const searchQuery = ref('')
+    const selectedRequest = ref(null)
+    const completionRemarks = ref('')
+    const remarksError = ref('')
+    const processingRequestId = ref(null)
 
     // Computed properties
-    const isRequestProcessing = computed(() => processingRequestId.value !== null);
+    const isRequestProcessing = computed(() => processingRequestId.value !== null)
 
-    const totalRequests = computed(() => store.getters['requests/pagination']?.total || 0);
-    const totalPages = computed(() => store.getters['requests/pagination']?.pages || 1);
-    const perPage = computed(() => store.getters['requests/pagination']?.per_page || 10);
+    const totalRequests = computed(() => store.getters['requests/pagination']?.total || 0)
+    const totalPages = computed(() => store.getters['requests/pagination']?.pages || 1)
+    const perPage = computed(() => store.getters['requests/pagination']?.per_page || 10)
 
-    const startIndex = computed(() => (currentPage.value - 1) * perPage.value);
-    const endIndex = computed(() => Math.min(startIndex.value + perPage.value, totalRequests.value));
+    const startIndex = computed(() => (currentPage.value - 1) * perPage.value)
+    const endIndex = computed(() => Math.min(startIndex.value + perPage.value, totalRequests.value))
 
     const displayedPages = computed(() => {
-      const totalPagesToShow = 5;
-      const pages = [];
-      let startPage = Math.max(1, currentPage.value - Math.floor(totalPagesToShow / 2));
-      let endPage = Math.min(totalPages.value, startPage + totalPagesToShow - 1);
+      const totalPagesToShow = 5
+      const pages = []
+      let startPage = Math.max(1, currentPage.value - Math.floor(totalPagesToShow / 2))
+      let endPage = Math.min(totalPages.value, startPage + totalPagesToShow - 1)
 
       // Adjust if we're near the end
       if (endPage - startPage + 1 < totalPagesToShow) {
-        startPage = Math.max(1, endPage - totalPagesToShow + 1);
+        startPage = Math.max(1, endPage - totalPagesToShow + 1)
       }
 
       for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
+        pages.push(i)
       }
 
-      return pages;
-    });
+      return pages
+    })
 
     const filteredRequests = computed(() => {
-      if (!searchQuery.value.trim()) return requests.value;
+      if (!searchQuery.value.trim()) return requests.value
 
-      const query = searchQuery.value.toLowerCase();
-      return requests.value.filter(request =>
-        request.service.name.toLowerCase().includes(query) ||
-        request.customer.user.full_name.toLowerCase().includes(query) ||
-        request.customer.user.address.toLowerCase().includes(query) ||
-        request.description?.toLowerCase().includes(query)
-      );
-    });
+      const query = searchQuery.value.toLowerCase()
+      return requests.value.filter(
+        (request) =>
+          request.service.name.toLowerCase().includes(query) ||
+          request.customer.user.full_name.toLowerCase().includes(query) ||
+          request.customer.user.address.toLowerCase().includes(query) ||
+          request.description?.toLowerCase().includes(query),
+      )
+    })
 
     // Methods
     const setActiveTab = (tab) => {
-      activeTab.value = tab;
-      currentPage.value = 1;
-      searchQuery.value = '';
-      fetchRequests();
-    };
+      activeTab.value = tab
+      currentPage.value = 1
+      searchQuery.value = ''
+      fetchRequests()
+    }
 
     const getActiveTabTitle = () => {
       switch (activeTab.value) {
-        case 'available': return 'Available Service Requests';
-        case 'ongoing': return 'Ongoing Services';
-        case 'completed': return 'Completed Services';
-        default: return 'Service Requests';
+        case 'available':
+          return 'Available Service Requests'
+        case 'ongoing':
+          return 'Ongoing Services'
+        case 'completed':
+          return 'Completed Services'
+        default:
+          return 'Service Requests'
       }
-    };
+    }
 
     const fetchRequests = async () => {
-      isLoading.value = true;
-      error.value = null;
+      isLoading.value = true
+      error.value = null
 
       try {
         // Map activeTab to the API's type parameter
         const typeParam = {
-          'available': 'new',
-          'ongoing': 'ongoing',
-          'completed': 'completed'
-        }[activeTab.value];
+          available: 'new',
+          ongoing: 'ongoing',
+          completed: 'completed',
+        }[activeTab.value]
 
         const response = await store.dispatch('requests/fetchProfessionalRequests', {
           type: typeParam,
           page: currentPage.value,
-          perPage: perPage.value
-        });
+          perPage: perPage.value,
+        })
 
-        requests.value = response.data || [];
+        requests.value = response.data || []
       } catch (err) {
-        console.error('Error fetching requests:', err);
-        error.value = 'Failed to load service requests. Please try again.';
+        console.error('Error fetching requests:', err)
+        error.value = 'Failed to load service requests. Please try again.'
       } finally {
-        isLoading.value = false;
+        isLoading.value = false
       }
-    };
+    }
 
     const changePage = (page) => {
-      if (page < 1 || page > totalPages.value) return;
-      currentPage.value = page;
-      fetchRequests();
-    };
+      if (page < 1 || page > totalPages.value) return
+      currentPage.value = page
+      fetchRequests()
+    }
 
     const handleSearch = () => {
       // If search is cleared, we might want to refresh the full list
       if (searchQuery.value === '') {
-        fetchRequests();
+        fetchRequests()
       }
-    };
+    }
 
     const clearSearch = () => {
-      searchQuery.value = '';
-      handleSearch();
-    };
+      searchQuery.value = ''
+      handleSearch()
+    }
 
     const viewRequestDetails = (request) => {
-      selectedRequest.value = request;
-      bsRequestDetailModal.show();
-    };
+      selectedRequest.value = request
+      bsRequestDetailModal.show()
+    }
 
     const acceptRequest = async (request) => {
-      if (isRequestProcessing.value) return;
+      if (isRequestProcessing.value) return
 
-      processingRequestId.value = request.id;
+      processingRequestId.value = request.id
       try {
-        await store.dispatch('requests/acceptRequest', request.id);
+        await store.dispatch('requests/acceptRequest', request.id)
         window.showToast({
           type: 'success',
           title: 'Success',
-          message: 'Service request accepted successfully!'
-        });
-        fetchRequests(); // Refresh the list
+          message: 'Service request accepted successfully!',
+        })
+        fetchRequests() // Refresh the list
       } catch (error) {
         window.showToast({
           type: 'error',
           title: 'Error',
-          message: error.response?.data?.message || 'Failed to accept request. Please try again.'
-        });
+          message: error.response?.data?.message || 'Failed to accept request. Please try again.',
+        })
       } finally {
-        processingRequestId.value = null;
+        processingRequestId.value = null
       }
-    };
+    }
 
     const acceptRequestFromModal = async () => {
-      if (!selectedRequest.value || isRequestProcessing.value) return;
+      if (!selectedRequest.value || isRequestProcessing.value) return
 
-      processingRequestId.value = selectedRequest.value.id;
+      processingRequestId.value = selectedRequest.value.id
       try {
-        await store.dispatch('requests/acceptRequest', selectedRequest.value.id);
+        await store.dispatch('requests/acceptRequest', selectedRequest.value.id)
         window.showToast({
           type: 'success',
           title: 'Success',
-          message: 'Service request accepted successfully!'
-        });
-        bsRequestDetailModal.hide();
-        fetchRequests(); // Refresh the list
+          message: 'Service request accepted successfully!',
+        })
+        bsRequestDetailModal.hide()
+        fetchRequests() // Refresh the list
       } catch (error) {
         window.showToast({
           type: 'error',
           title: 'Error',
-          message: error.response?.data?.message || 'Failed to accept request. Please try again.'
-        });
+          message: error.response?.data?.message || 'Failed to accept request. Please try again.',
+        })
       } finally {
-        processingRequestId.value = null;
+        processingRequestId.value = null
       }
-    };
+    }
 
     const completeRequest = (request) => {
-      selectedRequest.value = request;
-      completionRemarks.value = '';
-      remarksError.value = '';
-      bsCompleteRequestModal.show();
-    };
+      selectedRequest.value = request
+      completionRemarks.value = ''
+      remarksError.value = ''
+      bsCompleteRequestModal.show()
+    }
 
     const showCompleteModal = () => {
-      if (!selectedRequest.value) return;
-      bsRequestDetailModal.hide();
-      completionRemarks.value = '';
-      remarksError.value = '';
-      bsCompleteRequestModal.show();
-    };
+      if (!selectedRequest.value) return
+      bsRequestDetailModal.hide()
+      completionRemarks.value = ''
+      remarksError.value = ''
+      bsCompleteRequestModal.show()
+    }
 
     const submitCompletion = async () => {
-      if (!selectedRequest.value || isRequestProcessing.value) return;
+      if (!selectedRequest.value || isRequestProcessing.value) return
 
       // Validate remarks
       if (!completionRemarks.value.trim()) {
-        remarksError.value = 'Please provide remarks about the completed service';
-        return;
+        remarksError.value = 'Please provide remarks about the completed service'
+        return
       }
 
-      processingRequestId.value = selectedRequest.value.id;
+      processingRequestId.value = selectedRequest.value.id
       try {
         await store.dispatch('requests/completeRequest', {
           id: selectedRequest.value.id,
-          remarks: completionRemarks.value.trim()
-        });
+          remarks: completionRemarks.value.trim(),
+        })
 
         window.showToast({
           type: 'success',
           title: 'Success',
-          message: 'Service has been marked as completed!'
-        });
+          message: 'Service has been marked as completed!',
+        })
 
-        bsCompleteRequestModal.hide();
-        fetchRequests(); // Refresh the list
+        bsCompleteRequestModal.hide()
+        fetchRequests() // Refresh the list
       } catch (error) {
         window.showToast({
           type: 'error',
           title: 'Error',
-          message: error.response?.data?.message || 'Failed to complete service. Please try again.'
-        });
+          message: error.response?.data?.message || 'Failed to complete service. Please try again.',
+        })
       } finally {
-        processingRequestId.value = null;
+        processingRequestId.value = null
       }
-    };
+    }
 
     // Formatting helpers
     const formatDate = (dateString) => {
-      const date = moment(dateString);
+      const date = moment(dateString)
 
       // If today, show "Today at [time]"
       if (date.isSame(moment(), 'day')) {
-        return `Today at ${date.format('h:mm A')}`;
+        return `Today at ${date.format('h:mm A')}`
       }
 
       // If tomorrow, show "Tomorrow at [time]"
       if (date.isSame(moment().add(1, 'day'), 'day')) {
-        return `Tomorrow at ${date.format('h:mm A')}`;
+        return `Tomorrow at ${date.format('h:mm A')}`
       }
 
       // If within the next 7 days, show day name and time
       if (date.diff(moment(), 'days') < 7) {
-        return `${date.format('dddd')} at ${date.format('h:mm A')}`;
+        return `${date.format('dddd')} at ${date.format('h:mm A')}`
       }
 
       // Otherwise, show full date and time
-      return date.format('MMM D, YYYY h:mm A');
-    };
+      return date.format('MMM D, YYYY h:mm A')
+    }
 
     const formatDateOnly = (dateString) => {
-      return moment(dateString).format('MMM D, YYYY');
-    };
+      return moment(dateString).format('MMM D, YYYY')
+    }
 
     const formatDuration = (minutes) => {
-      const hours = Math.floor(minutes / 60);
-      const mins = minutes % 60;
+      const hours = Math.floor(minutes / 60)
+      const mins = minutes % 60
 
       if (hours === 0) {
-        return `${mins} minutes`;
+        return `${mins} minutes`
       } else if (mins === 0) {
-        return `${hours} hour${hours > 1 ? 's' : ''}`;
+        return `${hours} hour${hours > 1 ? 's' : ''}`
       } else {
-        return `${hours} hour${hours > 1 ? 's' : ''} ${mins} min`;
+        return `${hours} hour${hours > 1 ? 's' : ''} ${mins} min`
       }
-    };
+    }
 
     const formatPhone = (phone) => {
-      return `+91 ${phone}`;
-    };
+      return `+91 ${phone}`
+    }
 
     const formatStatus = (status) => {
       const statusMap = {
-        'created': 'Pending',
-        'assigned': 'In Progress',
-        'completed': 'Completed'
-      };
-      return statusMap[status] || status;
-    };
+        created: 'Pending',
+        assigned: 'In Progress',
+        completed: 'Completed',
+      }
+      return statusMap[status] || status
+    }
 
     const getStatusBadgeClass = (status) => {
       const classMap = {
-        'created': 'bg-warning',
-        'assigned': 'bg-info',
-        'completed': 'bg-success'
-      };
-      return classMap[status] || 'bg-secondary';
-    };
+        created: 'bg-warning',
+        assigned: 'bg-info',
+        completed: 'bg-success',
+      }
+      return classMap[status] || 'bg-secondary'
+    }
 
     const truncateText = (text, maxLength) => {
-      if (!text) return '';
-      return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-    };
+      if (!text) return ''
+      return text.length > maxLength ? text.substring(0, maxLength) + '...' : text
+    }
 
     // Initialize from route query params
-    watch(() => route.query.type, (newType) => {
-      if (newType && ['available', 'ongoing', 'completed'].includes(newType)) {
-        activeTab.value = newType;
-      }
-    }, { immediate: true });
+    watch(
+      () => route.query.type,
+      (newType) => {
+        if (newType && ['available', 'ongoing', 'completed'].includes(newType)) {
+          activeTab.value = newType
+        }
+      },
+      { immediate: true },
+    )
 
     // Lifecycle hooks
     onMounted(() => {
       if (requestDetailModal.value) {
-        bsRequestDetailModal = new bootstrap.Modal(requestDetailModal.value);
+        bsRequestDetailModal = new bootstrap.Modal(requestDetailModal.value)
       }
 
       if (completeRequestModal.value) {
-        bsCompleteRequestModal = new bootstrap.Modal(completeRequestModal.value);
+        bsCompleteRequestModal = new bootstrap.Modal(completeRequestModal.value)
       }
 
       // Check if we have a type in the query params
-      const queryType = route.query.type;
+      const queryType = route.query.type
       if (queryType && ['available', 'ongoing', 'completed'].includes(queryType)) {
-        activeTab.value = queryType;
+        activeTab.value = queryType
       }
 
-      fetchRequests();
-    });
+      fetchRequests()
+    })
 
     return {
       activeTab,
@@ -733,10 +805,10 @@ export default {
       formatPhone,
       formatStatus,
       getStatusBadgeClass,
-      truncateText
-    };
-  }
-};
+      truncateText,
+    }
+  },
+}
 </script>
 
 <style scoped>

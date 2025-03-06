@@ -5,12 +5,18 @@
       <h1 class="h3 mb-0">Professional Management</h1>
       <div class="d-flex gap-2">
         <div class="btn-group">
-          <button class="btn btn-outline-primary" :class="{ active: !showPendingOnly }"
-            @click="showPendingOnly = false">
+          <button
+            class="btn btn-outline-primary"
+            :class="{ active: !showPendingOnly }"
+            @click="showPendingOnly = false"
+          >
             All Professionals
           </button>
-          <button class="btn btn-outline-warning" :class="{ active: showPendingOnly }"
-            @click="showPendingOnly = true">
+          <button
+            class="btn btn-outline-warning"
+            :class="{ active: showPendingOnly }"
+            @click="showPendingOnly = true"
+          >
             Pending Verification
             <span v-if="pendingCount > 0" class="badge bg-warning ms-1">{{ pendingCount }}</span>
           </button>
@@ -42,8 +48,13 @@
           <div class="col-md-4">
             <label class="form-label">Search</label>
             <div class="input-group">
-              <input type="text" class="form-control" placeholder="Search by name or email..."
-                v-model="filters.search" @input="debouncedSearch" />
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search by name or email..."
+                v-model="filters.search"
+                @input="debouncedSearch"
+              />
               <button class="btn btn-outline-secondary" type="button" @click="clearSearch">
                 <i class="bi bi-x"></i>
               </button>
@@ -95,23 +106,26 @@
               <td>
                 <div class="d-flex align-items-center">
                   <div class="stars me-2">
-                    <i v-for="i in 5" :key="i" class="bi"
-                      :class="i <= Math.round(pro.average_rating || 0) ? 'bi-star-fill text-warning' : 'bi-star'"></i>
+                    <i
+                      v-for="i in 5"
+                      :key="i"
+                      class="bi"
+                      :class="
+                        i <= Math.round(pro.average_rating || 0)
+                          ? 'bi-star-fill text-warning'
+                          : 'bi-star'
+                      "
+                    ></i>
                   </div>
                   <span>{{ pro.average_rating ? pro.average_rating.toFixed(1) : 'N/A' }}</span>
                 </div>
               </td>
               <td>
                 <div class="d-flex align-items-center gap-2">
-                  <span :class="[
-                    'badge',
-                    pro.is_verified ? 'bg-success' : 'bg-warning',
-                  ]">
+                  <span :class="['badge', pro.is_verified ? 'bg-success' : 'bg-warning']">
                     {{ pro.is_verified ? 'Verified' : 'Pending' }}
                   </span>
-                  <span v-if="!pro.is_active" class="badge bg-danger">
-                    Blocked
-                  </span>
+                  <span v-if="!pro.is_active" class="badge bg-danger"> Blocked </span>
                 </div>
               </td>
               <td class="text-end">
@@ -119,16 +133,28 @@
                   <button class="btn btn-sm btn-outline-primary" @click="viewProfessional(pro)">
                     <i class="bi bi-eye"></i>
                   </button>
-                  <button v-if="!pro.is_verified" class="btn btn-sm btn-outline-success"
-                    @click="verifyProfessional(pro)" :disabled="isActionLoading">
+                  <button
+                    v-if="!pro.is_verified"
+                    class="btn btn-sm btn-outline-success"
+                    @click="verifyProfessional(pro)"
+                    :disabled="isActionLoading"
+                  >
                     <i class="bi bi-check-circle"></i>
                   </button>
-                  <button v-if="pro.is_active" class="btn btn-sm btn-outline-danger"
-                    @click="showBlockModal(pro)" :disabled="isActionLoading">
+                  <button
+                    v-if="pro.is_active"
+                    class="btn btn-sm btn-outline-danger"
+                    @click="showBlockModal(pro)"
+                    :disabled="isActionLoading"
+                  >
                     <i class="bi bi-slash-circle"></i>
                   </button>
-                  <button v-else class="btn btn-sm btn-outline-success"
-                    @click="unblockProfessional(pro)" :disabled="isActionLoading">
+                  <button
+                    v-else
+                    class="btn btn-sm btn-outline-success"
+                    @click="unblockProfessional(pro)"
+                    :disabled="isActionLoading"
+                  >
                     <i class="bi bi-check-circle"></i>
                   </button>
                 </div>
@@ -148,8 +174,12 @@
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
                 <button @click="changePage(currentPage - 1)" class="page-link">Previous</button>
               </li>
-              <li v-for="pageNum in displayedPages" :key="pageNum" class="page-item"
-                :class="{ active: currentPage === pageNum }">
+              <li
+                v-for="pageNum in displayedPages"
+                :key="pageNum"
+                class="page-item"
+                :class="{ active: currentPage === pageNum }"
+              >
                 <button @click="changePage(pageNum)" class="page-link">{{ pageNum }}</button>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === totalPages }">
@@ -165,9 +195,7 @@
     <div v-if="error" class="alert alert-danger mt-4">
       <i class="bi bi-exclamation-circle me-2"></i>
       {{ error }}
-      <button @click="fetchProfessionals" class="btn btn-sm btn-outline-danger ms-2">
-        Retry
-      </button>
+      <button @click="fetchProfessionals" class="btn btn-sm btn-outline-danger ms-2">Retry</button>
     </div>
 
     <!-- Professional Details Modal -->
@@ -176,8 +204,12 @@
         <div class="modal-content" v-if="selectedProfessional">
           <div class="modal-header">
             <h5 class="modal-title">Professional Details</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <div class="card">
@@ -190,11 +222,13 @@
                     <h4 class="mb-1">{{ selectedProfessional.full_name }}</h4>
                     <p class="mb-0 text-muted">
                       {{ getServiceName(selectedProfessional.service_type_id) }} Professional
-                      <span v-if="selectedProfessional.is_verified"
-                        class="badge bg-success ms-2">Verified</span>
+                      <span v-if="selectedProfessional.is_verified" class="badge bg-success ms-2"
+                        >Verified</span
+                      >
                       <span v-else class="badge bg-warning ms-2">Pending Verification</span>
-                      <span v-if="!selectedProfessional.is_active"
-                        class="badge bg-danger ms-2">Blocked</span>
+                      <span v-if="!selectedProfessional.is_active" class="badge bg-danger ms-2"
+                        >Blocked</span
+                      >
                     </p>
                   </div>
                 </div>
@@ -240,20 +274,33 @@
                         <div class="fw-medium mb-1">Average Rating</div>
                         <div class="d-flex align-items-center">
                           <div class="stars me-2">
-                            <i v-for="i in 5" :key="i" class="bi"
-                              :class="i <= Math.round(selectedProfessional.average_rating || 0) ? 'bi-star-fill text-warning' : 'bi-star'"></i>
+                            <i
+                              v-for="i in 5"
+                              :key="i"
+                              class="bi"
+                              :class="
+                                i <= Math.round(selectedProfessional.average_rating || 0)
+                                  ? 'bi-star-fill text-warning'
+                                  : 'bi-star'
+                              "
+                            ></i>
                           </div>
-                          <span>{{ selectedProfessional.average_rating ?
-                            selectedProfessional.average_rating.toFixed(1) : 'N/A' }}</span>
+                          <span>{{
+                            selectedProfessional.average_rating
+                              ? selectedProfessional.average_rating.toFixed(1)
+                              : 'N/A'
+                          }}</span>
                         </div>
                       </div>
                       <div class="col-md-6">
                         <div class="fw-medium mb-1">Account Status</div>
                         <div>
-                          <span :class="[
-                            'badge',
-                            selectedProfessional.is_active ? 'bg-success' : 'bg-danger',
-                          ]">
+                          <span
+                            :class="[
+                              'badge',
+                              selectedProfessional.is_active ? 'bg-success' : 'bg-danger',
+                            ]"
+                          >
                             {{ selectedProfessional.is_active ? 'Active' : 'Blocked' }}
                           </span>
                         </div>
@@ -274,8 +321,11 @@
                           <i class="bi bi-file-earmark-text me-2"></i>
                           {{ selectedProfessional.verification_documents }}
                         </div>
-                        <a :href="getDocumentUrl(selectedProfessional.verification_documents)"
-                          target="_blank" class="btn btn-sm btn-primary">
+                        <a
+                          :href="getDocumentUrl(selectedProfessional.verification_documents)"
+                          target="_blank"
+                          class="btn btn-sm btn-primary"
+                        >
                           <i class="bi bi-download me-1"></i>
                           Download
                         </a>
@@ -299,18 +349,33 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button v-if="!selectedProfessional.is_verified" type="button" class="btn btn-success"
-              @click="verifyProfessional(selectedProfessional)" :disabled="isActionLoading">
+            <button
+              v-if="!selectedProfessional.is_verified"
+              type="button"
+              class="btn btn-success"
+              @click="verifyProfessional(selectedProfessional)"
+              :disabled="isActionLoading"
+            >
               <i class="bi bi-check-circle me-1"></i>
               Verify Professional
             </button>
-            <button v-if="selectedProfessional.is_active" type="button" class="btn btn-danger"
-              @click="showBlockModal(selectedProfessional)" :disabled="isActionLoading">
+            <button
+              v-if="selectedProfessional.is_active"
+              type="button"
+              class="btn btn-danger"
+              @click="showBlockModal(selectedProfessional)"
+              :disabled="isActionLoading"
+            >
               <i class="bi bi-slash-circle me-1"></i>
               Block Professional
             </button>
-            <button v-else type="button" class="btn btn-success"
-              @click="unblockProfessional(selectedProfessional)" :disabled="isActionLoading">
+            <button
+              v-else
+              type="button"
+              class="btn btn-success"
+              @click="unblockProfessional(selectedProfessional)"
+              :disabled="isActionLoading"
+            >
               <i class="bi bi-check-circle me-1"></i>
               Unblock Professional
             </button>
@@ -328,25 +393,40 @@
               <i class="bi bi-slash-circle me-2"></i>
               Block Professional
             </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
-            <p>Are you sure you want to block <strong>{{ selectedProfessional?.full_name
-                }}</strong>?</p>
+            <p>
+              Are you sure you want to block <strong>{{ selectedProfessional?.full_name }}</strong
+              >?
+            </p>
             <p class="text-muted">This will prevent them from accepting new service requests.</p>
             <div class="mb-3">
               <label for="blockReason" class="form-label">Reason for blocking</label>
-              <textarea class="form-control" id="blockReason" rows="3" v-model="blockReason"
+              <textarea
+                class="form-control"
+                id="blockReason"
+                rows="3"
+                v-model="blockReason"
                 placeholder="Please provide a reason..."
-                :class="{ 'is-invalid': blockReasonError }"></textarea>
+                :class="{ 'is-invalid': blockReasonError }"
+              ></textarea>
               <div class="invalid-feedback">{{ blockReasonError }}</div>
             </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-danger" @click="blockProfessional"
-              :disabled="isActionLoading">
+            <button
+              type="button"
+              class="btn btn-danger"
+              @click="blockProfessional"
+              :disabled="isActionLoading"
+            >
               <span v-if="isActionLoading" class="spinner-border spinner-border-sm me-2"></span>
               Block Professional
             </button>
@@ -358,314 +438,324 @@
 </template>
 
 <script>
-import { useLoading } from '@/composables/useLoading';
-import * as bootstrap from 'bootstrap';
-import { computed, onMounted, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useStore } from 'vuex';
+import { useLoading } from '@/composables/useLoading'
+import * as bootstrap from 'bootstrap'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useStore } from 'vuex'
 
 export default {
   name: 'AdminProfessionals',
   setup() {
-    const store = useStore();
-    const route = useRoute();
-    const router = useRouter();
-    const { isLoading, showLoading, hideLoading, withLoading } = useLoading();
+    const store = useStore()
+    const route = useRoute()
+    const router = useRouter()
+    const { isLoading, showLoading, hideLoading, withLoading } = useLoading()
 
     // Modal refs
-    const professionalModal = ref(null);
-    const blockModal = ref(null);
-    let bsProfessionalModal = null;
-    let bsBlockModal = null;
+    const professionalModal = ref(null)
+    const blockModal = ref(null)
+    let bsProfessionalModal = null
+    let bsBlockModal = null
 
     // State
-    const professionals = computed(() => store.getters['professionals/allProfessionals'] || []);
-    const services = ref([]);
-    const selectedProfessional = ref(null);
-    const error = ref(null);
-    const isActionLoading = ref(false);
-    const blockReason = ref('');
-    const blockReasonError = ref('');
-    const docPreviewUrl = ref(null);
-    const searchTimeout = ref(null);
-    const showPendingOnly = ref(false);
+    const professionals = computed(() => store.getters['professionals/allProfessionals'] || [])
+    const services = ref([])
+    const selectedProfessional = ref(null)
+    const error = ref(null)
+    const isActionLoading = ref(false)
+    const blockReason = ref('')
+    const blockReasonError = ref('')
+    const docPreviewUrl = ref(null)
+    const searchTimeout = ref(null)
+    const showPendingOnly = ref(false)
 
     // Pagination
-    const currentPage = ref(1);
-    const perPage = ref(10);
-    const totalProfessionals = computed(() => store.getters['professionals/pagination']?.total || 0);
-    const totalPages = computed(() => store.getters['professionals/pagination']?.pages || 1);
+    const currentPage = ref(1)
+    const perPage = ref(10)
+    const totalProfessionals = computed(() => store.getters['professionals/pagination']?.total || 0)
+    const totalPages = computed(() => store.getters['professionals/pagination']?.pages || 1)
 
     // Filters
     const filters = ref({
       serviceType: '',
       verified: null,
       search: '',
-    });
+    })
 
     // Computed
     const pendingCount = computed(() => {
-      return professionals.value.filter(p => !p.is_verified).length;
-    });
+      return professionals.value.filter((p) => !p.is_verified).length
+    })
 
     const displayedPages = computed(() => {
-      const pages = [];
-      const maxVisiblePages = 5;
-      let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2));
-      let endPage = Math.min(totalPages.value, startPage + maxVisiblePages - 1);
+      const pages = []
+      const maxVisiblePages = 5
+      let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
+      let endPage = Math.min(totalPages.value, startPage + maxVisiblePages - 1)
 
       if (endPage - startPage + 1 < maxVisiblePages) {
-        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        startPage = Math.max(1, endPage - maxVisiblePages + 1)
       }
 
       for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
+        pages.push(i)
       }
 
-      return pages;
-    });
+      return pages
+    })
 
     const fetchActiveServices = async () => {
       try {
-        const response = await store.dispatch('services/fetchActiveServices', { isActive: true });
-        services.value = response.data;
+        const response = await store.dispatch('services/fetchActiveServices', { isActive: true })
+        services.value = response.data
       } catch (err) {
-        console.error('Error fetching services:', err);
+        console.error('Error fetching services:', err)
       }
-    };
+    }
 
     const fetchProfessionals = async () => {
       return withLoading(async () => {
         try {
-          error.value = null;
+          error.value = null
           await store.dispatch('professionals/fetchProfessionals', {
             page: currentPage.value,
             perPage: perPage.value,
             serviceType: filters.value.serviceType || undefined,
             verified: filters.value.verified,
-            search: filters.value.search || undefined
-          });
+            search: filters.value.search || undefined,
+          })
         } catch (err) {
-          error.value = err.message || 'Failed to load professionals';
-          console.error(err);
+          error.value = err.message || 'Failed to load professionals'
+          console.error(err)
         }
-      }, 'Loading professionals...');
-    };
+      }, 'Loading professionals...')
+    }
 
     // Watch for query params
-    watch(() => route.query, (newQuery) => {
-      if (newQuery.status === 'pending') {
-        showPendingOnly.value = true;
-        filters.value.verified = false;
-      }
+    watch(
+      () => route.query,
+      (newQuery) => {
+        if (newQuery.status === 'pending') {
+          showPendingOnly.value = true
+          filters.value.verified = false
+        }
 
-      fetchProfessionals();
-    }, { immediate: true });
+        fetchProfessionals()
+      },
+      { immediate: true },
+    )
 
     // Watch for status filter
-    watch(() => showPendingOnly.value, (newValue) => {
-      filters.value.verified = newValue ? false : null;
-      currentPage.value = 1;
-      fetchProfessionals();
+    watch(
+      () => showPendingOnly.value,
+      (newValue) => {
+        filters.value.verified = newValue ? false : null
+        currentPage.value = 1
+        fetchProfessionals()
 
-      // Update URL without reloading
-      const query = newValue ? { status: 'pending' } : {};
-      router.replace({ query });
-    });
+        // Update URL without reloading
+        const query = newValue ? { status: 'pending' } : {}
+        router.replace({ query })
+      },
+    )
 
     const getServiceName = (serviceId) => {
-      const service = services.value.find(s => s.id === serviceId);
-      return service ? service.name : 'Unknown Service';
-    };
+      const service = services.value.find((s) => s.id === serviceId)
+      return service ? service.name : 'Unknown Service'
+    }
 
     const viewProfessional = async (professional) => {
       try {
-        showLoading('Loading professional details...');
+        showLoading('Loading professional details...')
         // Get detailed information about the professional
-        const response = await store.dispatch('professionals/fetchProfessionalById', professional.professional_id);
-        selectedProfessional.value = response.data;
+        const response = await store.dispatch(
+          'professionals/fetchProfessionalById',
+          professional.professional_id,
+        )
+        selectedProfessional.value = response.data
 
         // Set document preview URL if available
         if (selectedProfessional.value.verification_documents) {
-          docPreviewUrl.value = getDocumentUrl(selectedProfessional.value.verification_documents);
+          docPreviewUrl.value = getDocumentUrl(selectedProfessional.value.verification_documents)
         } else {
-          docPreviewUrl.value = null;
+          docPreviewUrl.value = null
         }
 
-        bsProfessionalModal.show();
+        bsProfessionalModal.show()
       } catch (err) {
         window.showToast({
           type: 'error',
           title: 'Error',
-          message: 'Failed to load professional details'
-        });
-        console.error(err);
+          message: 'Failed to load professional details',
+        })
+        console.error(err)
       } finally {
-        hideLoading();
+        hideLoading()
       }
-    };
+    }
 
     const getDocumentUrl = (filename) => {
       // This will need to match your backend URL for document access
-      return `/static/uploads/verification_docs/${filename}`;
-    };
+      return `/static/uploads/verification_docs/${filename}`
+    }
 
     const verifyProfessional = async (professional) => {
-      if (isActionLoading.value) return;
+      if (isActionLoading.value) return
 
       try {
-        isActionLoading.value = true;
-        await store.dispatch('professionals/verifyProfessional', professional.professional_id);
+        isActionLoading.value = true
+        await store.dispatch('professionals/verifyProfessional', professional.professional_id)
 
         window.showToast({
           type: 'success',
           title: 'Success',
-          message: `${professional.full_name} has been verified successfully`
-        });
+          message: `${professional.full_name} has been verified successfully`,
+        })
 
         // Refresh data
-        await fetchProfessionals();
+        await fetchProfessionals()
 
         // Close modal if open
         if (bsProfessionalModal && bsProfessionalModal._isShown) {
-          bsProfessionalModal.hide();
+          bsProfessionalModal.hide()
         }
       } catch (err) {
         window.showToast({
           type: 'error',
           title: 'Error',
-          message: err.response?.data?.message || 'Failed to verify professional'
-        });
+          message: err.response?.data?.message || 'Failed to verify professional',
+        })
       } finally {
-        isActionLoading.value = false;
+        isActionLoading.value = false
       }
-    };
+    }
 
     const showBlockModal = (professional) => {
-      selectedProfessional.value = professional;
-      blockReason.value = '';
-      blockReasonError.value = '';
+      selectedProfessional.value = professional
+      blockReason.value = ''
+      blockReasonError.value = ''
 
       // Close details modal if open
       if (bsProfessionalModal && bsProfessionalModal._isShown) {
-        bsProfessionalModal.hide();
+        bsProfessionalModal.hide()
       }
 
-      bsBlockModal.show();
-    };
+      bsBlockModal.show()
+    }
 
     const blockProfessional = async () => {
-      if (isActionLoading.value) return;
+      if (isActionLoading.value) return
 
       // Validate reason
       if (!blockReason.value.trim()) {
-        blockReasonError.value = 'Please provide a reason for blocking';
-        return;
+        blockReasonError.value = 'Please provide a reason for blocking'
+        return
       }
 
       try {
-        isActionLoading.value = true;
+        isActionLoading.value = true
         await store.dispatch('professionals/blockProfessional', {
           id: selectedProfessional.value.professional_id,
-          reason: blockReason.value
-        });
+          reason: blockReason.value,
+        })
 
         window.showToast({
           type: 'success',
           title: 'Success',
-          message: `${selectedProfessional.value.full_name} has been blocked`
-        });
+          message: `${selectedProfessional.value.full_name} has been blocked`,
+        })
 
         // Refresh data
-        await fetchProfessionals();
+        await fetchProfessionals()
 
         // Close modal
-        bsBlockModal.hide();
+        bsBlockModal.hide()
       } catch (err) {
         window.showToast({
           type: 'error',
           title: 'Error',
-          message: err.response?.data?.message || 'Failed to block professional'
-        });
+          message: err.response?.data?.message || 'Failed to block professional',
+        })
       } finally {
-        isActionLoading.value = false;
+        isActionLoading.value = false
       }
-    };
+    }
 
     const unblockProfessional = async (professional) => {
-      if (isActionLoading.value) return;
+      if (isActionLoading.value) return
 
       try {
-        isActionLoading.value = true;
-        await store.dispatch('professionals/unblockProfessional', professional.professional_id);
+        isActionLoading.value = true
+        await store.dispatch('professionals/unblockProfessional', professional.professional_id)
 
         window.showToast({
           type: 'success',
           title: 'Success',
-          message: `${professional.full_name} has been unblocked`
-        });
+          message: `${professional.full_name} has been unblocked`,
+        })
 
         // Refresh data
-        await fetchProfessionals();
+        await fetchProfessionals()
 
         // Close modal if open
         if (bsProfessionalModal && bsProfessionalModal._isShown) {
-          bsProfessionalModal.hide();
+          bsProfessionalModal.hide()
         }
       } catch (err) {
         window.showToast({
           type: 'error',
           title: 'Error',
-          message: err.response?.data?.message || 'Failed to unblock professional'
-        });
+          message: err.response?.data?.message || 'Failed to unblock professional',
+        })
       } finally {
-        isActionLoading.value = false;
+        isActionLoading.value = false
       }
-    };
+    }
 
     const changePage = (page) => {
-      if (page < 1 || page > totalPages.value) return;
-      currentPage.value = page;
-      fetchProfessionals();
-    };
+      if (page < 1 || page > totalPages.value) return
+      currentPage.value = page
+      fetchProfessionals()
+    }
 
     const debouncedSearch = () => {
       if (searchTimeout.value) {
-        clearTimeout(searchTimeout.value);
+        clearTimeout(searchTimeout.value)
       }
 
       searchTimeout.value = setTimeout(() => {
-        currentPage.value = 1;
-        fetchProfessionals();
-      }, 500);
-    };
+        currentPage.value = 1
+        fetchProfessionals()
+      }, 500)
+    }
 
     const clearSearch = () => {
-      filters.value.search = '';
-      currentPage.value = 1;
-      fetchProfessionals();
-    };
+      filters.value.search = ''
+      currentPage.value = 1
+      fetchProfessionals()
+    }
 
     const onFiltersChange = () => {
-      currentPage.value = 1;
-      fetchProfessionals();
-    };
+      currentPage.value = 1
+      fetchProfessionals()
+    }
 
     // Lifecycle hooks
     onMounted(async () => {
       // Initialize Bootstrap modals
       if (professionalModal.value) {
-        bsProfessionalModal = new bootstrap.Modal(professionalModal.value);
+        bsProfessionalModal = new bootstrap.Modal(professionalModal.value)
       }
 
       if (blockModal.value) {
-        bsBlockModal = new bootstrap.Modal(blockModal.value);
+        bsBlockModal = new bootstrap.Modal(blockModal.value)
       }
 
       // Fetch initial data
-      await fetchActiveServices();
-      await fetchProfessionals();
-    });
+      await fetchActiveServices()
+      await fetchProfessionals()
+    })
 
     return {
       professionals,
@@ -697,10 +787,10 @@ export default {
       debouncedSearch,
       clearSearch,
       onFiltersChange,
-      getDocumentUrl
-    };
-  }
-};
+      getDocumentUrl,
+    }
+  },
+}
 </script>
 
 <style scoped>

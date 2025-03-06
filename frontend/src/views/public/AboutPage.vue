@@ -24,9 +24,9 @@
                 </div>
                 <h2>Our Mission</h2>
                 <p class="lead text-muted mt-3">
-                  To provide exceptional home services by connecting skilled professionals
-                  with homeowners, ensuring quality, reliability, and satisfaction in
-                  every service interaction.
+                  To provide exceptional home services by connecting skilled professionals with
+                  homeowners, ensuring quality, reliability, and satisfaction in every service
+                  interaction.
                 </p>
               </div>
             </div>

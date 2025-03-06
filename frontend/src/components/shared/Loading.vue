@@ -1,5 +1,5 @@
 <template>
-  <div v-if="show" class="loading-container" :class="{ 'overlay': overlay, 'full': fullscreen }">
+  <div v-if="show" class="loading-container" :class="{ overlay: overlay, full: fullscreen }">
     <div class="loading-content">
       <div class="spinner-border" :class="spinnerClass" role="status">
         <span class="visually-hidden">Loading...</span>
@@ -20,13 +20,13 @@ const props = defineProps({
   size: {
     type: String,
     default: 'md',
-    validator: value => ['sm', 'md', 'lg'].includes(value)
-  }
+    validator: (value) => ['sm', 'md', 'lg'].includes(value),
+  },
 })
 
 const spinnerClass = computed(() => ({
   'spinner-border-sm': props.size === 'sm',
-  'spinner-border-lg': props.size === 'lg'
+  'spinner-border-lg': props.size === 'lg',
 }))
 </script>
 

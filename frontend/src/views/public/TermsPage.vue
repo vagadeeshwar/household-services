@@ -27,7 +27,9 @@
                         <i class="bi bi-check-circle-fill"></i>
                       </div>
                       <h5 class="mb-3">Professional Verification</h5>
-                      <p class="text-muted mb-0">All service providers undergo thorough verification</p>
+                      <p class="text-muted mb-0">
+                        All service providers undergo thorough verification
+                      </p>
                     </div>
                   </div>
                   <div class="col-md-6">
@@ -69,8 +71,9 @@
                       <div class="number me-3">1</div>
                       <div>
                         <h6 class="mb-1">Accurate Information</h6>
-                        <p class="text-muted mb-0 small">Provide accurate and complete information when using our
-                          services</p>
+                        <p class="text-muted mb-0 small">
+                          Provide accurate and complete information when using our services
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -79,7 +82,9 @@
                       <div class="number me-3">2</div>
                       <div>
                         <h6 class="mb-1">Service Access</h6>
-                        <p class="text-muted mb-0 small">Ensure proper access and safety for service providers</p>
+                        <p class="text-muted mb-0 small">
+                          Ensure proper access and safety for service providers
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -88,7 +93,9 @@
                       <div class="number me-3">3</div>
                       <div>
                         <h6 class="mb-1">Timely Communication</h6>
-                        <p class="text-muted mb-0 small">Communicate changes or issues in a timely manner</p>
+                        <p class="text-muted mb-0 small">
+                          Communicate changes or issues in a timely manner
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -100,8 +107,9 @@
                 <h2 class="h4 mb-4">Disclaimers</h2>
                 <div class="alert alert-light">
                   <p class="small mb-0">
-                    Services are provided "as is" without warranty of any kind. While we strive for excellence,
-                    we cannot guarantee availability of specific service providers or exact service times.
+                    Services are provided "as is" without warranty of any kind. While we strive for
+                    excellence, we cannot guarantee availability of specific service providers or
+                    exact service times.
                   </p>
                 </div>
               </section>
@@ -120,7 +128,9 @@
   padding: 2rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
   height: 100%;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
 }
 
 .service-term-card:hover {
@@ -163,7 +173,9 @@
 }
 
 .border.rounded {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
 }
 
 .border.rounded:hover {

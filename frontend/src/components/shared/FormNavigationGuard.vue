@@ -13,12 +13,8 @@
           {{ message }}
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="handleStay">
-            Stay
-          </button>
-          <button type="button" class="btn btn-primary" @click="handleLeave">
-            Leave
-          </button>
+          <button type="button" class="btn btn-secondary" @click="handleStay">Stay</button>
+          <button type="button" class="btn btn-primary" @click="handleLeave">Leave</button>
         </div>
       </div>
     </div>
@@ -36,16 +32,16 @@ export default {
   props: {
     when: {
       type: Boolean,
-      required: true
+      required: true,
     },
     message: {
       type: String,
-      default: 'You have unsaved changes. Are you sure you want to leave?'
+      default: 'You have unsaved changes. Are you sure you want to leave?',
     },
     onBeforeUnload: {
       type: Boolean,
-      default: true
-    }
+      default: true,
+    },
   },
 
   setup(props) {
@@ -81,15 +77,19 @@ export default {
     }
 
     // Watch for changes in the when prop
-    watch(() => props.when, (value) => {
-      if (props.onBeforeUnload) {
-        if (value) {
-          window.addEventListener('beforeunload', handleBeforeUnload)
-        } else {
-          window.removeEventListener('beforeunload', handleBeforeUnload)
+    watch(
+      () => props.when,
+      (value) => {
+        if (props.onBeforeUnload) {
+          if (value) {
+            window.addEventListener('beforeunload', handleBeforeUnload)
+          } else {
+            window.removeEventListener('beforeunload', handleBeforeUnload)
+          }
         }
-      }
-    }, { immediate: true })
+      },
+      { immediate: true },
+    )
 
     // Initialize modal and router guard
     onMounted(() => {
@@ -104,7 +104,7 @@ export default {
 
         bsModal.value = new bootstrap.Modal(modal.value, {
           backdrop: 'static',
-          keyboard: false
+          keyboard: false,
         })
 
         // Setup router navigation guard
@@ -147,9 +147,9 @@ export default {
     return {
       modal,
       handleLeave,
-      handleStay
+      handleStay,
     }
-  }
+  },
 }
 </script>
 

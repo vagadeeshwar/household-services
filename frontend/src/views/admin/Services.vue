@@ -20,9 +20,7 @@
     <div v-else-if="error" class="alert alert-danger" role="alert">
       <i class="bi bi-exclamation-triangle-fill me-2"></i>
       {{ error }}
-      <button @click="fetchServices" class="btn btn-sm btn-outline-danger ms-2">
-        Retry
-      </button>
+      <button @click="fetchServices" class="btn btn-sm btn-outline-danger ms-2">Retry</button>
     </div>
 
     <!-- Services Table -->
@@ -34,9 +32,14 @@
           </div>
           <div class="col-md-6">
             <div class="d-flex justify-content-md-end align-items-center">
-              <div class="input-group" style="max-width: 200px;">
-                <input type="text" class="form-control form-control-sm" placeholder="Search..."
-                  v-model="searchQuery" @input="handleSearch">
+              <div class="input-group" style="max-width: 200px">
+                <input
+                  type="text"
+                  class="form-control form-control-sm"
+                  placeholder="Search..."
+                  v-model="searchQuery"
+                  @input="handleSearch"
+                />
                 <button class="btn btn-sm btn-outline-secondary" type="button" @click="clearSearch">
                   <i class="bi bi-x"></i>
                 </button>
@@ -75,23 +78,37 @@
               </td>
               <td class="text-end">
                 <div class="btn-group">
-                  <button class="btn btn-sm btn-outline-primary" @click="showEditModal(service)"
-                    title="Edit Service">
+                  <button
+                    class="btn btn-sm btn-outline-primary"
+                    @click="showEditModal(service)"
+                    title="Edit Service"
+                  >
                     <i class="bi bi-pencil"></i>
                   </button>
-                  <button class="btn btn-sm btn-outline-info" @click="showDetailsModal(service)"
-                    title="View Details">
+                  <button
+                    class="btn btn-sm btn-outline-info"
+                    @click="showDetailsModal(service)"
+                    title="View Details"
+                  >
                     <i class="bi bi-info-circle"></i>
                   </button>
-                  <button class="btn btn-sm"
+                  <button
+                    class="btn btn-sm"
                     :class="[service.is_active ? 'btn-outline-warning' : 'btn-outline-success']"
                     @click="toggleServiceStatus(service)"
-                    :title="service.is_active ? 'Deactivate Service' : 'Activate Service'">
-                    <i class="bi"
-                      :class="[service.is_active ? 'bi-pause-circle' : 'bi-play-circle']"></i>
+                    :title="service.is_active ? 'Deactivate Service' : 'Activate Service'"
+                  >
+                    <i
+                      class="bi"
+                      :class="[service.is_active ? 'bi-pause-circle' : 'bi-play-circle']"
+                    ></i>
                   </button>
-                  <button class="btn btn-sm btn-outline-danger" @click="confirmDelete(service)"
-                    title="Delete Service" :disabled="!canDelete(service)">
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    @click="confirmDelete(service)"
+                    title="Delete Service"
+                    :disabled="!canDelete(service)"
+                  >
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
@@ -110,8 +127,12 @@
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
                 <button @click="changePage(currentPage - 1)" class="page-link">Previous</button>
               </li>
-              <li v-for="pageNum in displayedPages" :key="pageNum" class="page-item"
-                :class="{ active: currentPage === pageNum }">
+              <li
+                v-for="pageNum in displayedPages"
+                :key="pageNum"
+                class="page-item"
+                :class="{ active: currentPage === pageNum }"
+              >
                 <button @click="changePage(pageNum)" class="page-link">{{ pageNum }}</button>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === totalPages }">
@@ -129,24 +150,39 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">{{ isEditMode ? 'Edit Service' : 'Add New Service' }}</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <form @submit.prevent="saveService">
               <div class="mb-3">
                 <label for="serviceName" class="form-label">Service Name</label>
-                <input type="text" class="form-control" id="serviceName" v-model="serviceForm.name"
-                  :class="{ 'is-invalid': formErrors.name }" required>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="serviceName"
+                  v-model="serviceForm.name"
+                  :class="{ 'is-invalid': formErrors.name }"
+                  required
+                />
                 <div class="invalid-feedback">
                   {{ formErrors.name }}
                 </div>
               </div>
               <div class="mb-3">
                 <label for="description" class="form-label">Description</label>
-                <textarea class="form-control" id="description" rows="3"
+                <textarea
+                  class="form-control"
+                  id="description"
+                  rows="3"
                   v-model="serviceForm.description"
-                  :class="{ 'is-invalid': formErrors.description }" required></textarea>
+                  :class="{ 'is-invalid': formErrors.description }"
+                  required
+                ></textarea>
                 <div class="invalid-feedback">
                   {{ formErrors.description }}
                 </div>
@@ -154,31 +190,49 @@
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label for="basePrice" class="form-label">Base Price (₹)</label>
-                  <input type="number" class="form-control" id="basePrice"
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="basePrice"
                     v-model="serviceForm.base_price"
-                    :class="{ 'is-invalid': formErrors.base_price }" min="0" step="0.01" required>
+                    :class="{ 'is-invalid': formErrors.base_price }"
+                    min="0"
+                    step="0.01"
+                    required
+                  />
                   <div class="invalid-feedback">
                     {{ formErrors.base_price }}
                   </div>
                 </div>
                 <div class="col-md-6 mb-3">
                   <label for="estTime" class="form-label">Estimated Time (minutes)</label>
-                  <input type="number" class="form-control" id="estTime"
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="estTime"
                     v-model="serviceForm.estimated_time"
-                    :class="{ 'is-invalid': formErrors.estimated_time }" min="1" required>
+                    :class="{ 'is-invalid': formErrors.estimated_time }"
+                    min="1"
+                    required
+                  />
                   <div class="invalid-feedback">
                     {{ formErrors.estimated_time }}
                   </div>
                 </div>
               </div>
               <div class="form-check form-switch mb-3" v-if="isEditMode">
-                <input class="form-check-input" type="checkbox" id="statusSwitch"
-                  v-model="serviceForm.is_active">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="statusSwitch"
+                  v-model="serviceForm.is_active"
+                />
                 <label class="form-check-label" for="statusSwitch">Active</label>
               </div>
               <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                <button type="button" class="btn btn-secondary"
-                  data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                  Cancel
+                </button>
                 <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
                   <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
                   {{ isEditMode ? 'Update Service' : 'Create Service' }}
@@ -196,8 +250,12 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Service Details</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body" v-if="selectedService">
             <div class="card">
@@ -219,7 +277,7 @@
                     <p class="text-primary h5">{{ formatTime(selectedService.estimated_time) }}</p>
                   </div>
                 </div>
-                <hr>
+                <hr />
                 <div class="row">
                   <div class="col-md-6">
                     <p class="mb-1 text-muted"><small>Created On:</small></p>
@@ -227,8 +285,13 @@
                   </div>
                   <div class="col-md-6">
                     <p class="mb-1 text-muted"><small>Last Updated:</small></p>
-                    <p>{{ selectedService.updated_at ? formatDate(selectedService.updated_at) :
-                      'Never' }}</p>
+                    <p>
+                      {{
+                        selectedService.updated_at
+                          ? formatDate(selectedService.updated_at)
+                          : 'Never'
+                      }}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -250,17 +313,28 @@
         <div class="modal-content">
           <div class="modal-header bg-danger text-white">
             <h5 class="modal-title">Confirm Delete</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
-            <p>Are you sure you want to delete <strong>{{ selectedService?.name }}</strong>?</p>
+            <p>
+              Are you sure you want to delete <strong>{{ selectedService?.name }}</strong
+              >?
+            </p>
             <p class="text-danger small">This action cannot be undone.</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-danger" @click="deleteService"
-              :disabled="isDeleting">
+            <button
+              type="button"
+              class="btn btn-danger"
+              @click="deleteService"
+              :disabled="isDeleting"
+            >
               <span v-if="isDeleting" class="spinner-border spinner-border-sm me-2"></span>
               {{ isDeleting ? 'Deleting...' : 'Delete' }}
             </button>
@@ -272,37 +346,37 @@
 </template>
 
 <script>
-import * as bootstrap from 'bootstrap';
-import moment from 'moment';
-import { computed, onMounted, reactive, ref } from 'vue';
-import { useStore } from 'vuex';
+import * as bootstrap from 'bootstrap'
+import moment from 'moment'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useStore } from 'vuex'
 
 export default {
   name: 'AdminServices',
   setup() {
-    const store = useStore();
+    const store = useStore()
 
     // Modal refs for Bootstrap
-    const serviceModal = ref(null);
-    const detailsModal = ref(null);
-    const deleteModal = ref(null);
-    let bsServiceModal = null;
-    let bsDetailsModal = null;
-    let bsDeleteModal = null;
+    const serviceModal = ref(null)
+    const detailsModal = ref(null)
+    const deleteModal = ref(null)
+    let bsServiceModal = null
+    let bsDetailsModal = null
+    let bsDeleteModal = null
 
     // State
-    const services = computed(() => store.getters['services/allServices'] || []);
-    const isLoading = computed(() => store.getters['services/isLoading']);
-    const error = computed(() => store.getters['services/error']);
-    const pagination = computed(() => store.getters['services/pagination']);
+    const services = computed(() => store.getters['services/allServices'] || [])
+    const isLoading = computed(() => store.getters['services/isLoading'])
+    const error = computed(() => store.getters['services/error'])
+    const pagination = computed(() => store.getters['services/pagination'])
 
-    const currentPage = ref(1);
-    const perPage = ref(10);
-    const searchQuery = ref('');
-    const isEditMode = ref(false);
-    const isSubmitting = ref(false);
-    const isDeleting = ref(false);
-    const selectedService = ref(null);
+    const currentPage = ref(1)
+    const perPage = ref(10)
+    const searchQuery = ref('')
+    const isEditMode = ref(false)
+    const isSubmitting = ref(false)
+    const isDeleting = ref(false)
+    const selectedService = ref(null)
 
     // Form state
     const serviceForm = reactive({
@@ -310,169 +384,169 @@ export default {
       description: '',
       base_price: 0,
       estimated_time: 60,
-      is_active: true
-    });
+      is_active: true,
+    })
 
     const formErrors = reactive({
       name: '',
       description: '',
       base_price: '',
-      estimated_time: ''
-    });
+      estimated_time: '',
+    })
 
     // Computed properties
-    const totalServices = computed(() => pagination.value?.total || 0);
-    const totalPages = computed(() => pagination.value?.pages || 1);
+    const totalServices = computed(() => pagination.value?.total || 0)
+    const totalPages = computed(() => pagination.value?.pages || 1)
 
     const filteredServices = computed(() => {
-      if (!services.value) return [];
+      if (!services.value) return []
 
-      let result = [...services.value];
+      let result = [...services.value]
 
       // Filter by search term
       if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase();
-        result = result.filter(service =>
-          service.name.toLowerCase().includes(query) ||
-          service.description.toLowerCase().includes(query)
-        );
+        const query = searchQuery.value.toLowerCase()
+        result = result.filter(
+          (service) =>
+            service.name.toLowerCase().includes(query) ||
+            service.description.toLowerCase().includes(query),
+        )
       }
 
-      return result;
-    });
+      return result
+    })
 
     const displayedPages = computed(() => {
-      const pages = [];
-      const maxVisiblePages = 5;
-      let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2));
-      let endPage = Math.min(totalPages.value, startPage + maxVisiblePages - 1);
+      const pages = []
+      const maxVisiblePages = 5
+      let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
+      let endPage = Math.min(totalPages.value, startPage + maxVisiblePages - 1)
 
       if (endPage - startPage + 1 < maxVisiblePages) {
-        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        startPage = Math.max(1, endPage - maxVisiblePages + 1)
       }
 
       for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
+        pages.push(i)
       }
 
-      return pages;
-    });
+      return pages
+    })
 
     // Methods
     const fetchServices = async () => {
       await store.dispatch('services/fetchAllServices', {
         page: currentPage.value,
-        perPage: perPage.value
-      });
-
-    };
+        perPage: perPage.value,
+      })
+    }
 
     const formatTime = (minutes) => {
-      const hours = Math.floor(minutes / 60);
-      const mins = minutes % 60;
+      const hours = Math.floor(minutes / 60)
+      const mins = minutes % 60
 
       if (hours > 0) {
-        return `${hours}h${mins > 0 ? ` ${mins}m` : ''}`;
+        return `${hours}h${mins > 0 ? ` ${mins}m` : ''}`
       }
 
-      return `${mins}m`;
-    };
+      return `${mins}m`
+    }
 
     const formatDate = (dateString) => {
-      return moment(dateString).format('MMM DD, YYYY h:mm A');
-    };
+      return moment(dateString).format('MMM DD, YYYY h:mm A')
+    }
 
     const resetForm = () => {
-      serviceForm.name = '';
-      serviceForm.description = '';
-      serviceForm.base_price = 0;
-      serviceForm.estimated_time = 60;
-      serviceForm.is_active = true;
+      serviceForm.name = ''
+      serviceForm.description = ''
+      serviceForm.base_price = 0
+      serviceForm.estimated_time = 60
+      serviceForm.is_active = true
 
       // Clear validation errors
-      Object.keys(formErrors).forEach(key => {
-        formErrors[key] = '';
-      });
-    };
+      Object.keys(formErrors).forEach((key) => {
+        formErrors[key] = ''
+      })
+    }
 
     const showCreateModal = () => {
-      resetForm();
-      isEditMode.value = false;
-      bsServiceModal.show();
-    };
+      resetForm()
+      isEditMode.value = false
+      bsServiceModal.show()
+    }
 
     const showEditModal = (service) => {
       // If coming from details modal, close it first
       if (bsDetailsModal._isShown) {
-        bsDetailsModal.hide();
+        bsDetailsModal.hide()
       }
 
-      resetForm();
-      isEditMode.value = true;
+      resetForm()
+      isEditMode.value = true
 
       // Populate form with service data
-      serviceForm.name = service.name;
-      serviceForm.description = service.description;
-      serviceForm.base_price = service.base_price;
-      serviceForm.estimated_time = service.estimated_time;
-      serviceForm.is_active = service.is_active;
+      serviceForm.name = service.name
+      serviceForm.description = service.description
+      serviceForm.base_price = service.base_price
+      serviceForm.estimated_time = service.estimated_time
+      serviceForm.is_active = service.is_active
 
-      selectedService.value = service;
-      bsServiceModal.show();
-    };
+      selectedService.value = service
+      bsServiceModal.show()
+    }
 
     const showDetailsModal = (service) => {
-      selectedService.value = service;
-      bsDetailsModal.show();
-    };
+      selectedService.value = service
+      bsDetailsModal.show()
+    }
 
     const confirmDelete = (service) => {
-      selectedService.value = service;
-      bsDeleteModal.show();
-    };
+      selectedService.value = service
+      bsDeleteModal.show()
+    }
 
     const validateForm = () => {
-      let isValid = true;
+      let isValid = true
 
       // Reset validation errors
-      Object.keys(formErrors).forEach(key => {
-        formErrors[key] = '';
-      });
+      Object.keys(formErrors).forEach((key) => {
+        formErrors[key] = ''
+      })
 
       // Name validation
       if (!serviceForm.name.trim()) {
-        formErrors.name = 'Service name is required';
-        isValid = false;
+        formErrors.name = 'Service name is required'
+        isValid = false
       } else if (serviceForm.name.length < 4) {
-        formErrors.name = 'Service name must be at least 4 characters';
-        isValid = false;
+        formErrors.name = 'Service name must be at least 4 characters'
+        isValid = false
       }
 
       // Description validation
       if (!serviceForm.description.trim()) {
-        formErrors.description = 'Description is required';
-        isValid = false;
+        formErrors.description = 'Description is required'
+        isValid = false
       }
 
       // Price validation
       if (serviceForm.base_price <= 0) {
-        formErrors.base_price = 'Base price must be greater than 0';
-        isValid = false;
+        formErrors.base_price = 'Base price must be greater than 0'
+        isValid = false
       }
 
       // Time validation
       if (serviceForm.estimated_time <= 0) {
-        formErrors.estimated_time = 'Estimated time must be greater than 0';
-        isValid = false;
+        formErrors.estimated_time = 'Estimated time must be greater than 0'
+        isValid = false
       }
 
-      return isValid;
-    };
+      return isValid
+    }
 
     const saveService = async () => {
-      if (!validateForm()) return;
+      if (!validateForm()) return
 
-      isSubmitting.value = true;
+      isSubmitting.value = true
 
       try {
         if (isEditMode.value) {
@@ -484,123 +558,122 @@ export default {
               description: serviceForm.description,
               basePrice: serviceForm.base_price,
               estimatedTime: serviceForm.estimated_time,
-              isActive: serviceForm.is_active
-            }
-          });
+              isActive: serviceForm.is_active,
+            },
+          })
 
           window.showToast({
             type: 'success',
             title: 'Service Updated',
-            message: `${serviceForm.name} has been updated successfully.`
-          });
+            message: `${serviceForm.name} has been updated successfully.`,
+          })
         } else {
           // Create new service
           await store.dispatch('services/createService', {
             name: serviceForm.name,
             description: serviceForm.description,
             basePrice: serviceForm.base_price,
-            estimatedTime: serviceForm.estimated_time
-          });
+            estimatedTime: serviceForm.estimated_time,
+          })
 
           window.showToast({
             type: 'success',
             title: 'Service Created',
-            message: `${serviceForm.name} has been added successfully.`
-          });
+            message: `${serviceForm.name} has been added successfully.`,
+          })
         }
 
-        bsServiceModal.hide();
-        fetchServices();
+        bsServiceModal.hide()
+        fetchServices()
       } catch (err) {
         // Handle specific errors
         if (err.response?.data?.error_type === 'DuplicateService') {
-          formErrors.name = 'A service with this name already exists';
+          formErrors.name = 'A service with this name already exists'
         }
       } finally {
-        isSubmitting.value = false;
+        isSubmitting.value = false
       }
-    };
+    }
 
     const toggleServiceStatus = async (service) => {
-      await store.dispatch('services/toggleService', service.id);
+      await store.dispatch('services/toggleService', service.id)
 
       window.showToast({
         type: 'success',
         title: service.is_active ? 'Service Deactivated' : 'Service Activated',
-        message: `${service.name} has been ${service.is_active ? 'deactivated' : 'activated'} successfully.`
-      });
+        message: `${service.name} has been ${service.is_active ? 'deactivated' : 'activated'} successfully.`,
+      })
 
-      fetchServices();
-
-    };
+      fetchServices()
+    }
 
     const deleteService = async () => {
-      if (!selectedService.value) return;
+      if (!selectedService.value) return
 
-      isDeleting.value = true;
+      isDeleting.value = true
 
       try {
-        await store.dispatch('services/deleteService', selectedService.value.id);
+        await store.dispatch('services/deleteService', selectedService.value.id)
 
         window.showToast({
           type: 'success',
           title: 'Service Deleted',
-          message: `${selectedService.value.name} has been deleted successfully.`
-        });
+          message: `${selectedService.value.name} has been deleted successfully.`,
+        })
 
-        bsDeleteModal.hide();
-        fetchServices();
+        bsDeleteModal.hide()
+        fetchServices()
         // eslint-disable-next-line no-unused-vars
       } catch (err) {
         // Error toast is shown via API response handler
       } finally {
-        isDeleting.value = false;
+        isDeleting.value = false
       }
-    };
+    }
 
     const changePage = (page) => {
-      if (page < 1 || page > totalPages.value) return;
+      if (page < 1 || page > totalPages.value) return
 
-      currentPage.value = page;
-      fetchServices();
-    };
+      currentPage.value = page
+      fetchServices()
+    }
 
     const handleSearch = () => {
       if (searchQuery.value.length > 2 || searchQuery.value.length === 0) {
-        currentPage.value = 1;
-        fetchServices();
+        currentPage.value = 1
+        fetchServices()
       }
-    };
+    }
 
     const clearSearch = () => {
-      searchQuery.value = '';
-      fetchServices();
-    };
+      searchQuery.value = ''
+      fetchServices()
+    }
 
     const canDelete = (service) => {
       // Only allow deletion of services that have never been used
       // In a real app, you might check if the service has any associated requests
-      return !service.is_active;
-    };
+      return !service.is_active
+    }
 
     // Lifecycle hooks
     onMounted(() => {
       // Initialize Bootstrap modals
       if (serviceModal.value) {
-        bsServiceModal = new bootstrap.Modal(serviceModal.value);
+        bsServiceModal = new bootstrap.Modal(serviceModal.value)
       }
 
       if (detailsModal.value) {
-        bsDetailsModal = new bootstrap.Modal(detailsModal.value);
+        bsDetailsModal = new bootstrap.Modal(detailsModal.value)
       }
 
       if (deleteModal.value) {
-        bsDeleteModal = new bootstrap.Modal(deleteModal.value);
+        bsDeleteModal = new bootstrap.Modal(deleteModal.value)
       }
 
       // Initial data fetch
-      fetchServices();
-    });
+      fetchServices()
+    })
 
     return {
       // Refs and state
@@ -639,10 +712,10 @@ export default {
       changePage,
       handleSearch,
       clearSearch,
-      canDelete
-    };
-  }
-};
+      canDelete,
+    }
+  },
+}
 </script>
 
 <style scoped>

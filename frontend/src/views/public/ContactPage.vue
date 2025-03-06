@@ -1,6 +1,6 @@
 <template>
   <div class="contact-page">
-    <FormNavigationGuard :when="Object.values(form).some(value => value !== '')" />
+    <FormNavigationGuard :when="Object.values(form).some((value) => value !== '')" />
 
     <!-- Hero Section -->
     <div class="bg-primary text-white py-5 mb-5">
@@ -8,7 +8,9 @@
         <div class="row justify-content-center">
           <div class="col-lg-8 text-center">
             <h1 class="display-4 mb-3">Contact Us</h1>
-            <p class="lead mb-0 opacity-75">We're here to help and answer any questions you might have</p>
+            <p class="lead mb-0 opacity-75">
+              We're here to help and answer any questions you might have
+            </p>
           </div>
         </div>
       </div>
@@ -25,9 +27,14 @@
                   <!-- Name Field -->
                   <div class="col-md-6">
                     <label for="name" class="form-label">Name</label>
-                    <input type="text" id="name" v-model="form.name"
-                      :class="['form-control', { 'is-invalid': v$.form.name.$error }]" :disabled="submitting"
-                      @input="v$.form.name.$touch()" />
+                    <input
+                      type="text"
+                      id="name"
+                      v-model="form.name"
+                      :class="['form-control', { 'is-invalid': v$.form.name.$error }]"
+                      :disabled="submitting"
+                      @input="v$.form.name.$touch()"
+                    />
                     <div class="invalid-feedback" v-if="v$.form.name.$error">
                       {{ v$.form.name.$errors[0]?.$message }}
                     </div>
@@ -36,9 +43,14 @@
                   <!-- Email Field -->
                   <div class="col-md-6">
                     <label for="email" class="form-label">Email</label>
-                    <input type="email" id="email" v-model="form.email"
-                      :class="['form-control', { 'is-invalid': v$.form.email.$error }]" :disabled="submitting"
-                      @input="v$.form.email.$touch()" />
+                    <input
+                      type="email"
+                      id="email"
+                      v-model="form.email"
+                      :class="['form-control', { 'is-invalid': v$.form.email.$error }]"
+                      :disabled="submitting"
+                      @input="v$.form.email.$touch()"
+                    />
                     <div class="invalid-feedback" v-if="v$.form.email.$error">
                       {{ v$.form.email.$errors[0]?.$message }}
                     </div>
@@ -47,9 +59,14 @@
                   <!-- Subject Field -->
                   <div class="col-12">
                     <label for="subject" class="form-label">Subject</label>
-                    <input type="text" id="subject" v-model="form.subject"
-                      :class="['form-control', { 'is-invalid': v$.form.subject.$error }]" :disabled="submitting"
-                      @input="v$.form.subject.$touch()" />
+                    <input
+                      type="text"
+                      id="subject"
+                      v-model="form.subject"
+                      :class="['form-control', { 'is-invalid': v$.form.subject.$error }]"
+                      :disabled="submitting"
+                      @input="v$.form.subject.$touch()"
+                    />
                     <div class="invalid-feedback" v-if="v$.form.subject.$error">
                       {{ v$.form.subject.$errors[0]?.$message }}
                     </div>
@@ -58,9 +75,14 @@
                   <!-- Message Field -->
                   <div class="col-12">
                     <label for="message" class="form-label">Message</label>
-                    <textarea id="message" v-model="form.message"
-                      :class="['form-control', { 'is-invalid': v$.form.message.$error }]" :disabled="submitting"
-                      @input="v$.form.message.$touch()" rows="5"></textarea>
+                    <textarea
+                      id="message"
+                      v-model="form.message"
+                      :class="['form-control', { 'is-invalid': v$.form.message.$error }]"
+                      :disabled="submitting"
+                      @input="v$.form.message.$touch()"
+                      rows="5"
+                    ></textarea>
                     <div class="invalid-feedback" v-if="v$.form.message.$error">
                       {{ v$.form.message.$errors[0]?.$message }}
                     </div>
@@ -102,7 +124,7 @@
                       <i class="bi bi-geo-alt text-primary"></i>
                     </div>
                     <h5>Address</h5>
-                    <p class="text-muted mb-0">123 Service Street<br>Bangalore, 560001</p>
+                    <p class="text-muted mb-0">123 Service Street<br />Bangalore, 560001</p>
                   </div>
                 </div>
               </div>
@@ -130,7 +152,7 @@ export default {
       name: '',
       email: '',
       subject: '',
-      message: ''
+      message: '',
     }
 
     const form = reactive({ ...initialForm })
@@ -140,14 +162,14 @@ export default {
         name: { required, minLength: minLength(2) },
         email: { required, email },
         subject: { required, minLength: minLength(5) },
-        message: { required, minLength: minLength(10) }
-      }
+        message: { required, minLength: minLength(10) },
+      },
     }
 
     const v$ = useVuelidate(rules, { form })
 
     const resetForm = () => {
-      Object.keys(form).forEach(key => form[key] = initialForm[key])
+      Object.keys(form).forEach((key) => (form[key] = initialForm[key]))
       v$.value.$reset()
     }
 
@@ -162,14 +184,14 @@ export default {
         window.showToast({
           type: 'success',
           title: 'Message Sent',
-          message: 'Thank you! Your message has been sent successfully.'
+          message: 'Thank you! Your message has been sent successfully.',
         })
         resetForm()
       } catch {
         window.showToast({
           type: 'error',
           title: 'Message Not Sent',
-          message: 'Failed to send message. Please try again.'
+          message: 'Failed to send message. Please try again.',
         })
       } finally {
         submitting.value = false
@@ -180,9 +202,9 @@ export default {
       form,
       submitting,
       handleSubmit,
-      v$
+      v$,
     }
-  }
+  },
 }
 </script>
 
@@ -191,7 +213,9 @@ export default {
   text-align: center;
   padding: 1.5rem;
   border-radius: 0.5rem;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
 }
 
 .contact-info-card:hover {

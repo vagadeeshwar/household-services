@@ -23,9 +23,7 @@
           <div>{{ error }}</div>
         </div>
         <div class="text-center mt-3">
-          <button @click="fetchActiveServices" class="btn btn-primary">
-            Try Again
-          </button>
+          <button @click="fetchActiveServices" class="btn btn-primary">Try Again</button>
         </div>
       </div>
 
@@ -51,14 +49,14 @@
                 <i class="bi bi-clock me-1"></i>
                 <span>{{ service.estimated_time }} mins</span>
               </div>
-              <div class="fw-bold text-primary">
-                ₹{{ service.base_price }}
-              </div>
+              <div class="fw-bold text-primary">₹{{ service.base_price }}</div>
             </div>
           </div>
           <div class="card-footer bg-transparent border-top-0 text-center p-3">
-            <router-link :to="isAuthenticated ? '/customer/services' : '/register/customer'"
-              class="btn btn-primary w-100">
+            <router-link
+              :to="isAuthenticated ? '/customer/services' : '/register/customer'"
+              class="btn btn-primary w-100"
+            >
               {{ isAuthenticated ? 'Book Service' : 'Book Now' }}
             </router-link>
           </div>
@@ -68,72 +66,72 @@
   </div>
 </template>
 <script>
-import { service } from '@/services'; // Import the service directly
-import { computed, onMounted, ref } from 'vue';
-import { useStore } from 'vuex';
+import { service } from '@/services' // Import the service directly
+import { computed, onMounted, ref } from 'vue'
+import { useStore } from 'vuex'
 
 export default {
   name: 'ServicesPage',
 
   setup() {
-    const store = useStore();
-    const services = ref([]);
-    const loading = ref(true);
-    const error = ref(null);
+    const store = useStore()
+    const services = ref([])
+    const loading = ref(true)
+    const error = ref(null)
 
-    const isAuthenticated = computed(() => store.getters['auth/isLoggedIn']);
+    const isAuthenticated = computed(() => store.getters['auth/isLoggedIn'])
 
     const fetchActiveServices = async () => {
       try {
-        loading.value = true;
-        error.value = null;
+        loading.value = true
+        error.value = null
 
         // Call the API service directly instead of using store
         const response = await service.getActive({
           page: 1,
-          per_page: 9
-        });
+          per_page: 9,
+        })
 
         if (response?.data) {
-          services.value = response.data;
+          services.value = response.data
         } else {
-          throw new Error('Invalid response format');
+          throw new Error('Invalid response format')
         }
       } catch (err) {
-        console.error('Service fetch error:', err);
-        error.value = err.response?.data?.message || 'Failed to load services. Please try again.';
+        console.error('Service fetch error:', err)
+        error.value = err.response?.data?.message || 'Failed to load services. Please try again.'
         window.showToast({
           type: 'error',
           title: 'Error',
-          message: error.value
-        });
+          message: error.value,
+        })
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
+    }
 
     onMounted(() => {
-      fetchActiveServices();
-    });
+      fetchActiveServices()
+    })
 
     return {
       services,
       loading,
       error,
       isAuthenticated,
-      fetchActiveServices
-    };
-  }
-};
+      fetchActiveServices,
+    }
+  },
+}
 </script>
 
 <style scoped>
 .hover-shadow:hover {
   transform: translateY(-5px);
-  box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 
 .transition-all {
-  transition: all .3s ease-in-out;
+  transition: all 0.3s ease-in-out;
 }
 </style>

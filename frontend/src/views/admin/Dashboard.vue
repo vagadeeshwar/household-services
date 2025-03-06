@@ -42,11 +42,15 @@
                 <div class="border rounded p-3 bg-warning bg-opacity-10">
                   <div class="d-flex justify-content-between">
                     <div class="text-muted small mb-1">Pending Verification</div>
-                    <span class="badge bg-warning">{{ dashboardStats.pending_verifications || 0
+                    <span class="badge bg-warning">{{
+                      dashboardStats.pending_verifications || 0
                     }}</span>
                   </div>
-                  <router-link v-if="dashboardStats.pending_verifications > 0"
-                    to="/admin/professionals?status=pending" class="btn btn-sm btn-warning mt-2">
+                  <router-link
+                    v-if="dashboardStats.pending_verifications > 0"
+                    to="/admin/professionals?status=pending"
+                    class="btn btn-sm btn-warning mt-2"
+                  >
                     Review Now
                   </router-link>
                 </div>
@@ -147,7 +151,8 @@
                   <i class="bi bi-person-x-fill text-warning me-2"></i>
                   Pending Verifications
                 </span>
-                <span class="badge bg-warning">{{ dashboardStats.pending_verifications || 0
+                <span class="badge bg-warning">{{
+                  dashboardStats.pending_verifications || 0
                 }}</span>
               </li>
             </ul>
@@ -196,112 +201,112 @@
     <div v-if="error" class="alert alert-danger mt-4">
       <i class="bi bi-exclamation-circle me-2"></i>
       {{ error }}
-      <button @click="refreshDashboard" class="btn btn-sm btn-outline-danger ms-2">
-        Retry
-      </button>
+      <button @click="refreshDashboard" class="btn btn-sm btn-outline-danger ms-2">Retry</button>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
-import { useStore } from 'vuex';
-import moment from 'moment';
-import { useLoading } from '@/composables/useLoading';
+import { ref, computed, onMounted } from 'vue'
+import { useStore } from 'vuex'
+import moment from 'moment'
+import { useLoading } from '@/composables/useLoading'
 
 export default {
   name: 'AdminDashboard',
   setup() {
-    const store = useStore();
+    const store = useStore()
     // eslint-disable-next-line no-unused-vars
-    const { isLoading, showLoading, hideLoading, withLoading } = useLoading();
+    const { isLoading, showLoading, hideLoading, withLoading } = useLoading()
 
-    const dashboardStats = ref(null);
-    const activityLogs = ref([]);
-    const error = ref(null);
-    const isLoadingActivity = ref(false);
+    const dashboardStats = ref(null)
+    const activityLogs = ref([])
+    const error = ref(null)
+    const isLoadingActivity = ref(false)
 
     // Computed properties
     const calculateInactiveCustomers = computed(() => {
-      if (!dashboardStats.value) return 0;
-      return (dashboardStats.value.total_customers || 0) - (dashboardStats.value.active_customers || 0);
-    });
+      if (!dashboardStats.value) return 0
+      return (
+        (dashboardStats.value.total_customers || 0) - (dashboardStats.value.active_customers || 0)
+      )
+    })
 
     // Methods
     const fetchDashboardStats = async () => {
       return withLoading(async () => {
         try {
-          error.value = null;
-          const response = await store.dispatch('stats/fetchDashboardStats');
-          dashboardStats.value = response.data;
+          error.value = null
+          const response = await store.dispatch('stats/fetchDashboardStats')
+          dashboardStats.value = response.data
         } catch (err) {
-          error.value = err.message || 'Failed to load dashboard statistics';
-          console.error(err);
+          error.value = err.message || 'Failed to load dashboard statistics'
+          console.error(err)
         }
-      }, 'Loading dashboard data...');
-    };
+      }, 'Loading dashboard data...')
+    }
 
     const fetchActivityLogs = async () => {
-      isLoadingActivity.value = true;
+      isLoadingActivity.value = true
       try {
         const response = await store.dispatch('stats/fetchDetailedStats', {
           type: 'pending_verifications',
           page: 1,
-          perPage: 5
-        });
-        activityLogs.value = response.data;
+          perPage: 5,
+        })
+        activityLogs.value = response.data
       } catch (err) {
-        console.error('Failed to load activity logs:', err);
+        console.error('Failed to load activity logs:', err)
       } finally {
-        isLoadingActivity.value = false;
+        isLoadingActivity.value = false
       }
-    };
+    }
 
     const refreshDashboard = async () => {
-      await fetchDashboardStats();
-      await fetchActivityLogs();
-    };
+      await fetchDashboardStats()
+      await fetchActivityLogs()
+    }
 
     const formatDate = (dateString) => {
-      return moment(dateString).fromNow();
-    };
+      return moment(dateString).fromNow()
+    }
 
     const getActivityIcon = (action) => {
       const iconMap = {
-        'user_login': 'bi-box-arrow-in-right',
-        'user_register': 'bi-person-plus',
-        'profile_update': 'bi-pencil',
-        'password_change': 'bi-key',
-        'user_delete': 'bi-person-x',
-        'professional_verify': 'bi-check-circle',
-        'professional_block': 'bi-slash-circle',
-        'professional_unblock': 'bi-check-circle',
-        'document_update': 'bi-file-earmark-arrow-up',
-        'service_update': 'bi-tools',
-        'customer_block': 'bi-slash-circle',
-        'customer_unblock': 'bi-check-circle',
-        'service_create': 'bi-plus-circle',
-        'service_delete': 'bi-trash',
-        'service_restore': 'bi-arrow-counterclockwise',
-        'request_create': 'bi-clipboard-plus',
-        'request_assign': 'bi-person-check',
-        'request_update': 'bi-pencil',
-        'request_complete': 'bi-check2-all',
-        'request_reviewed': 'bi-star',
-        'request_cancel': 'bi-x-circle',
-        'review_submit': 'bi-star',
-        'review_report': 'bi-flag',
-        'review_dismiss': 'bi-shield-check',
-        'review_remove': 'bi-trash'
-      };
+        user_login: 'bi-box-arrow-in-right',
+        user_register: 'bi-person-plus',
+        profile_update: 'bi-pencil',
+        password_change: 'bi-key',
+        user_delete: 'bi-person-x',
+        professional_verify: 'bi-check-circle',
+        professional_block: 'bi-slash-circle',
+        professional_unblock: 'bi-check-circle',
+        document_update: 'bi-file-earmark-arrow-up',
+        service_update: 'bi-tools',
+        customer_block: 'bi-slash-circle',
+        customer_unblock: 'bi-check-circle',
+        service_create: 'bi-plus-circle',
+        service_delete: 'bi-trash',
+        service_restore: 'bi-arrow-counterclockwise',
+        request_create: 'bi-clipboard-plus',
+        request_assign: 'bi-person-check',
+        request_update: 'bi-pencil',
+        request_complete: 'bi-check2-all',
+        request_reviewed: 'bi-star',
+        request_cancel: 'bi-x-circle',
+        review_submit: 'bi-star',
+        review_report: 'bi-flag',
+        review_dismiss: 'bi-shield-check',
+        review_remove: 'bi-trash',
+      }
 
-      return iconMap[action] || 'bi-activity';
-    };
+      return iconMap[action] || 'bi-activity'
+    }
 
     // Lifecycle hooks
     onMounted(async () => {
-      await refreshDashboard();
-    });
+      await refreshDashboard()
+    })
 
     return {
       dashboardStats,
@@ -312,10 +317,10 @@ export default {
       calculateInactiveCustomers,
       refreshDashboard,
       formatDate,
-      getActivityIcon
-    };
-  }
-};
+      getActivityIcon,
+    }
+  },
+}
 </script>
 
 <style scoped>

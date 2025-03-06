@@ -21,8 +21,8 @@
               <section class="mb-5">
                 <h2 class="h4">Your Privacy Matters</h2>
                 <p class="text-muted">
-                  This Privacy Policy outlines how Household Services collects, uses, and protects your
-                  personal information when you use our services.
+                  This Privacy Policy outlines how Household Services collects, uses, and protects
+                  your personal information when you use our services.
                 </p>
               </section>
 
@@ -34,7 +34,9 @@
                     <i class="bi bi-person-badge text-primary me-3 fs-4"></i>
                     <div>
                       <h6 class="mb-1">Personal Information</h6>
-                      <p class="text-muted mb-0 small">Name, contact details, and service preferences</p>
+                      <p class="text-muted mb-0 small">
+                        Name, contact details, and service preferences
+                      </p>
                     </div>
                   </div>
                   <div class="list-group-item d-flex align-items-center py-3">
@@ -122,7 +124,9 @@
   padding: 2rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
   height: 100%;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
 }
 
 .service-term-card:hover {
@@ -165,7 +169,9 @@
 }
 
 .border.rounded {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
 }
 
 .border.rounded:hover {

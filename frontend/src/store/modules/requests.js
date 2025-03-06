@@ -8,19 +8,19 @@ const state = {
   pagination: {
     currentPage: 1,
     totalPages: 0,
-    perPage: 10
-  }
+    perPage: 10,
+  },
 }
 
 const getters = {
-  allRequests: state => state.requests,
-  selectedRequest: state => state.selectedRequest,
-  isLoading: state => state.loading,
-  error: state => state.error,
-  pagination: state => state.pagination,
-  requestsByStatus: state => status => {
-    return state.requests.filter(request => request.status === status)
-  }
+  allRequests: (state) => state.requests,
+  selectedRequest: (state) => state.selectedRequest,
+  isLoading: (state) => state.loading,
+  error: (state) => state.error,
+  pagination: (state) => state.pagination,
+  requestsByStatus: (state) => (status) => {
+    return state.requests.filter((request) => request.status === status)
+  },
 }
 
 const actions = {
@@ -137,7 +137,7 @@ const actions = {
     } finally {
       commit('SET_LOADING', false)
     }
-  }
+  },
 }
 
 const mutations = {
@@ -166,11 +166,11 @@ const mutations = {
   },
 
   UPDATE_REQUEST(state, updatedRequest) {
-    const index = state.requests.findIndex(r => r.id === updatedRequest.id)
+    const index = state.requests.findIndex((r) => r.id === updatedRequest.id)
     if (index !== -1) {
       state.requests.splice(index, 1, updatedRequest)
     }
-  }
+  },
 }
 
 export default {
@@ -178,5 +178,5 @@ export default {
   state,
   getters,
   actions,
-  mutations
+  mutations,
 }

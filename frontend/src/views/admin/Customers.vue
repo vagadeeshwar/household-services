@@ -4,12 +4,18 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1 class="h3 mb-0">Customer Management</h1>
       <div class="btn-group">
-        <button class="btn btn-outline-primary" :class="{ active: !showBlocked }"
-          @click="showBlocked = false">
+        <button
+          class="btn btn-outline-primary"
+          :class="{ active: !showBlocked }"
+          @click="showBlocked = false"
+        >
           Active Customers
         </button>
-        <button class="btn btn-outline-danger" :class="{ active: showBlocked }"
-          @click="showBlocked = true">
+        <button
+          class="btn btn-outline-danger"
+          :class="{ active: showBlocked }"
+          @click="showBlocked = true"
+        >
           Blocked Customers
           <span v-if="blockedCount > 0" class="badge bg-danger ms-1">{{ blockedCount }}</span>
         </button>
@@ -22,8 +28,13 @@
         <div class="row g-3">
           <div class="col-md-4">
             <label class="form-label">PIN Code</label>
-            <input type="text" class="form-control" placeholder="Filter by PIN code"
-              v-model="filters.pinCode" @input="debouncedFilter" />
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Filter by PIN code"
+              v-model="filters.pinCode"
+              @input="debouncedFilter"
+            />
           </div>
           <div class="col-md-4">
             <label class="form-label">Signup Date</label>
@@ -38,8 +49,13 @@
           <div class="col-md-4">
             <label class="form-label">Search</label>
             <div class="input-group">
-              <input type="text" class="form-control" placeholder="Search by name or email..."
-                v-model="filters.search" @input="debouncedSearch" />
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search by name or email..."
+                v-model="filters.search"
+                @input="debouncedSearch"
+              />
               <button class="btn btn-outline-secondary" type="button" @click="clearSearch">
                 <i class="bi bi-x"></i>
               </button>
@@ -98,10 +114,7 @@
                 </span>
               </td>
               <td>
-                <span :class="[
-                  'badge',
-                  customer.is_active ? 'bg-success' : 'bg-danger',
-                ]">
+                <span :class="['badge', customer.is_active ? 'bg-success' : 'bg-danger']">
                   {{ customer.is_active ? 'Active' : 'Blocked' }}
                 </span>
               </td>
@@ -111,12 +124,20 @@
                   <button class="btn btn-sm btn-outline-primary" @click="viewCustomer(customer)">
                     <i class="bi bi-eye"></i>
                   </button>
-                  <button v-if="customer.is_active" class="btn btn-sm btn-outline-danger"
-                    @click="showBlockModal(customer)" :disabled="isActionLoading">
+                  <button
+                    v-if="customer.is_active"
+                    class="btn btn-sm btn-outline-danger"
+                    @click="showBlockModal(customer)"
+                    :disabled="isActionLoading"
+                  >
                     <i class="bi bi-slash-circle"></i>
                   </button>
-                  <button v-else class="btn btn-sm btn-outline-success"
-                    @click="unblockCustomer(customer)" :disabled="isActionLoading">
+                  <button
+                    v-else
+                    class="btn btn-sm btn-outline-success"
+                    @click="unblockCustomer(customer)"
+                    :disabled="isActionLoading"
+                  >
                     <i class="bi bi-check-circle"></i>
                   </button>
                 </div>
@@ -136,8 +157,12 @@
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
                 <button @click="changePage(currentPage - 1)" class="page-link">Previous</button>
               </li>
-              <li v-for="pageNum in displayedPages" :key="pageNum" class="page-item"
-                :class="{ active: currentPage === pageNum }">
+              <li
+                v-for="pageNum in displayedPages"
+                :key="pageNum"
+                class="page-item"
+                :class="{ active: currentPage === pageNum }"
+              >
                 <button @click="changePage(pageNum)" class="page-link">{{ pageNum }}</button>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === totalPages }">
@@ -153,9 +178,7 @@
     <div v-if="error" class="alert alert-danger mt-4">
       <i class="bi bi-exclamation-circle me-2"></i>
       {{ error }}
-      <button @click="fetchCustomers" class="btn btn-sm btn-outline-danger ms-2">
-        Retry
-      </button>
+      <button @click="fetchCustomers" class="btn btn-sm btn-outline-danger ms-2">Retry</button>
     </div>
 
     <!-- Customer Details Modal -->
@@ -164,8 +187,12 @@
         <div class="modal-content" v-if="selectedCustomer">
           <div class="modal-header">
             <h5 class="modal-title">Customer Details</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <div class="card">
@@ -178,10 +205,12 @@
                     <h4 class="mb-1">{{ selectedCustomer.full_name }}</h4>
                     <p class="mb-0 text-muted">
                       Customer
-                      <span :class="[
-                        'badge ms-2',
-                        selectedCustomer.is_active ? 'bg-success' : 'bg-danger',
-                      ]">
+                      <span
+                        :class="[
+                          'badge ms-2',
+                          selectedCustomer.is_active ? 'bg-success' : 'bg-danger',
+                        ]"
+                      >
                         {{ selectedCustomer.is_active ? 'Active' : 'Blocked' }}
                       </span>
                     </p>
@@ -224,10 +253,12 @@
                       <div class="col-md-6">
                         <div class="fw-medium mb-1">Account Status</div>
                         <div>
-                          <span :class="[
-                            'badge',
-                            selectedCustomer.is_active ? 'bg-success' : 'bg-danger',
-                          ]">
+                          <span
+                            :class="[
+                              'badge',
+                              selectedCustomer.is_active ? 'bg-success' : 'bg-danger',
+                            ]"
+                          >
                             {{ selectedCustomer.is_active ? 'Active' : 'Blocked' }}
                           </span>
                         </div>
@@ -238,8 +269,13 @@
                       </div>
                       <div class="col-md-6">
                         <div class="fw-medium mb-1">Last Login</div>
-                        <div>{{ selectedCustomer.last_login ?
-                          formatDate(selectedCustomer.last_login, true) : 'Never' }}</div>
+                        <div>
+                          {{
+                            selectedCustomer.last_login
+                              ? formatDate(selectedCustomer.last_login, true)
+                              : 'Never'
+                          }}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -286,13 +322,23 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button v-if="selectedCustomer.is_active" type="button" class="btn btn-danger"
-              @click="showBlockModal(selectedCustomer)" :disabled="isActionLoading">
+            <button
+              v-if="selectedCustomer.is_active"
+              type="button"
+              class="btn btn-danger"
+              @click="showBlockModal(selectedCustomer)"
+              :disabled="isActionLoading"
+            >
               <i class="bi bi-slash-circle me-1"></i>
               Block Customer
             </button>
-            <button v-else type="button" class="btn btn-success"
-              @click="unblockCustomer(selectedCustomer)" :disabled="isActionLoading">
+            <button
+              v-else
+              type="button"
+              class="btn btn-success"
+              @click="unblockCustomer(selectedCustomer)"
+              :disabled="isActionLoading"
+            >
               <i class="bi bi-check-circle me-1"></i>
               Unblock Customer
             </button>
@@ -310,25 +356,40 @@
               <i class="bi bi-slash-circle me-2"></i>
               Block Customer
             </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
-            <p>Are you sure you want to block <strong>{{ selectedCustomer?.full_name }}</strong>?
+            <p>
+              Are you sure you want to block <strong>{{ selectedCustomer?.full_name }}</strong
+              >?
             </p>
             <p class="text-muted">This will prevent them from creating new service requests.</p>
             <div class="mb-3">
               <label for="blockReason" class="form-label">Reason for blocking</label>
-              <textarea class="form-control" id="blockReason" rows="3" v-model="blockReason"
+              <textarea
+                class="form-control"
+                id="blockReason"
+                rows="3"
+                v-model="blockReason"
                 placeholder="Please provide a reason..."
-                :class="{ 'is-invalid': blockReasonError }"></textarea>
+                :class="{ 'is-invalid': blockReasonError }"
+              ></textarea>
               <div class="invalid-feedback">{{ blockReasonError }}</div>
             </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-danger" @click="blockCustomer"
-              :disabled="isActionLoading">
+            <button
+              type="button"
+              class="btn btn-danger"
+              @click="blockCustomer"
+              :disabled="isActionLoading"
+            >
               <span v-if="isActionLoading" class="spinner-border spinner-border-sm me-2"></span>
               Block Customer
             </button>
@@ -340,105 +401,105 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
-import { useStore } from 'vuex';
-import * as bootstrap from 'bootstrap';
-import moment from 'moment';
-import { useRoute, useRouter } from 'vue-router';
-import { useLoading } from '@/composables/useLoading';
+import { ref, computed, onMounted, watch } from 'vue'
+import { useStore } from 'vuex'
+import * as bootstrap from 'bootstrap'
+import moment from 'moment'
+import { useRoute, useRouter } from 'vue-router'
+import { useLoading } from '@/composables/useLoading'
 
 export default {
   name: 'AdminCustomers',
   setup() {
-    const store = useStore();
-    const route = useRoute();
-    const router = useRouter();
-    const { isLoading, showLoading, hideLoading, withLoading } = useLoading();
+    const store = useStore()
+    const route = useRoute()
+    const router = useRouter()
+    const { isLoading, showLoading, hideLoading, withLoading } = useLoading()
 
     // Modal refs
-    const customerModal = ref(null);
-    const blockModal = ref(null);
-    let bsCustomerModal = null;
-    let bsBlockModal = null;
+    const customerModal = ref(null)
+    const blockModal = ref(null)
+    let bsCustomerModal = null
+    let bsBlockModal = null
 
     // State
-    const customers = computed(() => store.getters['customers/allCustomers'] || []);
-    const selectedCustomer = ref(null);
-    const customerStats = ref({});
-    const error = ref(null);
-    const isActionLoading = ref(false);
-    const blockReason = ref('');
-    const blockReasonError = ref('');
-    const searchTimeout = ref(null);
-    const filterTimeout = ref(null);
-    const showBlocked = ref(false);
+    const customers = computed(() => store.getters['customers/allCustomers'] || [])
+    const selectedCustomer = ref(null)
+    const customerStats = ref({})
+    const error = ref(null)
+    const isActionLoading = ref(false)
+    const blockReason = ref('')
+    const blockReasonError = ref('')
+    const searchTimeout = ref(null)
+    const filterTimeout = ref(null)
+    const showBlocked = ref(false)
 
     // Pagination
-    const currentPage = ref(1);
-    const perPage = ref(10);
-    const totalCustomers = computed(() => store.getters['customers/pagination']?.total || 0);
-    const totalPages = computed(() => store.getters['customers/pagination']?.pages || 1);
+    const currentPage = ref(1)
+    const perPage = ref(10)
+    const totalCustomers = computed(() => store.getters['customers/pagination']?.total || 0)
+    const totalPages = computed(() => store.getters['customers/pagination']?.pages || 1)
 
     // Filters
     const filters = ref({
       pinCode: '',
       dateRange: '',
       search: '',
-    });
+    })
 
     // Computed
     const blockedCount = computed(() => {
-      return customers.value.filter(c => !c.is_active).length;
-    });
+      return customers.value.filter((c) => !c.is_active).length
+    })
 
     const displayedPages = computed(() => {
-      const pages = [];
-      const maxVisiblePages = 5;
-      let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2));
-      let endPage = Math.min(totalPages.value, startPage + maxVisiblePages - 1);
+      const pages = []
+      const maxVisiblePages = 5
+      let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
+      let endPage = Math.min(totalPages.value, startPage + maxVisiblePages - 1)
 
       if (endPage - startPage + 1 < maxVisiblePages) {
-        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        startPage = Math.max(1, endPage - maxVisiblePages + 1)
       }
 
       for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
+        pages.push(i)
       }
 
-      return pages;
-    });
+      return pages
+    })
 
     const fetchCustomers = async () => {
       return withLoading(async () => {
         try {
-          error.value = null;
+          error.value = null
 
           // Prepare date range params if needed
-          let dateParams = {};
+          let dateParams = {}
           if (filters.value.dateRange) {
-            const now = moment();
-            let startDate;
+            const now = moment()
+            let startDate
 
             switch (filters.value.dateRange) {
               case 'today':
-                startDate = now.startOf('day');
-                break;
+                startDate = now.startOf('day')
+                break
               case 'week':
-                startDate = now.startOf('week');
-                break;
+                startDate = now.startOf('week')
+                break
               case 'month':
-                startDate = now.startOf('month');
-                break;
+                startDate = now.startOf('month')
+                break
               case 'year':
-                startDate = now.startOf('year');
-                break;
+                startDate = now.startOf('year')
+                break
             }
 
             if (startDate) {
               dateParams = {
                 start_date: startDate.format('YYYY-MM-DD'),
-                end_date: now.format('YYYY-MM-DD')
-              };
+                end_date: now.format('YYYY-MM-DD'),
+              }
             }
           }
 
@@ -448,211 +509,217 @@ export default {
             active: showBlocked.value ? false : true,
             pinCode: filters.value.pinCode || undefined,
             search: filters.value.search || undefined,
-            ...dateParams
-          });
+            ...dateParams,
+          })
         } catch (err) {
-          error.value = err.message || 'Failed to load customers';
-          console.error(err);
+          error.value = err.message || 'Failed to load customers'
+          console.error(err)
         }
-      }, 'Loading customers...');
-    };
+      }, 'Loading customers...')
+    }
 
     // Watch for query params
-    watch(() => route.query, (newQuery) => {
-      if (newQuery.status === 'blocked') {
-        showBlocked.value = true;
-      }
+    watch(
+      () => route.query,
+      (newQuery) => {
+        if (newQuery.status === 'blocked') {
+          showBlocked.value = true
+        }
 
-      fetchCustomers();
-    }, { immediate: true });
+        fetchCustomers()
+      },
+      { immediate: true },
+    )
 
     // Watch for status filter
-    watch(() => showBlocked.value, (newValue) => {
-      currentPage.value = 1;
-      fetchCustomers();
+    watch(
+      () => showBlocked.value,
+      (newValue) => {
+        currentPage.value = 1
+        fetchCustomers()
 
-      // Update URL without reloading
-      const query = newValue ? { status: 'blocked' } : {};
-      router.replace({ query });
-    });
+        // Update URL without reloading
+        const query = newValue ? { status: 'blocked' } : {}
+        router.replace({ query })
+      },
+    )
 
     // Methods
 
-
     const formatDate = (dateString, includeTime = false) => {
-      if (!dateString) return 'N/A';
+      if (!dateString) return 'N/A'
       return includeTime
         ? moment(dateString).format('MMM D, YYYY h:mm A')
-        : moment(dateString).format('MMM D, YYYY');
-    };
+        : moment(dateString).format('MMM D, YYYY')
+    }
 
     const viewCustomer = async (customer) => {
       try {
-        showLoading('Loading customer details...');
+        showLoading('Loading customer details...')
         // Get detailed information about the customer
-        const response = await store.dispatch('customers/fetchCustomerById', customer.customer_id);
-        selectedCustomer.value = response.data;
+        const response = await store.dispatch('customers/fetchCustomerById', customer.customer_id)
+        selectedCustomer.value = response.data
 
         // Get customer statistics (service requests, etc.)
         try {
           const statsResponse = await store.dispatch('stats/fetchDetailedStats', {
             type: 'customer_stats',
-            customerId: customer.customer_id
-          });
-          customerStats.value = statsResponse.data || {};
+            customerId: customer.customer_id,
+          })
+          customerStats.value = statsResponse.data || {}
         } catch (statsErr) {
-          console.error('Error fetching customer stats:', statsErr);
-          customerStats.value = {};
+          console.error('Error fetching customer stats:', statsErr)
+          customerStats.value = {}
         }
 
-        bsCustomerModal.show();
+        bsCustomerModal.show()
       } catch (err) {
         window.showToast({
           type: 'error',
           title: 'Error',
-          message: 'Failed to load customer details'
-        });
-        console.error(err);
+          message: 'Failed to load customer details',
+        })
+        console.error(err)
       } finally {
-        hideLoading();
+        hideLoading()
       }
-    };
+    }
 
     const showBlockModal = (customer) => {
-      selectedCustomer.value = customer;
-      blockReason.value = '';
-      blockReasonError.value = '';
+      selectedCustomer.value = customer
+      blockReason.value = ''
+      blockReasonError.value = ''
 
       // Close details modal if open
       if (bsCustomerModal && bsCustomerModal._isShown) {
-        bsCustomerModal.hide();
+        bsCustomerModal.hide()
       }
 
-      bsBlockModal.show();
-    };
+      bsBlockModal.show()
+    }
 
     const blockCustomer = async () => {
-      if (isActionLoading.value) return;
+      if (isActionLoading.value) return
 
       // Validate reason
       if (!blockReason.value.trim()) {
-        blockReasonError.value = 'Please provide a reason for blocking';
-        return;
+        blockReasonError.value = 'Please provide a reason for blocking'
+        return
       }
 
       try {
-        isActionLoading.value = true;
+        isActionLoading.value = true
         await store.dispatch('customers/blockCustomer', {
           id: selectedCustomer.value.customer_id,
-          reason: blockReason.value
-        });
+          reason: blockReason.value,
+        })
 
         window.showToast({
           type: 'success',
           title: 'Success',
-          message: `${selectedCustomer.value.full_name} has been blocked`
-        });
+          message: `${selectedCustomer.value.full_name} has been blocked`,
+        })
 
         // Refresh data
-        await fetchCustomers();
+        await fetchCustomers()
 
         // Close modal
-        bsBlockModal.hide();
+        bsBlockModal.hide()
       } catch (err) {
         window.showToast({
           type: 'error',
           title: 'Error',
-          message: err.response?.data?.message || 'Failed to block customer'
-        });
+          message: err.response?.data?.message || 'Failed to block customer',
+        })
       } finally {
-        isActionLoading.value = false;
+        isActionLoading.value = false
       }
-    };
+    }
 
     const unblockCustomer = async (customer) => {
-      if (isActionLoading.value) return;
+      if (isActionLoading.value) return
 
       try {
-        isActionLoading.value = true;
-        await store.dispatch('customers/unblockCustomer', customer.customer_id);
+        isActionLoading.value = true
+        await store.dispatch('customers/unblockCustomer', customer.customer_id)
 
         window.showToast({
           type: 'success',
           title: 'Success',
-          message: `${customer.full_name} has been unblocked`
-        });
+          message: `${customer.full_name} has been unblocked`,
+        })
 
         // Refresh data
-        await fetchCustomers();
+        await fetchCustomers()
 
         // Close modal if open
         if (bsCustomerModal && bsCustomerModal._isShown) {
-          bsCustomerModal.hide();
+          bsCustomerModal.hide()
         }
       } catch (err) {
         window.showToast({
           type: 'error',
           title: 'Error',
-          message: err.response?.data?.message || 'Failed to unblock customer'
-        });
+          message: err.response?.data?.message || 'Failed to unblock customer',
+        })
       } finally {
-        isActionLoading.value = false;
+        isActionLoading.value = false
       }
-    };
+    }
 
     const changePage = (page) => {
-      if (page < 1 || page > totalPages.value) return;
-      currentPage.value = page;
-      fetchCustomers();
-    };
+      if (page < 1 || page > totalPages.value) return
+      currentPage.value = page
+      fetchCustomers()
+    }
 
     const debouncedSearch = () => {
       if (searchTimeout.value) {
-        clearTimeout(searchTimeout.value);
+        clearTimeout(searchTimeout.value)
       }
 
       searchTimeout.value = setTimeout(() => {
-        currentPage.value = 1;
-        fetchCustomers();
-      }, 500);
-    };
+        currentPage.value = 1
+        fetchCustomers()
+      }, 500)
+    }
 
     const debouncedFilter = () => {
       if (filterTimeout.value) {
-        clearTimeout(filterTimeout.value);
+        clearTimeout(filterTimeout.value)
       }
 
       filterTimeout.value = setTimeout(() => {
-        currentPage.value = 1;
-        fetchCustomers();
-      }, 500);
-    };
+        currentPage.value = 1
+        fetchCustomers()
+      }, 500)
+    }
 
     const clearSearch = () => {
-      filters.value.search = '';
-      currentPage.value = 1;
-      fetchCustomers();
-    };
+      filters.value.search = ''
+      currentPage.value = 1
+      fetchCustomers()
+    }
 
     const onFiltersChange = () => {
-      currentPage.value = 1;
-      fetchCustomers();
-    };
+      currentPage.value = 1
+      fetchCustomers()
+    }
 
     // Lifecycle hooks
     onMounted(async () => {
       // Initialize Bootstrap modals
       if (customerModal.value) {
-        bsCustomerModal = new bootstrap.Modal(customerModal.value);
+        bsCustomerModal = new bootstrap.Modal(customerModal.value)
       }
 
       if (blockModal.value) {
-        bsBlockModal = new bootstrap.Modal(blockModal.value);
+        bsBlockModal = new bootstrap.Modal(blockModal.value)
       }
 
       // Fetch initial data
-      await fetchCustomers();
-    });
+      await fetchCustomers()
+    })
 
     return {
       customers,
@@ -682,10 +749,10 @@ export default {
       debouncedSearch,
       debouncedFilter,
       clearSearch,
-      onFiltersChange
-    };
-  }
-};
+      onFiltersChange,
+    }
+  },
+}
 </script>
 
 <style scoped>

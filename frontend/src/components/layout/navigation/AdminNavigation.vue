@@ -2,7 +2,6 @@
   <div class="d-flex w-100">
     <!-- Left Side Links -->
     <ul class="navbar-nav me-auto">
-
       <li class="nav-item">
         <router-link class="nav-link" to="/admin/services">
           <i class="bi bi-tools me-1"></i>
@@ -40,13 +39,12 @@
         </router-link>
       </li>
     </ul>
-
   </div>
 </template>
 
 <script>
 export default {
-  name: 'AdminNavigation'
+  name: 'AdminNavigation',
 }
 </script>
 

@@ -43,7 +43,7 @@
 
 <script>
 export default {
-  name: 'GuestNavigation'
+  name: 'GuestNavigation',
 }
 </script>
 

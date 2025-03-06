@@ -1,8 +1,15 @@
 # src/components/shared/Toast.vue
 <template>
   <div class="toast-container position-fixed bottom-0 end-0 p-3">
-    <div v-for="toast in toasts" :key="toast.id" class="toast show" :class="toastClasses(toast)" role="alert"
-      aria-live="assertive" aria-atomic="true">
+    <div
+      v-for="toast in toasts"
+      :key="toast.id"
+      class="toast show"
+      :class="toastClasses(toast)"
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+    >
       <div class="toast-header" :class="headerClasses(toast)">
         <i :class="['bi', iconClass(toast.type), 'me-2']"></i>
         <strong class="me-auto">{{ toast.title }}</strong>
@@ -27,30 +34,35 @@ export default {
     let nextId = 1
 
     const toastClasses = (toast) => {
-      if (!toast.type) return '';
+      if (!toast.type) return ''
       return {
         'bg-success': toast.type === 'success',
         'bg-danger': toast.type === 'danger',
         'bg-warning': toast.type === 'warning',
-        'bg-info': toast.type === 'info'
+        'bg-info': toast.type === 'info',
       }
     }
 
     const headerClasses = (toast) => {
-      if (!toast.type) return '';
+      if (!toast.type) return ''
       return {
         'text-white': ['success', 'danger'].includes(toast.type),
-        'border-0': !!toast.type
+        'border-0': !!toast.type,
       }
     }
 
     const iconClass = (type) => {
       switch (type) {
-        case 'success': return 'bi-check-circle-fill'
-        case 'danger': return 'bi-x-circle-fill'
-        case 'warning': return 'bi-exclamation-triangle-fill'
-        case 'info': return 'bi-info-circle-fill'
-        default: return 'bi-bell-fill'
+        case 'success':
+          return 'bi-check-circle-fill'
+        case 'danger':
+          return 'bi-x-circle-fill'
+        case 'warning':
+          return 'bi-exclamation-triangle-fill'
+        case 'info':
+          return 'bi-info-circle-fill'
+        default:
+          return 'bi-bell-fill'
       }
     }
 
@@ -75,7 +87,7 @@ export default {
     }
 
     const removeToast = (id) => {
-      const index = toasts.value.findIndex(t => t.id === id)
+      const index = toasts.value.findIndex((t) => t.id === id)
       if (index > -1) {
         toasts.value.splice(index, 1)
       }
@@ -92,9 +104,9 @@ export default {
       headerClasses,
       iconClass,
       timeAgo,
-      removeToast
+      removeToast,
     }
-  }
+  },
 }
 </script>
 

@@ -18,7 +18,7 @@ export default createStore({
     customers,
     stats,
     exports,
-    apiCache
+    apiCache,
   },
   // Enable strict mode in development
   strict: true,

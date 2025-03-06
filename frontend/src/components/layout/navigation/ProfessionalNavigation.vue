@@ -2,7 +2,6 @@
   <div class="d-flex w-100">
     <!-- Left Side Links -->
     <ul class="navbar-nav me-auto">
-
       <li class="nav-item">
         <router-link class="nav-link" to="/professional/services">
           <i class="bi bi-tools me-1"></i>
@@ -70,7 +69,7 @@
 
 <script>
 export default {
-  name: 'ProfessionalNavigation'
+  name: 'ProfessionalNavigation',
 }
 </script>
 

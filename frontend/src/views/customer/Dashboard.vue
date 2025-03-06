@@ -40,9 +40,7 @@
             <div>{{ error }}</div>
           </div>
           <div class="text-center mt-3">
-            <button @click="fetchDashboardData" class="btn btn-primary">
-              Try Again
-            </button>
+            <button @click="fetchDashboardData" class="btn btn-primary">Try Again</button>
           </div>
         </div>
       </template>
@@ -61,9 +59,7 @@
                     <i class="bi bi-list-check text-primary fs-4"></i>
                   </div>
                   <h2 class="mb-0">{{ requestsData.total || '0' }}</h2>
-                  <div class="text-muted small mt-2">
-                    Total service requests
-                  </div>
+                  <div class="text-muted small mt-2">Total service requests</div>
                 </div>
               </div>
             </div>
@@ -77,9 +73,7 @@
                     <i class="bi bi-hourglass-split text-warning fs-4"></i>
                   </div>
                   <h2 class="mb-0">{{ requestsData.pending || '0' }}</h2>
-                  <div class="text-muted small mt-2">
-                    Awaiting assignment
-                  </div>
+                  <div class="text-muted small mt-2">Awaiting assignment</div>
                 </div>
               </div>
             </div>
@@ -93,9 +87,7 @@
                     <i class="bi bi-arrow-repeat text-info fs-4"></i>
                   </div>
                   <h2 class="mb-0">{{ requestsData.active || '0' }}</h2>
-                  <div class="text-muted small mt-2">
-                    In progress
-                  </div>
+                  <div class="text-muted small mt-2">In progress</div>
                 </div>
               </div>
             </div>
@@ -109,9 +101,7 @@
                     <i class="bi bi-check-circle text-success fs-4"></i>
                   </div>
                   <h2 class="mb-0">{{ requestsData.completed || '0' }}</h2>
-                  <div class="text-muted small mt-2">
-                    Successfully completed
-                  </div>
+                  <div class="text-muted small mt-2">Successfully completed</div>
                 </div>
               </div>
             </div>
@@ -125,10 +115,16 @@
               <div class="d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">My Service Requests</h5>
                 <div class="btn-group" role="group">
-                  <button v-for="status in ['All', 'Pending', 'Active', 'Completed']" :key="status"
-                    type="button" class="btn btn-sm"
-                    :class="currentFilter === status.toLowerCase() ? 'btn-primary' : 'btn-outline-primary'"
-                    @click="filterRequests(status.toLowerCase())">
+                  <button
+                    v-for="status in ['All', 'Pending', 'Active', 'Completed']"
+                    :key="status"
+                    type="button"
+                    class="btn btn-sm"
+                    :class="
+                      currentFilter === status.toLowerCase() ? 'btn-primary' : 'btn-outline-primary'
+                    "
+                    @click="filterRequests(status.toLowerCase())"
+                  >
                     {{ status }}
                   </button>
                 </div>
@@ -147,11 +143,16 @@
                   <div class="d-flex justify-content-between align-items-center flex-wrap">
                     <div>
                       <div class="d-flex align-items-center mb-2">
-                        <span :class="[
-                          'badge me-2',
-                          request.status === 'created' ? 'bg-warning' :
-                            request.status === 'assigned' ? 'bg-info' : 'bg-success'
-                        ]">
+                        <span
+                          :class="[
+                            'badge me-2',
+                            request.status === 'created'
+                              ? 'bg-warning'
+                              : request.status === 'assigned'
+                                ? 'bg-info'
+                                : 'bg-success',
+                          ]"
+                        >
                           {{ formatStatus(request.status) }}
                         </span>
                         <h6 class="mb-0">{{ request.service.name }}</h6>
@@ -170,13 +171,17 @@
                       </p>
                     </div>
                     <div class="mt-2 mt-md-0">
-                      <router-link :to="`/customer/requests/${request.id}`"
-                        class="btn btn-sm btn-outline-primary">
+                      <router-link
+                        :to="`/customer/requests/${request.id}`"
+                        class="btn btn-sm btn-outline-primary"
+                      >
                         Details
                       </router-link>
-                      <button v-if="request.status === 'completed' && !hasReview(request)"
+                      <button
+                        v-if="request.status === 'completed' && !hasReview(request)"
                         class="btn btn-sm btn-outline-warning ms-1"
-                        @click="showReviewModal(request)">
+                        @click="showReviewModal(request)"
+                      >
                         Add Review
                       </button>
                     </div>
@@ -240,8 +245,10 @@
             <div class="card-body">
               <div class="row g-3">
                 <div class="col-md-3 col-sm-6">
-                  <router-link to="/customer/services"
-                    class="card h-100 bg-light text-center text-decoration-none">
+                  <router-link
+                    to="/customer/services"
+                    class="card h-100 bg-light text-center text-decoration-none"
+                  >
                     <div class="card-body py-4">
                       <i class="bi bi-tools text-primary fs-3 mb-3"></i>
                       <h6 class="card-title mb-0">Book Service</h6>
@@ -250,8 +257,10 @@
                   </router-link>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                  <router-link to="/customer/requests?status=created"
-                    class="card h-100 bg-light text-center text-decoration-none">
+                  <router-link
+                    to="/customer/requests?status=created"
+                    class="card h-100 bg-light text-center text-decoration-none"
+                  >
                     <div class="card-body py-4">
                       <i class="bi bi-hourglass-split text-warning fs-3 mb-3"></i>
                       <h6 class="card-title mb-0">Pending Requests</h6>
@@ -260,8 +269,10 @@
                   </router-link>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                  <router-link to="/customer/professionals"
-                    class="card h-100 bg-light text-center text-decoration-none">
+                  <router-link
+                    to="/customer/professionals"
+                    class="card h-100 bg-light text-center text-decoration-none"
+                  >
                     <div class="card-body py-4">
                       <i class="bi bi-person-badge text-info fs-3 mb-3"></i>
                       <h6 class="card-title mb-0">Find Professionals</h6>
@@ -270,8 +281,10 @@
                   </router-link>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                  <router-link to="/customer/profile"
-                    class="card h-100 bg-light text-center text-decoration-none">
+                  <router-link
+                    to="/customer/profile"
+                    class="card h-100 bg-light text-center text-decoration-none"
+                  >
                     <div class="card-body py-4">
                       <i class="bi bi-person-circle text-success fs-3 mb-3"></i>
                       <h6 class="card-title mb-0">My Profile</h6>
@@ -292,29 +305,44 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Leave a Review</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <form @submit.prevent="submitReview">
               <div class="mb-3">
                 <label class="form-label">Service</label>
-                <input type="text" class="form-control" disabled
-                  :value="selectedRequest?.service?.name || ''" />
+                <input
+                  type="text"
+                  class="form-control"
+                  disabled
+                  :value="selectedRequest?.service?.name || ''"
+                />
               </div>
               <div class="mb-3">
                 <label class="form-label">Rating</label>
                 <div class="star-rating">
                   <div class="d-flex">
-                    <span v-for="star in 5" :key="star" class="fs-3 cursor-pointer star-icon"
-                      @click="reviewForm.rating = star" @mouseover="hoverRating = star"
-                      @mouseleave="hoverRating = 0">
-                      <i :class="[
-                        'bi',
-                        (hoverRating || reviewForm.rating) >= star
-                          ? 'bi-star-fill text-warning'
-                          : 'bi-star text-muted'
-                      ]"></i>
+                    <span
+                      v-for="star in 5"
+                      :key="star"
+                      class="fs-3 cursor-pointer star-icon"
+                      @click="reviewForm.rating = star"
+                      @mouseover="hoverRating = star"
+                      @mouseleave="hoverRating = 0"
+                    >
+                      <i
+                        :class="[
+                          'bi',
+                          (hoverRating || reviewForm.rating) >= star
+                            ? 'bi-star-fill text-warning'
+                            : 'bi-star text-muted',
+                        ]"
+                      ></i>
                     </span>
                   </div>
                   <p class="small text-muted mt-1">
@@ -324,14 +352,24 @@
               </div>
               <div class="mb-3">
                 <label for="comment" class="form-label">Comment (Optional)</label>
-                <textarea id="comment" class="form-control" v-model="reviewForm.comment" rows="4"
-                  placeholder="Share your experience with this service..."></textarea>
+                <textarea
+                  id="comment"
+                  class="form-control"
+                  v-model="reviewForm.comment"
+                  rows="4"
+                  placeholder="Share your experience with this service..."
+                ></textarea>
               </div>
               <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary"
-                  :disabled="!reviewForm.rating || isSubmittingReview">
-                  <span v-if="isSubmittingReview"
-                    class="spinner-border spinner-border-sm me-2"></span>
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  :disabled="!reviewForm.rating || isSubmittingReview"
+                >
+                  <span
+                    v-if="isSubmittingReview"
+                    class="spinner-border spinner-border-sm me-2"
+                  ></span>
                   {{ isSubmittingReview ? 'Submitting...' : 'Submit Review' }}
                 </button>
               </div>
@@ -347,34 +385,56 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Book Service</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <form @submit.prevent="submitBooking">
               <div class="mb-3">
                 <label class="form-label">Service</label>
-                <input type="text" class="form-control" disabled
-                  :value="selectedService?.name || ''" />
+                <input
+                  type="text"
+                  class="form-control"
+                  disabled
+                  :value="selectedService?.name || ''"
+                />
               </div>
               <div class="mb-3">
                 <label class="form-label">Price</label>
                 <div class="input-group">
                   <span class="input-group-text">₹</span>
-                  <input type="text" class="form-control" disabled
-                    :value="selectedService?.base_price || ''" />
+                  <input
+                    type="text"
+                    class="form-control"
+                    disabled
+                    :value="selectedService?.base_price || ''"
+                  />
                 </div>
               </div>
               <div class="mb-3">
                 <label class="form-label">Duration</label>
-                <input type="text" class="form-control" disabled
-                  :value="selectedService ? formatDuration(selectedService.estimated_time) : ''" />
+                <input
+                  type="text"
+                  class="form-control"
+                  disabled
+                  :value="selectedService ? formatDuration(selectedService.estimated_time) : ''"
+                />
               </div>
               <div class="mb-3">
                 <label for="preferredTime" class="form-label">Preferred Date & Time</label>
-                <input type="datetime-local" id="preferredTime" class="form-control"
-                  v-model="bookingForm.preferredTime" :min="minDateTime" :max="maxDateTime"
-                  :class="{ 'is-invalid': bookingErrors.preferredTime }" />
+                <input
+                  type="datetime-local"
+                  id="preferredTime"
+                  class="form-control"
+                  v-model="bookingForm.preferredTime"
+                  :min="minDateTime"
+                  :max="maxDateTime"
+                  :class="{ 'is-invalid': bookingErrors.preferredTime }"
+                />
                 <div class="invalid-feedback" v-if="bookingErrors.preferredTime">
                   {{ bookingErrors.preferredTime }}
                 </div>
@@ -384,17 +444,24 @@
               </div>
               <div class="mb-3">
                 <label for="description" class="form-label">Description</label>
-                <textarea id="description" class="form-control" v-model="bookingForm.description"
-                  rows="3" placeholder="Please describe your requirements..."
-                  :class="{ 'is-invalid': bookingErrors.description }"></textarea>
+                <textarea
+                  id="description"
+                  class="form-control"
+                  v-model="bookingForm.description"
+                  rows="3"
+                  placeholder="Please describe your requirements..."
+                  :class="{ 'is-invalid': bookingErrors.description }"
+                ></textarea>
                 <div class="invalid-feedback" v-if="bookingErrors.description">
                   {{ bookingErrors.description }}
                 </div>
               </div>
               <div class="d-grid gap-2">
                 <button type="submit" class="btn btn-primary" :disabled="isSubmittingBooking">
-                  <span v-if="isSubmittingBooking"
-                    class="spinner-border spinner-border-sm me-2"></span>
+                  <span
+                    v-if="isSubmittingBooking"
+                    class="spinner-border spinner-border-sm me-2"
+                  ></span>
                   {{ isSubmittingBooking ? 'Booking...' : 'Book Now' }}
                 </button>
               </div>
@@ -407,356 +474,355 @@
 </template>
 
 <script>
-import * as bootstrap from 'bootstrap';
-import moment from 'moment';
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useStore } from 'vuex';
+import * as bootstrap from 'bootstrap'
+import moment from 'moment'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
 
 export default {
   name: 'CustomerDashboard',
   setup() {
-    const store = useStore();
+    const store = useStore()
     // eslint-disable-next-line no-unused-vars
-    const router = useRouter();
+    const router = useRouter()
 
     // Modal refs
-    const reviewModal = ref(null);
-    const bookServiceModal = ref(null);
-    let bsReviewModal = null;
-    let bsBookServiceModal = null;
+    const reviewModal = ref(null)
+    const bookServiceModal = ref(null)
+    let bsReviewModal = null
+    let bsBookServiceModal = null
 
     // State
-    const isLoading = ref(true);
-    const error = ref(null);
-    const dashboardData = ref(null);
-    const serviceRequests = ref([]);
-    const popularServices = ref([]);
-    const currentFilter = ref('all');
-    const refreshInterval = ref(null);
-    const selectedRequest = ref(null);
-    const selectedService = ref(null);
-    const hoverRating = ref(0);
+    const isLoading = ref(true)
+    const error = ref(null)
+    const dashboardData = ref(null)
+    const serviceRequests = ref([])
+    const popularServices = ref([])
+    const currentFilter = ref('all')
+    const refreshInterval = ref(null)
+    const selectedRequest = ref(null)
+    const selectedService = ref(null)
+    const hoverRating = ref(0)
 
-    const isSubmittingReview = ref(false);
-    const isSubmittingBooking = ref(false);
+    const isSubmittingReview = ref(false)
+    const isSubmittingBooking = ref(false)
 
     // Form state
     const reviewForm = reactive({
       rating: 0,
-      comment: ''
-    });
+      comment: '',
+    })
 
     const bookingForm = reactive({
       preferredTime: '',
-      description: ''
-    });
+      description: '',
+    })
 
     const bookingErrors = reactive({
       preferredTime: '',
-      description: ''
-    });
+      description: '',
+    })
 
     // Computed properties
-    const userName = computed(() => store.getters['auth/userName'] || 'Customer');
-    const currentDate = computed(() => moment().format('dddd, MMMM D, YYYY'));
+    const userName = computed(() => store.getters['auth/userName'] || 'Customer')
+    const currentDate = computed(() => moment().format('dddd, MMMM D, YYYY'))
 
     const requestsData = computed(() => {
-      if (!dashboardData.value) return { total: 0, pending: 0, active: 0, completed: 0 };
-      return dashboardData.value.service_requests;
-    });
+      if (!dashboardData.value) return { total: 0, pending: 0, active: 0, completed: 0 }
+      return dashboardData.value.service_requests
+    })
 
     const filteredRequests = computed(() => {
-      if (!serviceRequests.value) return [];
+      if (!serviceRequests.value) return []
 
       if (currentFilter.value === 'all') {
-        return serviceRequests.value;
+        return serviceRequests.value
       }
 
       const statusMap = {
-        'pending': 'created',
-        'active': 'assigned',
-        'completed': 'completed'
-      };
+        pending: 'created',
+        active: 'assigned',
+        completed: 'completed',
+      }
 
-      return serviceRequests.value.filter(request =>
-        request.status === statusMap[currentFilter.value]
-      );
-    });
+      return serviceRequests.value.filter(
+        (request) => request.status === statusMap[currentFilter.value],
+      )
+    })
 
     const ratingLabel = computed(() => {
-      const rating = hoverRating.value || reviewForm.rating;
+      const rating = hoverRating.value || reviewForm.rating
       const labels = [
         '',
         'Poor - Not satisfied',
         'Fair - Below expectations',
         'Good - Met expectations',
         'Very Good - Above expectations',
-        'Excellent - Highly satisfied'
-      ];
-      return labels[rating] || '';
-    });
+        'Excellent - Highly satisfied',
+      ]
+      return labels[rating] || ''
+    })
 
     const minDateTime = computed(() => {
       // Allow booking from tomorrow
-      const tomorrow = moment().add(1, 'day').set({ hour: 9, minute: 0 });
-      return tomorrow.format('YYYY-MM-DDTHH:mm');
-    });
+      const tomorrow = moment().add(1, 'day').set({ hour: 9, minute: 0 })
+      return tomorrow.format('YYYY-MM-DDTHH:mm')
+    })
 
     const maxDateTime = computed(() => {
       // Allow booking up to 7 days ahead, until 5 PM
-      const maxDay = moment().add(7, 'days').set({ hour: 17, minute: 0 });
-      return maxDay.format('YYYY-MM-DDTHH:mm');
-    });
+      const maxDay = moment().add(7, 'days').set({ hour: 17, minute: 0 })
+      return maxDay.format('YYYY-MM-DDTHH:mm')
+    })
 
     // Methods
     const fetchDashboardData = async () => {
-      isLoading.value = true;
-      error.value = null;
+      isLoading.value = true
+      error.value = null
 
       try {
         // Fetch dashboard overview data
-        const response = await store.dispatch('stats/fetchDashboardStats');
-        dashboardData.value = response;
+        const response = await store.dispatch('stats/fetchDashboardStats')
+        dashboardData.value = response
 
         // Fetch recent service requests
         const requestsResponse = await store.dispatch('requests/fetchCustomerRequests', {
           page: 1,
-          perPage: 5
-        });
-        serviceRequests.value = requestsResponse.data;
+          perPage: 5,
+        })
+        serviceRequests.value = requestsResponse.data
 
         // Fetch popular services
         const servicesResponse = await store.dispatch('services/fetchActiveServices', {
           page: 1,
           perPage: 5,
-          isActive: true
-        });
-        popularServices.value = servicesResponse.data;
-
+          isActive: true,
+        })
+        popularServices.value = servicesResponse.data
       } catch (err) {
-        error.value = 'Failed to load dashboard data. Please try again.';
-        console.error('Dashboard error:', err);
+        error.value = 'Failed to load dashboard data. Please try again.'
+        console.error('Dashboard error:', err)
       } finally {
-        isLoading.value = false;
+        isLoading.value = false
       }
-    };
+    }
 
     const formatDate = (dateString) => {
-      const date = moment(dateString);
+      const date = moment(dateString)
       // If today, show time only
       if (date.isSame(moment(), 'day')) {
-        return `Today at ${date.format('h:mm A')}`;
+        return `Today at ${date.format('h:mm A')}`
       }
       // If tomorrow, show "Tomorrow"
       if (date.isSame(moment().add(1, 'day'), 'day')) {
-        return `Tomorrow at ${date.format('h:mm A')}`;
+        return `Tomorrow at ${date.format('h:mm A')}`
       }
       // Otherwise show date and time
-      return date.format('MMM D [at] h:mm A');
-    };
+      return date.format('MMM D [at] h:mm A')
+    }
 
     const formatDuration = (minutes) => {
       if (minutes < 60) {
-        return `${minutes}m`;
+        return `${minutes}m`
       }
-      const hrs = Math.floor(minutes / 60);
-      const mins = minutes % 60;
-      return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
-    };
+      const hrs = Math.floor(minutes / 60)
+      const mins = minutes % 60
+      return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`
+    }
 
     const formatStatus = (status) => {
       const statusMap = {
-        'created': 'Pending',
-        'assigned': 'In Progress',
-        'completed': 'Completed'
-      };
-      return statusMap[status] || status;
-    };
+        created: 'Pending',
+        assigned: 'In Progress',
+        completed: 'Completed',
+      }
+      return statusMap[status] || status
+    }
 
     const filterRequests = (filter) => {
-      currentFilter.value = filter;
-    };
+      currentFilter.value = filter
+    }
 
     const hasReview = (request) => {
-      return request.review !== null && request.review !== undefined;
-    };
+      return request.review !== null && request.review !== undefined
+    }
 
     const showReviewModal = (request) => {
-      selectedRequest.value = request;
-      reviewForm.rating = 0;
-      reviewForm.comment = '';
-      bsReviewModal.show();
-    };
+      selectedRequest.value = request
+      reviewForm.rating = 0
+      reviewForm.comment = ''
+      bsReviewModal.show()
+    }
 
     const submitReview = async () => {
-      if (!selectedRequest.value || !reviewForm.rating) return;
+      if (!selectedRequest.value || !reviewForm.rating) return
 
-      isSubmittingReview.value = true;
+      isSubmittingReview.value = true
 
       try {
         await store.dispatch('requests/submitReview', {
           id: selectedRequest.value.id,
           data: {
             rating: reviewForm.rating,
-            comment: reviewForm.comment
-          }
-        });
+            comment: reviewForm.comment,
+          },
+        })
 
         window.showToast({
           type: 'success',
           title: 'Review Submitted',
-          message: 'Thank you for your feedback!'
-        });
+          message: 'Thank you for your feedback!',
+        })
 
-        bsReviewModal.hide();
-        fetchDashboardData(); // Refresh data
+        bsReviewModal.hide()
+        fetchDashboardData() // Refresh data
 
         // eslint-disable-next-line no-unused-vars
       } catch (err) {
         window.showToast({
           type: 'error',
           title: 'Error',
-          message: 'Failed to submit review. Please try again.'
-        });
+          message: 'Failed to submit review. Please try again.',
+        })
       } finally {
-        isSubmittingReview.value = false;
+        isSubmittingReview.value = false
       }
-    };
+    }
 
     const bookService = (service) => {
-      selectedService.value = service;
+      selectedService.value = service
 
       // Initialize form with defaults
-      const defaultTime = moment().add(1, 'day').set({ hour: 10, minute: 0 });
-      bookingForm.preferredTime = defaultTime.format('YYYY-MM-DDTHH:mm');
-      bookingForm.description = '';
+      const defaultTime = moment().add(1, 'day').set({ hour: 10, minute: 0 })
+      bookingForm.preferredTime = defaultTime.format('YYYY-MM-DDTHH:mm')
+      bookingForm.description = ''
 
       // Reset errors
-      bookingErrors.preferredTime = '';
-      bookingErrors.description = '';
+      bookingErrors.preferredTime = ''
+      bookingErrors.description = ''
 
-      bsBookServiceModal.show();
-    };
+      bsBookServiceModal.show()
+    }
 
     const validateBookingForm = () => {
-      let isValid = true;
+      let isValid = true
 
       // Reset errors
-      bookingErrors.preferredTime = '';
-      bookingErrors.description = '';
+      bookingErrors.preferredTime = ''
+      bookingErrors.description = ''
 
       // Validate preferred time
       if (!bookingForm.preferredTime) {
-        bookingErrors.preferredTime = 'Please select a preferred time';
-        isValid = false;
+        bookingErrors.preferredTime = 'Please select a preferred time'
+        isValid = false
       } else {
-        const selectedTime = moment(bookingForm.preferredTime);
-        const now = moment();
+        const selectedTime = moment(bookingForm.preferredTime)
+        const now = moment()
 
         // Must be in the future
         if (selectedTime <= now) {
-          bookingErrors.preferredTime = 'Please select a future date and time';
-          isValid = false;
+          bookingErrors.preferredTime = 'Please select a future date and time'
+          isValid = false
         }
 
         // Must be between 9 AM and 5 PM
-        const hour = selectedTime.hour();
+        const hour = selectedTime.hour()
         if (hour < 9 || hour >= 17) {
-          bookingErrors.preferredTime = 'Services are only available between 9:00 AM and 5:00 PM';
-          isValid = false;
+          bookingErrors.preferredTime = 'Services are only available between 9:00 AM and 5:00 PM'
+          isValid = false
         }
 
         // Check if service can be completed by 6 PM
         if (selectedService.value) {
-          const endTime = moment(selectedTime).add(selectedService.value.estimated_time, 'minutes');
-          const cutoffTime = moment(selectedTime).set({ hour: 18, minute: 0 });
+          const endTime = moment(selectedTime).add(selectedService.value.estimated_time, 'minutes')
+          const cutoffTime = moment(selectedTime).set({ hour: 18, minute: 0 })
 
           if (endTime > cutoffTime) {
-            bookingErrors.preferredTime = 'Service cannot be completed by 6:00 PM with this start time';
-            isValid = false;
+            bookingErrors.preferredTime =
+              'Service cannot be completed by 6:00 PM with this start time'
+            isValid = false
           }
         }
       }
 
       // Validate description
       if (!bookingForm.description.trim()) {
-        bookingErrors.description = 'Please provide a description of your request';
-        isValid = false;
+        bookingErrors.description = 'Please provide a description of your request'
+        isValid = false
       } else if (bookingForm.description.length < 10) {
-        bookingErrors.description = 'Description must be at least 10 characters';
-        isValid = false;
+        bookingErrors.description = 'Description must be at least 10 characters'
+        isValid = false
       }
 
-      return isValid;
-    };
+      return isValid
+    }
 
     const submitBooking = async () => {
-      if (!selectedService.value) return;
+      if (!selectedService.value) return
 
-      if (!validateBookingForm()) return;
+      if (!validateBookingForm()) return
 
-      isSubmittingBooking.value = true;
+      isSubmittingBooking.value = true
 
       try {
         await store.dispatch('requests/createRequest', {
           serviceId: selectedService.value.id,
           preferredTime: bookingForm.preferredTime,
-          description: bookingForm.description
-        });
+          description: bookingForm.description,
+        })
 
         window.showToast({
           type: 'success',
           title: 'Service Booked',
-          message: 'Your service request has been created successfully!'
-        });
+          message: 'Your service request has been created successfully!',
+        })
 
-        bsBookServiceModal.hide();
-        fetchDashboardData(); // Refresh data
-
+        bsBookServiceModal.hide()
+        fetchDashboardData() // Refresh data
       } catch (err) {
-        let errorMessage = 'Failed to book service. Please try again.';
+        let errorMessage = 'Failed to book service. Please try again.'
         if (err.response?.data?.detail) {
-          errorMessage = err.response.data.detail;
+          errorMessage = err.response.data.detail
         }
 
         window.showToast({
           type: 'error',
           title: 'Booking Error',
-          message: errorMessage
-        });
+          message: errorMessage,
+        })
       } finally {
-        isSubmittingBooking.value = false;
+        isSubmittingBooking.value = false
       }
-    };
+    }
 
     // Setup automatic refresh every 5 minutes
     const setupRefreshInterval = () => {
       refreshInterval.value = setInterval(() => {
-        fetchDashboardData();
-      }, 300000); // 5 minutes
-    };
+        fetchDashboardData()
+      }, 300000) // 5 minutes
+    }
 
     // Lifecycle hooks
     onMounted(() => {
       // Initialize Bootstrap modals
       if (reviewModal.value) {
-        bsReviewModal = new bootstrap.Modal(reviewModal.value);
+        bsReviewModal = new bootstrap.Modal(reviewModal.value)
       }
 
       if (bookServiceModal.value) {
-        bsBookServiceModal = new bootstrap.Modal(bookServiceModal.value);
+        bsBookServiceModal = new bootstrap.Modal(bookServiceModal.value)
       }
 
-      fetchDashboardData();
-      setupRefreshInterval();
-    });
+      fetchDashboardData()
+      setupRefreshInterval()
+    })
 
     onBeforeUnmount(() => {
       if (refreshInterval.value) {
-        clearInterval(refreshInterval.value);
+        clearInterval(refreshInterval.value)
       }
-    });
+    })
 
     return {
       isLoading,
@@ -791,22 +857,24 @@ export default {
       showReviewModal,
       submitReview,
       bookService,
-      submitBooking
-    };
-  }
-};
+      submitBooking,
+    }
+  },
+}
 </script>
 
 <style scoped>
 .card {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
   border-radius: 0.5rem;
   overflow: hidden;
 }
 
 a.card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 
 .list-group-item {

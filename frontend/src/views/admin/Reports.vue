@@ -16,36 +16,51 @@
     <!-- Report Navigation Tabs -->
     <ul class="nav nav-tabs mb-4">
       <li class="nav-item">
-        <button class="nav-link" :class="{ active: activeTab === 'activity' }"
-          @click="activeTab = 'activity'">
+        <button
+          class="nav-link"
+          :class="{ active: activeTab === 'activity' }"
+          @click="activeTab = 'activity'"
+        >
           <i class="bi bi-activity me-1"></i>
           Activity Logs
         </button>
       </li>
       <li class="nav-item">
-        <button class="nav-link" :class="{ active: activeTab === 'professionals' }"
-          @click="activeTab = 'professionals'">
+        <button
+          class="nav-link"
+          :class="{ active: activeTab === 'professionals' }"
+          @click="activeTab = 'professionals'"
+        >
           <i class="bi bi-person-badge me-1"></i>
           Professionals
         </button>
       </li>
       <li class="nav-item">
-        <button class="nav-link" :class="{ active: activeTab === 'requests' }"
-          @click="activeTab = 'requests'">
+        <button
+          class="nav-link"
+          :class="{ active: activeTab === 'requests' }"
+          @click="activeTab = 'requests'"
+        >
           <i class="bi bi-list-check me-1"></i>
           Service Requests
         </button>
       </li>
       <li class="nav-item">
-        <button class="nav-link" :class="{ active: activeTab === 'reviews' }"
-          @click="activeTab = 'reviews'">
+        <button
+          class="nav-link"
+          :class="{ active: activeTab === 'reviews' }"
+          @click="activeTab = 'reviews'"
+        >
           <i class="bi bi-star me-1"></i>
           Reviews
         </button>
       </li>
       <li class="nav-item">
-        <button class="nav-link" :class="{ active: activeTab === 'exports' }"
-          @click="activeTab = 'exports'">
+        <button
+          class="nav-link"
+          :class="{ active: activeTab === 'exports' }"
+          @click="activeTab = 'exports'"
+        >
           <i class="bi bi-file-earmark-arrow-down me-1"></i>
           Export History
         </button>
@@ -62,8 +77,11 @@
           <div class="col-md-7">
             <div class="d-flex justify-content-md-end gap-2">
               <!-- Action Filter -->
-              <select class="form-select form-select-sm" v-model="activityFilters.action"
-                @change="fetchActivityLogs">
+              <select
+                class="form-select form-select-sm"
+                v-model="activityFilters.action"
+                @change="fetchActivityLogs"
+              >
                 <option value="">All Actions</option>
                 <option v-for="action in actionTypes" :key="action.value" :value="action.value">
                   {{ action.label }}
@@ -72,11 +90,19 @@
 
               <!-- Date Range Filter -->
               <div class="d-flex align-items-center">
-                <input type="date" class="form-control form-control-sm"
-                  v-model="activityFilters.startDate" @change="fetchActivityLogs" />
+                <input
+                  type="date"
+                  class="form-control form-control-sm"
+                  v-model="activityFilters.startDate"
+                  @change="fetchActivityLogs"
+                />
                 <span class="mx-1">to</span>
-                <input type="date" class="form-control form-control-sm"
-                  v-model="activityFilters.endDate" @change="fetchActivityLogs" />
+                <input
+                  type="date"
+                  class="form-control form-control-sm"
+                  v-model="activityFilters.endDate"
+                  @change="fetchActivityLogs"
+                />
               </div>
             </div>
           </div>
@@ -132,20 +158,27 @@
           <div class="col-md-6">
             <ul class="pagination pagination-sm mb-0 justify-content-md-end">
               <li class="page-item" :class="{ disabled: activityFilters.page === 1 }">
-                <button @click="changePage(activityFilters.page - 1, 'activity')"
-                  class="page-link">Previous</button>
+                <button @click="changePage(activityFilters.page - 1, 'activity')" class="page-link">
+                  Previous
+                </button>
               </li>
               <li
                 v-for="pageNum in getDisplayedPages(activityFilters.page, activityPagination.pages)"
-                :key="pageNum" class="page-item"
-                :class="{ active: activityFilters.page === pageNum }">
-                <button @click="changePage(pageNum, 'activity')" class="page-link">{{ pageNum
-                }}</button>
+                :key="pageNum"
+                class="page-item"
+                :class="{ active: activityFilters.page === pageNum }"
+              >
+                <button @click="changePage(pageNum, 'activity')" class="page-link">
+                  {{ pageNum }}
+                </button>
               </li>
-              <li class="page-item"
-                :class="{ disabled: activityFilters.page === activityPagination.pages }">
-                <button @click="changePage(activityFilters.page + 1, 'activity')"
-                  class="page-link">Next</button>
+              <li
+                class="page-item"
+                :class="{ disabled: activityFilters.page === activityPagination.pages }"
+              >
+                <button @click="changePage(activityFilters.page + 1, 'activity')" class="page-link">
+                  Next
+                </button>
               </li>
             </ul>
           </div>
@@ -163,8 +196,11 @@
           <div class="col-md-6">
             <div class="d-flex justify-content-md-end gap-2">
               <!-- Service Type Filter -->
-              <select class="form-select form-select-sm" v-model="proFilters.serviceType"
-                @change="fetchProfessionalStats">
+              <select
+                class="form-select form-select-sm"
+                v-model="proFilters.serviceType"
+                @change="fetchProfessionalStats"
+              >
                 <option value="">All Services</option>
                 <option v-for="service in services" :key="service.id" :value="service.id">
                   {{ service.name }}
@@ -172,8 +208,11 @@
               </select>
 
               <!-- Rating Filter -->
-              <select class="form-select form-select-sm" v-model="proFilters.rating"
-                @change="fetchProfessionalStats">
+              <select
+                class="form-select form-select-sm"
+                v-model="proFilters.rating"
+                @change="fetchProfessionalStats"
+              >
                 <option value="">All Ratings</option>
                 <option value="5">5 Stars</option>
                 <option value="4">4+ Stars</option>
@@ -224,15 +263,18 @@
                   <div class="col-md-3">
                     <div class="border rounded p-3 text-center h-100">
                       <div class="text-muted small mb-1">Avg Experience</div>
-                      <div class="h4 mb-0">{{ profStats.avg_experience?.toFixed(1) || 'N/A' }} yrs
+                      <div class="h4 mb-0">
+                        {{ profStats.avg_experience?.toFixed(1) || 'N/A' }} yrs
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <!-- Chart placeholder - In a real app, you'd implement a proper chart here -->
-                <div class="mt-4 border rounded p-3 bg-light"
-                  style="height: 250px; display: flex; align-items: center; justify-content: center;">
+                <div
+                  class="mt-4 border rounded p-3 bg-light"
+                  style="height: 250px; display: flex; align-items: center; justify-content: center"
+                >
                   <div class="text-center text-muted">
                     <i class="bi bi-bar-chart-line fs-1 mb-2"></i>
                     <p>Professional performance chart would be displayed here</p>
@@ -273,8 +315,16 @@
                       <td>
                         <div class="d-flex align-items-center">
                           <div class="stars me-2">
-                            <i v-for="i in 5" :key="i" class="bi"
-                              :class="i <= Math.round(pro.rating || 0) ? 'bi-star-fill text-warning' : 'bi-star'"></i>
+                            <i
+                              v-for="i in 5"
+                              :key="i"
+                              class="bi"
+                              :class="
+                                i <= Math.round(pro.rating || 0)
+                                  ? 'bi-star-fill text-warning'
+                                  : 'bi-star'
+                              "
+                            ></i>
                           </div>
                           <span>{{ pro.rating.toFixed(1) }}</span>
                         </div>
@@ -305,8 +355,11 @@
           <div class="col-md-7">
             <div class="d-flex justify-content-md-end gap-2">
               <!-- Service Type Filter -->
-              <select class="form-select form-select-sm" v-model="requestFilters.serviceType"
-                @change="fetchRequestStats">
+              <select
+                class="form-select form-select-sm"
+                v-model="requestFilters.serviceType"
+                @change="fetchRequestStats"
+              >
                 <option value="">All Services</option>
                 <option v-for="service in services" :key="service.id" :value="service.id">
                   {{ service.name }}
@@ -314,8 +367,11 @@
               </select>
 
               <!-- Status Filter -->
-              <select class="form-select form-select-sm" v-model="requestFilters.status"
-                @change="fetchRequestStats">
+              <select
+                class="form-select form-select-sm"
+                v-model="requestFilters.status"
+                @change="fetchRequestStats"
+              >
                 <option value="">All Statuses</option>
                 <option value="created">Created</option>
                 <option value="assigned">Assigned</option>
@@ -323,8 +379,11 @@
               </select>
 
               <!-- Date Range Filter -->
-              <select class="form-select form-select-sm" v-model="requestFilters.dateRange"
-                @change="fetchRequestStats">
+              <select
+                class="form-select form-select-sm"
+                v-model="requestFilters.dateRange"
+                @change="fetchRequestStats"
+              >
                 <option value="all">All Time</option>
                 <option value="today">Today</option>
                 <option value="week">This Week</option>
@@ -380,8 +439,10 @@
                 </div>
 
                 <!-- Chart placeholder - In a real app, you'd implement a proper chart here -->
-                <div class="mt-4 border rounded p-3 bg-light"
-                  style="height: 250px; display: flex; align-items: center; justify-content: center;">
+                <div
+                  class="mt-4 border rounded p-3 bg-light"
+                  style="height: 250px; display: flex; align-items: center; justify-content: center"
+                >
                   <div class="text-center text-muted">
                     <i class="bi bi-bar-chart-line fs-1 mb-2"></i>
                     <p>Service request trend chart would be displayed here</p>
@@ -421,8 +482,16 @@
                       <td>
                         <div class="d-flex align-items-center">
                           <div class="stars me-2">
-                            <i v-for="i in 5" :key="i" class="bi"
-                              :class="i <= Math.round(service.avg_rating || 0) ? 'bi-star-fill text-warning' : 'bi-star'"></i>
+                            <i
+                              v-for="i in 5"
+                              :key="i"
+                              class="bi"
+                              :class="
+                                i <= Math.round(service.avg_rating || 0)
+                                  ? 'bi-star-fill text-warning'
+                                  : 'bi-star'
+                              "
+                            ></i>
                           </div>
                           <span>{{ service.avg_rating?.toFixed(1) || 'N/A' }}</span>
                         </div>
@@ -448,8 +517,11 @@
           <div class="col-md-6">
             <div class="d-flex justify-content-md-end gap-2">
               <!-- Service Type Filter -->
-              <select class="form-select form-select-sm" v-model="reviewFilters.serviceType"
-                @change="fetchReviewStats">
+              <select
+                class="form-select form-select-sm"
+                v-model="reviewFilters.serviceType"
+                @change="fetchReviewStats"
+              >
                 <option value="">All Services</option>
                 <option v-for="service in services" :key="service.id" :value="service.id">
                   {{ service.name }}
@@ -457,8 +529,11 @@
               </select>
 
               <!-- Rating Filter -->
-              <select class="form-select form-select-sm" v-model="reviewFilters.rating"
-                @change="fetchReviewStats">
+              <select
+                class="form-select form-select-sm"
+                v-model="reviewFilters.rating"
+                @change="fetchReviewStats"
+              >
                 <option value="">All Ratings</option>
                 <option value="5">5 Stars</option>
                 <option value="4">4 Stars</option>
@@ -468,8 +543,11 @@
               </select>
 
               <!-- Reported Filter -->
-              <select class="form-select form-select-sm" v-model="reviewFilters.reported"
-                @change="fetchReviewStats">
+              <select
+                class="form-select form-select-sm"
+                v-model="reviewFilters.reported"
+                @change="fetchReviewStats"
+              >
                 <option :value="null">All Reviews</option>
                 <option :value="true">Reported Only</option>
                 <option :value="false">Not Reported</option>
@@ -523,8 +601,10 @@
                 </div>
 
                 <!-- Rating Distribution placeholder - In a real app, you'd implement a proper chart here -->
-                <div class="mt-4 border rounded p-3 bg-light"
-                  style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                <div
+                  class="mt-4 border rounded p-3 bg-light"
+                  style="height: 200px; display: flex; align-items: center; justify-content: center"
+                >
                   <div class="text-center text-muted">
                     <i class="bi bi-bar-chart-line fs-1 mb-2"></i>
                     <p>Rating distribution chart would be displayed here</p>
@@ -571,8 +651,12 @@
                       <td>
                         <div class="d-flex align-items-center">
                           <div class="stars me-2">
-                            <i v-for="i in 5" :key="i" class="bi"
-                              :class="i <= review.rating ? 'bi-star-fill text-warning' : 'bi-star'"></i>
+                            <i
+                              v-for="i in 5"
+                              :key="i"
+                              class="bi"
+                              :class="i <= review.rating ? 'bi-star-fill text-warning' : 'bi-star'"
+                            ></i>
                           </div>
                           <span>{{ review.rating }}</span>
                         </div>
@@ -602,20 +686,36 @@
                   <div class="col-md-6">
                     <ul class="pagination pagination-sm mb-0 justify-content-md-end">
                       <li class="page-item" :class="{ disabled: reviewFilters.page === 1 }">
-                        <button @click="changePage(reviewFilters.page - 1, 'review')"
-                          class="page-link">Previous</button>
+                        <button
+                          @click="changePage(reviewFilters.page - 1, 'review')"
+                          class="page-link"
+                        >
+                          Previous
+                        </button>
                       </li>
                       <li
-                        v-for="pageNum in getDisplayedPages(reviewFilters.page, reviewPagination.pages)"
-                        :key="pageNum" class="page-item"
-                        :class="{ active: reviewFilters.page === pageNum }">
-                        <button @click="changePage(pageNum, 'review')" class="page-link">{{ pageNum
-                        }}</button>
+                        v-for="pageNum in getDisplayedPages(
+                          reviewFilters.page,
+                          reviewPagination.pages,
+                        )"
+                        :key="pageNum"
+                        class="page-item"
+                        :class="{ active: reviewFilters.page === pageNum }"
+                      >
+                        <button @click="changePage(pageNum, 'review')" class="page-link">
+                          {{ pageNum }}
+                        </button>
                       </li>
-                      <li class="page-item"
-                        :class="{ disabled: reviewFilters.page === reviewPagination.pages }">
-                        <button @click="changePage(reviewFilters.page + 1, 'review')"
-                          class="page-link">Next</button>
+                      <li
+                        class="page-item"
+                        :class="{ disabled: reviewFilters.page === reviewPagination.pages }"
+                      >
+                        <button
+                          @click="changePage(reviewFilters.page + 1, 'review')"
+                          class="page-link"
+                        >
+                          Next
+                        </button>
                       </li>
                     </ul>
                   </div>
@@ -679,13 +779,19 @@
                 </span>
               </td>
               <td>
-                <button class="btn btn-sm btn-primary me-1" @click="downloadExport(export_item)"
-                  :disabled="export_item.status !== 'completed'">
+                <button
+                  class="btn btn-sm btn-primary me-1"
+                  @click="downloadExport(export_item)"
+                  :disabled="export_item.status !== 'completed'"
+                >
                   <i class="bi bi-download me-1"></i>
                   Download
                 </button>
-                <button class="btn btn-sm btn-outline-danger" @click="deleteExport(export_item)"
-                  :disabled="isActionLoading">
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  @click="deleteExport(export_item)"
+                  :disabled="isActionLoading"
+                >
                   <i class="bi bi-trash"></i>
                 </button>
               </td>
@@ -704,8 +810,12 @@
               <i class="bi bi-file-earmark-arrow-down me-1"></i>
               Export Data
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <form @submit.prevent="generateExport">
@@ -732,11 +842,11 @@
               <div class="row g-3 mb-3">
                 <div class="col-md-6">
                   <label class="form-label">Start Date</label>
-                  <input type="date" class="form-control" v-model="exportForm.startDate">
+                  <input type="date" class="form-control" v-model="exportForm.startDate" />
                 </div>
                 <div class="col-md-6">
                   <label class="form-label">End Date</label>
-                  <input type="date" class="form-control" v-model="exportForm.endDate">
+                  <input type="date" class="form-control" v-model="exportForm.endDate" />
                 </div>
               </div>
 
@@ -749,8 +859,9 @@
               </div>
 
               <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                <button type="button" class="btn btn-secondary"
-                  data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                  Cancel
+                </button>
                 <button type="submit" class="btn btn-primary" :disabled="isExporting">
                   <span v-if="isExporting" class="spinner-border spinner-border-sm me-2"></span>
                   Generate Export
@@ -763,8 +874,13 @@
     </div>
 
     <!-- Export Progress Modal -->
-    <div class="modal fade" id="exportProgressModal" tabindex="-1" data-bs-backdrop="static"
-      ref="exportProgressModal">
+    <div
+      class="modal fade"
+      id="exportProgressModal"
+      tabindex="-1"
+      data-bs-backdrop="static"
+      ref="exportProgressModal"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -779,10 +895,14 @@
             </div>
             <p>Your export is being generated...</p>
             <div class="progress mb-3">
-              <div class="progress-bar progress-bar-striped progress-bar-animated"
-                role="progressbar" :style="{ width: exportProgress + '%' }"></div>
+              <div
+                class="progress-bar progress-bar-striped progress-bar-animated"
+                role="progressbar"
+                :style="{ width: exportProgress + '%' }"
+              ></div>
             </div>
-            <p class="small text-muted">This may take a few minutes depending on the amount of data.
+            <p class="small text-muted">
+              This may take a few minutes depending on the amount of data.
             </p>
           </div>
         </div>
@@ -792,83 +912,83 @@
 </template>
 
 <script>
-import * as bootstrap from 'bootstrap';
-import moment from 'moment';
-import { onMounted, ref, watch } from 'vue';
-import { useStore } from 'vuex';
+import * as bootstrap from 'bootstrap'
+import moment from 'moment'
+import { onMounted, ref, watch } from 'vue'
+import { useStore } from 'vuex'
 
 export default {
   name: 'AdminReports',
   setup() {
-    const store = useStore();
+    const store = useStore()
 
     // Modal refs
-    const exportModal = ref(null);
-    const exportProgressModal = ref(null);
-    let bsExportModal = null;
-    let bsExportProgressModal = null;
+    const exportModal = ref(null)
+    const exportProgressModal = ref(null)
+    let bsExportModal = null
+    let bsExportProgressModal = null
 
     // State
-    const activeTab = ref('activity');
-    const isLoading = ref(false);
-    const isExporting = ref(false);
-    const isActionLoading = ref(false);
-    const exportProgress = ref(0);
-    const error = ref(null);
+    const activeTab = ref('activity')
+    const isLoading = ref(false)
+    const isExporting = ref(false)
+    const isActionLoading = ref(false)
+    const exportProgress = ref(0)
+    const error = ref(null)
 
     // Services data
-    const services = ref([]);
-    const professionals = ref([]);
+    const services = ref([])
+    const professionals = ref([])
 
     // Activity Logs
-    const activityLogs = ref([]);
-    const activityPagination = ref({});
+    const activityLogs = ref([])
+    const activityPagination = ref({})
     const activityFilters = ref({
       action: '',
       startDate: '',
       endDate: '',
       page: 1,
-      perPage: 10
-    });
+      perPage: 10,
+    })
 
     // Professionals Analytics
-    const profStats = ref({});
-    const topProfessionals = ref([]);
+    const profStats = ref({})
+    const topProfessionals = ref([])
     const proFilters = ref({
       serviceType: '',
       rating: '',
-    });
+    })
 
     // Service Requests Analytics
-    const requestStats = ref({});
-    const popularServices = ref([]);
+    const requestStats = ref({})
+    const popularServices = ref([])
     const requestFilters = ref({
       serviceType: '',
       status: '',
-      dateRange: 'all'
-    });
+      dateRange: 'all',
+    })
 
     // Reviews Analytics
-    const reviewStats = ref({});
-    const recentReviews = ref([]);
-    const reviewPagination = ref({});
+    const reviewStats = ref({})
+    const recentReviews = ref([])
+    const reviewPagination = ref({})
     const reviewFilters = ref({
       serviceType: '',
       rating: '',
       reported: null,
       page: 1,
-      perPage: 10
-    });
+      perPage: 10,
+    })
 
     // Exports
-    const exports = ref([]);
+    const exports = ref([])
     const exportForm = ref({
       type: 'service_requests',
       professionalId: '',
       startDate: '',
       endDate: '',
-      format: 'csv'
-    });
+      format: 'csv',
+    })
 
     // Action types for activity log filtering
     const actionTypes = [
@@ -887,26 +1007,26 @@ export default {
       { value: 'request_assign', label: 'Request Assignment' },
       { value: 'request_complete', label: 'Request Completion' },
       { value: 'review_submit', label: 'Review Submission' },
-      { value: 'review_report', label: 'Review Report' }
-    ];
+      { value: 'review_report', label: 'Review Report' },
+    ]
 
     // Watch for tab changes to load appropriate data
     watch(activeTab, (newTab) => {
-      loadTabData(newTab);
-    });
+      loadTabData(newTab)
+    })
 
     // Methods
     const formatDate = (dateString, includeTime = true) => {
-      if (!dateString) return 'N/A';
+      if (!dateString) return 'N/A'
       return includeTime
         ? moment(dateString).format('MMM D, YYYY h:mm A')
-        : moment(dateString).format('MMM D, YYYY');
-    };
+        : moment(dateString).format('MMM D, YYYY')
+    }
 
     const formatActionType = (action) => {
-      const found = actionTypes.find(a => a.value === action);
-      return found ? found.label : action;
-    };
+      const found = actionTypes.find((a) => a.value === action)
+      return found ? found.label : action
+    }
 
     const getActionBadgeClass = (action) => {
       const actionTypeMap = {
@@ -934,212 +1054,212 @@ export default {
         review_submit: 'bg-success',
         review_report: 'bg-danger',
         review_dismiss: 'bg-primary',
-        review_remove: 'bg-danger'
-      };
+        review_remove: 'bg-danger',
+      }
 
-      return actionTypeMap[action] || 'bg-secondary';
-    };
+      return actionTypeMap[action] || 'bg-secondary'
+    }
 
     const formatExportType = (type) => {
       const types = {
         service_requests: 'Service Requests',
         professional_performance: 'Professional Performance',
         customer_activity: 'Customer Activity',
-        reviews: 'Reviews'
-      };
-      return types[type] || type;
-    };
+        reviews: 'Reviews',
+      }
+      return types[type] || type
+    }
 
     const formatExportStatus = (status) => {
       const statuses = {
         pending: 'Pending',
         processing: 'Processing',
         completed: 'Completed',
-        failed: 'Failed'
-      };
-      return statuses[status] || status;
-    };
+        failed: 'Failed',
+      }
+      return statuses[status] || status
+    }
 
     const getExportStatusBadge = (status) => {
       const statusMap = {
         pending: 'bg-secondary',
         processing: 'bg-info',
         completed: 'bg-success',
-        failed: 'bg-danger'
-      };
-      return statusMap[status] || 'bg-secondary';
-    };
+        failed: 'bg-danger',
+      }
+      return statusMap[status] || 'bg-secondary'
+    }
 
     const refreshData = () => {
-      loadTabData(activeTab.value);
-    };
+      loadTabData(activeTab.value)
+    }
 
     const loadTabData = async (tabName) => {
       switch (tabName) {
         case 'activity':
-          await fetchActivityLogs();
-          break;
+          await fetchActivityLogs()
+          break
         case 'professionals':
-          await fetchProfessionalStats();
-          break;
+          await fetchProfessionalStats()
+          break
         case 'requests':
-          await fetchRequestStats();
-          break;
+          await fetchRequestStats()
+          break
         case 'reviews':
-          await fetchReviewStats();
-          break;
+          await fetchReviewStats()
+          break
         case 'exports':
-          await fetchExports();
-          break;
+          await fetchExports()
+          break
       }
-    };
+    }
 
     const showExportModal = () => {
-      bsExportModal.show();
-    };
+      bsExportModal.show()
+    }
 
     const generateExport = async () => {
       try {
-        isExporting.value = true;
+        isExporting.value = true
 
         // Close the export modal and show the progress modal
-        bsExportModal.hide();
-        bsExportProgressModal.show();
+        bsExportModal.hide()
+        bsExportProgressModal.show()
 
         // Simulate progress updates (in a real app, this would come from the server)
-        exportProgress.value = 0;
+        exportProgress.value = 0
         const progressInterval = setInterval(() => {
-          exportProgress.value += 5;
+          exportProgress.value += 5
           if (exportProgress.value >= 100) {
-            clearInterval(progressInterval);
+            clearInterval(progressInterval)
           }
-        }, 300);
+        }, 300)
 
         // Generate the export
         const response = await store.dispatch('exports/generateServiceReport', {
           professionalId: exportForm.value.professionalId || undefined,
           startDate: exportForm.value.startDate || undefined,
-          endDate: exportForm.value.endDate || undefined
-        });
+          endDate: exportForm.value.endDate || undefined,
+        })
 
         // Clear interval and set to 100%
-        clearInterval(progressInterval);
-        exportProgress.value = 100;
+        clearInterval(progressInterval)
+        exportProgress.value = 100
 
         // Close progress modal
         setTimeout(() => {
-          bsExportProgressModal.hide();
+          bsExportProgressModal.hide()
 
           // Show success message
           window.showToast({
             type: 'success',
             title: 'Export Generated',
-            message: `File ${response.filename} is ready for download`
-          });
+            message: `File ${response.filename} is ready for download`,
+          })
 
           // Switch to exports tab and refresh
-          activeTab.value = 'exports';
-          fetchExports();
-        }, 1000);
+          activeTab.value = 'exports'
+          fetchExports()
+        }, 1000)
       } catch (err) {
         // Handle errors
         window.showToast({
           type: 'error',
           title: 'Export Failed',
-          message: err.message || 'Failed to generate export'
-        });
+          message: err.message || 'Failed to generate export',
+        })
 
-        bsExportProgressModal.hide();
+        bsExportProgressModal.hide()
       } finally {
-        isExporting.value = false;
+        isExporting.value = false
       }
-    };
+    }
 
     const downloadExport = async (exportItem) => {
       try {
-        isActionLoading.value = true;
-        await store.dispatch('exports/downloadReport', exportItem.filename);
+        isActionLoading.value = true
+        await store.dispatch('exports/downloadReport', exportItem.filename)
 
         window.showToast({
           type: 'success',
           title: 'Download Started',
-          message: 'Your file should download shortly'
-        });
+          message: 'Your file should download shortly',
+        })
       } catch (err) {
         window.showToast({
           type: 'error',
           title: 'Download Failed',
-          message: err.message || 'Failed to download file'
-        });
+          message: err.message || 'Failed to download file',
+        })
       } finally {
-        isActionLoading.value = false;
+        isActionLoading.value = false
       }
-    };
+    }
 
     const deleteExport = async (exportItem) => {
       try {
-        isActionLoading.value = true;
-        await store.dispatch('exports/deleteExport', exportItem.id);
+        isActionLoading.value = true
+        await store.dispatch('exports/deleteExport', exportItem.id)
 
         window.showToast({
           type: 'success',
           title: 'Export Deleted',
-          message: 'The export file has been deleted'
-        });
+          message: 'The export file has been deleted',
+        })
 
-        fetchExports();
+        fetchExports()
       } catch (err) {
         window.showToast({
           type: 'error',
           title: 'Delete Failed',
-          message: err.message || 'Failed to delete export'
-        });
+          message: err.message || 'Failed to delete export',
+        })
       } finally {
-        isActionLoading.value = false;
+        isActionLoading.value = false
       }
-    };
+    }
 
     const getDisplayedPages = (currentPage, totalPages) => {
-      const pages = [];
-      const maxVisiblePages = 5;
-      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-      let endPage = Math.min(totalPages || 1, startPage + maxVisiblePages - 1);
+      const pages = []
+      const maxVisiblePages = 5
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
+      let endPage = Math.min(totalPages || 1, startPage + maxVisiblePages - 1)
 
       if (endPage - startPage + 1 < maxVisiblePages) {
-        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        startPage = Math.max(1, endPage - maxVisiblePages + 1)
       }
 
       for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
+        pages.push(i)
       }
 
-      return pages;
-    };
+      return pages
+    }
 
     const changePage = (page, type) => {
       if (type === 'activity') {
-        if (page < 1 || page > activityPagination.value.pages) return;
-        activityFilters.value.page = page;
-        fetchActivityLogs();
+        if (page < 1 || page > activityPagination.value.pages) return
+        activityFilters.value.page = page
+        fetchActivityLogs()
       } else if (type === 'review') {
-        if (page < 1 || page > reviewPagination.value.pages) return;
-        reviewFilters.value.page = page;
-        fetchReviewStats();
+        if (page < 1 || page > reviewPagination.value.pages) return
+        reviewFilters.value.page = page
+        fetchReviewStats()
       }
-    };
+    }
 
     // Data fetching methods
     const fetchActiveServices = async () => {
       try {
-        const response = await store.dispatch('services/fetchActiveServices');
-        services.value = response.data || [];
+        const response = await store.dispatch('services/fetchActiveServices')
+        services.value = response.data || []
       } catch (err) {
-        console.error('Error fetching services:', err);
+        console.error('Error fetching services:', err)
       }
-    };
+    }
 
     const fetchActivityLogs = async () => {
-      isLoading.value = true;
+      isLoading.value = true
       try {
         const response = await store.dispatch('stats/fetchDetailedStats', {
           type: 'pending_verifications',
@@ -1147,21 +1267,21 @@ export default {
           perPage: activityFilters.value.perPage,
           action: activityFilters.value.action || undefined,
           startDate: activityFilters.value.startDate || undefined,
-          endDate: activityFilters.value.endDate || undefined
-        });
+          endDate: activityFilters.value.endDate || undefined,
+        })
 
-        activityLogs.value = response.data || [];
-        activityPagination.value = response.pagination || {};
+        activityLogs.value = response.data || []
+        activityPagination.value = response.pagination || {}
       } catch (err) {
-        error.value = err.message || 'Failed to load activity logs';
-        console.error(err);
+        error.value = err.message || 'Failed to load activity logs'
+        console.error(err)
       } finally {
-        isLoading.value = false;
+        isLoading.value = false
       }
-    };
+    }
 
     const fetchProfessionalStats = async () => {
-      isLoading.value = true;
+      isLoading.value = true
       try {
         // In a real application, you would fetch this from the API
         // For now, we'll use dummy data
@@ -1171,62 +1291,132 @@ export default {
           total: 42,
           verified: 35,
           avg_rating: 4.3,
-          avg_experience: 4.8
-        };
+          avg_experience: 4.8,
+        }
 
         // Mock data for top professionals
         topProfessionals.value = [
-          { id: 1, name: 'John Doe', service: 'Plumbing', experience: 5, rating: 4.8, completed_jobs: 87 },
-          { id: 2, name: 'Sarah Kim', service: 'Electrical Work', experience: 7, rating: 4.9, completed_jobs: 122 },
-          { id: 3, name: 'Mike Johnson', service: 'AC Repair', experience: 4, rating: 4.5, completed_jobs: 64 },
-          { id: 4, name: 'Priya Sharma', service: 'House Painting', experience: 6, rating: 4.7, completed_jobs: 52 },
-          { id: 5, name: 'David Wilson', service: 'Carpentry', experience: 8, rating: 4.6, completed_jobs: 93 }
-        ];
+          {
+            id: 1,
+            name: 'John Doe',
+            service: 'Plumbing',
+            experience: 5,
+            rating: 4.8,
+            completed_jobs: 87,
+          },
+          {
+            id: 2,
+            name: 'Sarah Kim',
+            service: 'Electrical Work',
+            experience: 7,
+            rating: 4.9,
+            completed_jobs: 122,
+          },
+          {
+            id: 3,
+            name: 'Mike Johnson',
+            service: 'AC Repair',
+            experience: 4,
+            rating: 4.5,
+            completed_jobs: 64,
+          },
+          {
+            id: 4,
+            name: 'Priya Sharma',
+            service: 'House Painting',
+            experience: 6,
+            rating: 4.7,
+            completed_jobs: 52,
+          },
+          {
+            id: 5,
+            name: 'David Wilson',
+            service: 'Carpentry',
+            experience: 8,
+            rating: 4.6,
+            completed_jobs: 93,
+          },
+        ]
       } catch (err) {
-        error.value = err.message || 'Failed to load professional statistics';
-        console.error(err);
+        error.value = err.message || 'Failed to load professional statistics'
+        console.error(err)
       } finally {
-        isLoading.value = false;
+        isLoading.value = false
       }
-    };
+    }
 
     const fetchRequestStats = async () => {
-      isLoading.value = true;
+      isLoading.value = true
       try {
         // Mock data for request stats
         requestStats.value = {
           total: 546,
           pending: 42,
           assigned: 38,
-          completed: 466
-        };
+          completed: 466,
+        }
 
         // Mock data for popular services
         popularServices.value = [
-          { id: 1, name: 'Plumbing Service', total_requests: 212, completed_requests: 198, avg_rating: 4.6, avg_price: 850.75 },
-          { id: 2, name: 'AC Repair & Service', total_requests: 187, completed_requests: 165, avg_rating: 4.4, avg_price: 1200.50 },
-          { id: 3, name: 'Electrical Work', total_requests: 145, completed_requests: 132, avg_rating: 4.5, avg_price: 950.25 },
-          { id: 4, name: 'House Painting', total_requests: 89, completed_requests: 76, avg_rating: 4.7, avg_price: 3200.00 },
-          { id: 5, name: 'Carpentry', total_requests: 65, completed_requests: 58, avg_rating: 4.3, avg_price: 1150.50 }
-        ];
+          {
+            id: 1,
+            name: 'Plumbing Service',
+            total_requests: 212,
+            completed_requests: 198,
+            avg_rating: 4.6,
+            avg_price: 850.75,
+          },
+          {
+            id: 2,
+            name: 'AC Repair & Service',
+            total_requests: 187,
+            completed_requests: 165,
+            avg_rating: 4.4,
+            avg_price: 1200.5,
+          },
+          {
+            id: 3,
+            name: 'Electrical Work',
+            total_requests: 145,
+            completed_requests: 132,
+            avg_rating: 4.5,
+            avg_price: 950.25,
+          },
+          {
+            id: 4,
+            name: 'House Painting',
+            total_requests: 89,
+            completed_requests: 76,
+            avg_rating: 4.7,
+            avg_price: 3200.0,
+          },
+          {
+            id: 5,
+            name: 'Carpentry',
+            total_requests: 65,
+            completed_requests: 58,
+            avg_rating: 4.3,
+            avg_price: 1150.5,
+          },
+        ]
       } catch (err) {
-        error.value = err.message || 'Failed to load request statistics';
-        console.error(err);
+        error.value = err.message || 'Failed to load request statistics'
+        console.error(err)
       } finally {
-        isLoading.value = false;
+        isLoading.value = false
       }
-    };
+    }
 
     const fetchReviewStats = async () => {
-      isLoading.value = true;
+      isLoading.value = true
       try {
         // Mock data for review stats
         reviewStats.value = {
           total: 428,
           avg_rating: 4.5,
           five_star: 198,
-          reported: 12
-        };
+          reported: 12,
+        }
 
         // Mock data for recent reviews
         recentReviews.value = [
@@ -1237,7 +1427,7 @@ export default {
             professional_name: 'John Doe',
             customer_name: 'Alice Smith',
             rating: 5,
-            is_reported: false
+            is_reported: false,
           },
           {
             id: 2,
@@ -1246,7 +1436,7 @@ export default {
             professional_name: 'Mike Johnson',
             customer_name: 'Bob Miller',
             rating: 4,
-            is_reported: false
+            is_reported: false,
           },
           {
             id: 3,
@@ -1255,7 +1445,7 @@ export default {
             professional_name: 'Sarah Kim',
             customer_name: 'Charlie Davis',
             rating: 2,
-            is_reported: true
+            is_reported: true,
           },
           {
             id: 4,
@@ -1264,7 +1454,7 @@ export default {
             professional_name: 'Priya Sharma',
             customer_name: 'Dave Wilson',
             rating: 5,
-            is_reported: false
+            is_reported: false,
           },
           {
             id: 5,
@@ -1273,27 +1463,27 @@ export default {
             professional_name: 'David Wilson',
             customer_name: 'Eve Jackson',
             rating: 3,
-            is_reported: false
-          }
-        ];
+            is_reported: false,
+          },
+        ]
 
         // Mock pagination data
         reviewPagination.value = {
           total: 428,
           pages: 86,
           page: reviewFilters.value.page,
-          perPage: reviewFilters.value.perPage
-        };
+          perPage: reviewFilters.value.perPage,
+        }
       } catch (err) {
-        error.value = err.message || 'Failed to load review statistics';
-        console.error(err);
+        error.value = err.message || 'Failed to load review statistics'
+        console.error(err)
       } finally {
-        isLoading.value = false;
+        isLoading.value = false
       }
-    };
+    }
 
     const fetchExports = async () => {
-      isLoading.value = true;
+      isLoading.value = true
       try {
         // In a real application, you would fetch this from the API
         // For now, we'll use dummy data
@@ -1304,7 +1494,7 @@ export default {
             type: 'service_requests',
             created_at: new Date().toISOString(),
             total_records: 548,
-            status: 'completed'
+            status: 'completed',
           },
           {
             id: 2,
@@ -1312,7 +1502,7 @@ export default {
             type: 'professional_performance',
             created_at: new Date(Date.now() - 86400000).toISOString(),
             total_records: 42,
-            status: 'completed'
+            status: 'completed',
           },
           {
             id: 3,
@@ -1320,7 +1510,7 @@ export default {
             type: 'reviews',
             created_at: new Date(Date.now() - 172800000).toISOString(),
             total_records: 354,
-            status: 'completed'
+            status: 'completed',
           },
           {
             id: 4,
@@ -1328,34 +1518,34 @@ export default {
             type: 'customer_activity',
             created_at: new Date(Date.now() - 259200000).toISOString(),
             total_records: 128,
-            status: 'completed'
-          }
-        ];
+            status: 'completed',
+          },
+        ]
       } catch (err) {
-        error.value = err.message || 'Failed to load exports';
-        console.error(err);
+        error.value = err.message || 'Failed to load exports'
+        console.error(err)
       } finally {
-        isLoading.value = false;
+        isLoading.value = false
       }
-    };
+    }
 
     // Lifecycle hooks
     onMounted(async () => {
       // Initialize Bootstrap modals
       if (exportModal.value) {
-        bsExportModal = new bootstrap.Modal(exportModal.value);
+        bsExportModal = new bootstrap.Modal(exportModal.value)
       }
 
       if (exportProgressModal.value) {
-        bsExportProgressModal = new bootstrap.Modal(exportProgressModal.value);
+        bsExportProgressModal = new bootstrap.Modal(exportProgressModal.value)
       }
 
       // Fetch services for filters
-      await fetchActiveServices();
+      await fetchActiveServices()
 
       // Load data for initial tab
-      await loadTabData(activeTab.value);
-    });
+      await loadTabData(activeTab.value)
+    })
 
     return {
       // State
@@ -1416,10 +1606,10 @@ export default {
       fetchProfessionalStats,
       fetchRequestStats,
       fetchReviewStats,
-      fetchExports
-    };
-  }
-};
+      fetchExports,
+    }
+  },
+}
 </script>
 
 <style scoped>

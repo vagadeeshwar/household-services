@@ -2,7 +2,6 @@
   <div class="d-flex w-100">
     <!-- Left Side Links -->
     <ul class="navbar-nav me-auto">
-
       <!-- Services -->
       <li class="nav-item">
         <router-link class="nav-link" to="/customer/services">
@@ -55,7 +54,7 @@
 
 <script>
 export default {
-  name: 'CustomerNavigation'
+  name: 'CustomerNavigation',
 }
 </script>
 

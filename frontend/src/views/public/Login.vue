@@ -13,9 +13,15 @@
               <!-- Username Field -->
               <div class="mb-3">
                 <label for="username" class="form-label">Username</label>
-                <input type="text" id="username" v-model="form.username"
-                  :class="['form-control', { 'is-invalid': v$.form.username.$error }]" :disabled="isLoading"
-                  @input="v$.form.username.$touch()" @blur="v$.form.username.$touch()" />
+                <input
+                  type="text"
+                  id="username"
+                  v-model="form.username"
+                  :class="['form-control', { 'is-invalid': v$.form.username.$error }]"
+                  :disabled="isLoading"
+                  @input="v$.form.username.$touch()"
+                  @blur="v$.form.username.$touch()"
+                />
                 <div class="invalid-feedback" v-if="v$.form.username.$error">
                   {{ v$.form.username.$errors[0]?.$message }}
                 </div>
@@ -25,9 +31,15 @@
               <div class="mb-4">
                 <label for="password" class="form-label">Password</label>
                 <div class="input-group">
-                  <input :type="showPassword ? 'text' : 'password'" id="password" v-model="form.password"
-                    :class="['form-control', { 'is-invalid': v$.form.password.$error }]" :disabled="isLoading"
-                    @input="v$.form.password.$touch()" @blur="v$.form.password.$touch()" />
+                  <input
+                    :type="showPassword ? 'text' : 'password'"
+                    id="password"
+                    v-model="form.password"
+                    :class="['form-control', { 'is-invalid': v$.form.password.$error }]"
+                    :disabled="isLoading"
+                    @input="v$.form.password.$touch()"
+                    @blur="v$.form.password.$touch()"
+                  />
                   <button class="btn btn-outline-secondary" type="button" @click="togglePassword">
                     <i :class="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
                   </button>
@@ -83,7 +95,7 @@ export default {
 
     const form = reactive({
       username: '',
-      password: ''
+      password: '',
     })
 
     const isLoading = ref(false)
@@ -93,12 +105,12 @@ export default {
     const rules = {
       form: {
         username: {
-          required: helpers.withMessage('Username is required', required)
+          required: helpers.withMessage('Username is required', required),
         },
         password: {
-          required: helpers.withMessage('Password is required', required)
-        }
-      }
+          required: helpers.withMessage('Password is required', required),
+        },
+      },
     }
 
     const v$ = useVuelidate(rules, { form })
@@ -112,7 +124,7 @@ export default {
 
         await store.dispatch('auth/login', {
           username: form.username.trim(),
-          password: form.password
+          password: form.password,
         })
 
         const user = store.getters['auth/currentUser']
@@ -120,14 +132,14 @@ export default {
         window.showToast({
           type: 'success',
           title: 'Welcome back!',
-          message: `Welcome back, ${user.full_name}!`
+          message: `Welcome back, ${user.full_name}!`,
         })
 
         // Navigate based on user role
         const roleRoutes = {
           admin: '/admin/dashboard',
           professional: '/professional/dashboard',
-          customer: '/customer/dashboard'
+          customer: '/customer/dashboard',
         }
 
         const defaultRoute = roleRoutes[user.role]
@@ -136,7 +148,6 @@ export default {
         }
 
         await router.replace(defaultRoute)
-
       } catch (error) {
         let errorMessage = 'Login failed. Please check your credentials.'
 
@@ -150,7 +161,7 @@ export default {
         window.showToast({
           type: 'error',
           title: 'Login Failed',
-          message: errorMessage
+          message: errorMessage,
         })
       } finally {
         isLoading.value = false
@@ -167,9 +178,9 @@ export default {
       isLoading,
       showPassword,
       handleSubmit,
-      togglePassword
+      togglePassword,
     }
-  }
+  },
 }
 </script>
 
@@ -197,7 +208,6 @@ export default {
 }
 
 @keyframes shake {
-
   0%,
   100% {
     transform: translateX(0);

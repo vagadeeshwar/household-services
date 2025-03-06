@@ -49,9 +49,7 @@
             <div>{{ error }}</div>
           </div>
           <div class="text-center mt-3">
-            <button @click="fetchDashboardData" class="btn btn-primary">
-              Try Again
-            </button>
+            <button @click="fetchDashboardData" class="btn btn-primary">Try Again</button>
           </div>
         </div>
       </template>
@@ -70,21 +68,25 @@
                     <i class="bi bi-star-fill text-warning fs-4"></i>
                   </div>
                   <h2 class="mb-0">{{ profileStatus?.average_rating.toFixed(1) || '0.0' }}</h2>
-                  <div class="text-success small d-flex align-items-center mt-2"
-                    v-if="profileStatus?.average_rating > 4">
+                  <div
+                    class="text-success small d-flex align-items-center mt-2"
+                    v-if="profileStatus?.average_rating > 4"
+                  >
                     <i class="bi bi-arrow-up-short"></i> Excellent
                   </div>
-                  <div class="text-warning small d-flex align-items-center mt-2"
-                    v-else-if="profileStatus?.average_rating > 3">
+                  <div
+                    class="text-warning small d-flex align-items-center mt-2"
+                    v-else-if="profileStatus?.average_rating > 3"
+                  >
                     <i class="bi bi-arrow-right-short"></i> Good
                   </div>
-                  <div class="text-danger small d-flex align-items-center mt-2"
-                    v-else-if="profileStatus?.average_rating > 0">
+                  <div
+                    class="text-danger small d-flex align-items-center mt-2"
+                    v-else-if="profileStatus?.average_rating > 0"
+                  >
                     <i class="bi bi-arrow-down-short"></i> Needs Improvement
                   </div>
-                  <div class="text-muted small mt-2" v-else>
-                    No ratings yet
-                  </div>
+                  <div class="text-muted small mt-2" v-else>No ratings yet</div>
                 </div>
               </div>
             </div>
@@ -98,9 +100,7 @@
                     <i class="bi bi-list-check text-primary fs-4"></i>
                   </div>
                   <h2 class="mb-0">{{ requestsData.total || '0' }}</h2>
-                  <div class="text-muted small mt-2">
-                    All time service requests
-                  </div>
+                  <div class="text-muted small mt-2">All time service requests</div>
                 </div>
               </div>
             </div>
@@ -114,9 +114,7 @@
                     <i class="bi bi-arrow-repeat text-info fs-4"></i>
                   </div>
                   <h2 class="mb-0">{{ requestsData.active || '0' }}</h2>
-                  <div class="text-muted small mt-2">
-                    Ongoing services
-                  </div>
+                  <div class="text-muted small mt-2">Ongoing services</div>
                 </div>
               </div>
             </div>
@@ -130,9 +128,7 @@
                     <i class="bi bi-check-circle text-success fs-4"></i>
                   </div>
                   <h2 class="mb-0">{{ requestsData.completed || '0' }}</h2>
-                  <div class="text-muted small mt-2">
-                    Successfully completed
-                  </div>
+                  <div class="text-muted small mt-2">Successfully completed</div>
                 </div>
               </div>
             </div>
@@ -145,8 +141,10 @@
             <div class="card-header bg-white py-3">
               <div class="d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">Upcoming Services</h5>
-                <router-link to="/professional/requests?type=ongoing"
-                  class="btn btn-sm btn-outline-primary">
+                <router-link
+                  to="/professional/requests?type=ongoing"
+                  class="btn btn-sm btn-outline-primary"
+                >
                   View All
                 </router-link>
               </div>
@@ -157,8 +155,10 @@
                   <i class="bi bi-calendar-x fs-3 mb-2"></i>
                   <p class="mb-0">No upcoming services</p>
                   <p class="small">Browse available service requests to find work</p>
-                  <router-link to="/professional/requests?type=new"
-                    class="btn btn-sm btn-outline-primary mt-2">
+                  <router-link
+                    to="/professional/requests?type=new"
+                    class="btn btn-sm btn-outline-primary mt-2"
+                  >
                     Browse Requests
                   </router-link>
                 </div>
@@ -182,8 +182,10 @@
                       </div>
                     </div>
                     <div>
-                      <router-link :to="`/professional/requests/${request.id}`"
-                        class="btn btn-sm btn-outline-primary">
+                      <router-link
+                        :to="`/professional/requests/${request.id}`"
+                        class="btn btn-sm btn-outline-primary"
+                      >
                         Details
                       </router-link>
                     </div>
@@ -246,8 +248,10 @@
             <div class="card-body">
               <div class="row g-3">
                 <div class="col-md-3 col-sm-6">
-                  <router-link to="/professional/requests?type=new"
-                    class="card h-100 bg-light text-center text-decoration-none">
+                  <router-link
+                    to="/professional/requests?type=new"
+                    class="card h-100 bg-light text-center text-decoration-none"
+                  >
                     <div class="card-body py-4">
                       <i class="bi bi-search-heart text-primary fs-3 mb-3"></i>
                       <h6 class="card-title mb-0">Find Work</h6>
@@ -256,8 +260,10 @@
                   </router-link>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                  <router-link to="/professional/schedule"
-                    class="card h-100 bg-light text-center text-decoration-none">
+                  <router-link
+                    to="/professional/schedule"
+                    class="card h-100 bg-light text-center text-decoration-none"
+                  >
                     <div class="card-body py-4">
                       <i class="bi bi-calendar-week text-success fs-3 mb-3"></i>
                       <h6 class="card-title mb-0">My Schedule</h6>
@@ -266,8 +272,10 @@
                   </router-link>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                  <router-link to="/professional/reviews"
-                    class="card h-100 bg-light text-center text-decoration-none">
+                  <router-link
+                    to="/professional/reviews"
+                    class="card h-100 bg-light text-center text-decoration-none"
+                  >
                     <div class="card-body py-4">
                       <i class="bi bi-star-half text-warning fs-3 mb-3"></i>
                       <h6 class="card-title mb-0">My Reviews</h6>
@@ -276,8 +284,10 @@
                   </router-link>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                  <router-link to="/professional/profile"
-                    class="card h-100 bg-light text-center text-decoration-none">
+                  <router-link
+                    to="/professional/profile"
+                    class="card h-100 bg-light text-center text-decoration-none"
+                  >
                     <div class="card-body py-4">
                       <i class="bi bi-person-badge text-info fs-3 mb-3"></i>
                       <h6 class="card-title mb-0">My Profile</h6>
@@ -295,111 +305,110 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { useStore } from 'vuex';
-import moment from 'moment';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useStore } from 'vuex'
+import moment from 'moment'
 
 export default {
   name: 'ProfessionalDashboard',
   setup() {
-    const store = useStore();
+    const store = useStore()
 
     // State
-    const isLoading = ref(true);
-    const error = ref(null);
-    const dashboardData = ref(null);
-    const upcomingRequests = ref([]);
-    const recentReviews = ref([]);
-    const refreshInterval = ref(null);
+    const isLoading = ref(true)
+    const error = ref(null)
+    const dashboardData = ref(null)
+    const upcomingRequests = ref([])
+    const recentReviews = ref([])
+    const refreshInterval = ref(null)
 
     // Computed properties
-    const userName = computed(() => store.getters['auth/userName'] || 'Professional');
-    const currentDate = computed(() => moment().format('dddd, MMMM D, YYYY'));
+    const userName = computed(() => store.getters['auth/userName'] || 'Professional')
+    const currentDate = computed(() => moment().format('dddd, MMMM D, YYYY'))
 
     const profileStatus = computed(() => {
-      if (!dashboardData.value) return null;
-      return dashboardData.value.profile_status;
-    });
+      if (!dashboardData.value) return null
+      return dashboardData.value.profile_status
+    })
 
     const requestsData = computed(() => {
-      if (!dashboardData.value) return { total: 0, active: 0, completed: 0 };
-      return dashboardData.value.service_requests;
-    });
+      if (!dashboardData.value) return { total: 0, active: 0, completed: 0 }
+      return dashboardData.value.service_requests
+    })
 
     // Methods
     const fetchDashboardData = async () => {
-      isLoading.value = true;
-      error.value = null;
+      isLoading.value = true
+      error.value = null
 
       try {
         // Fetch dashboard overview data
-        const response = await store.dispatch('professionals/fetchDashboard');
-        dashboardData.value = response;
+        const response = await store.dispatch('professionals/fetchDashboard')
+        dashboardData.value = response
 
         // Fetch upcoming requests (ongoing)
         const requestsResponse = await store.dispatch('requests/fetchProfessionalRequests', {
           type: 'ongoing',
           page: 1,
-          perPage: 5
-        });
-        upcomingRequests.value = requestsResponse.data;
+          perPage: 5,
+        })
+        upcomingRequests.value = requestsResponse.data
 
         // Fetch recent reviews
         const reviewsResponse = await store.dispatch('professionals/fetchReviews', {
           page: 1,
-          perPage: 3
-        });
-        recentReviews.value = reviewsResponse.data;
-
+          perPage: 3,
+        })
+        recentReviews.value = reviewsResponse.data
       } catch (err) {
-        error.value = 'Failed to load dashboard data. Please try again.';
-        console.error('Dashboard error:', err);
+        error.value = 'Failed to load dashboard data. Please try again.'
+        console.error('Dashboard error:', err)
       } finally {
-        isLoading.value = false;
+        isLoading.value = false
       }
-    };
+    }
 
     const formatDate = (dateString) => {
-      const date = moment(dateString);
+      const date = moment(dateString)
       // If today, show time only
       if (date.isSame(moment(), 'day')) {
-        return `Today at ${date.format('h:mm A')}`;
+        return `Today at ${date.format('h:mm A')}`
       }
       // If tomorrow, show "Tomorrow"
       if (date.isSame(moment().add(1, 'day'), 'day')) {
-        return `Tomorrow at ${date.format('h:mm A')}`;
+        return `Tomorrow at ${date.format('h:mm A')}`
       }
       // Otherwise show date and time
-      return date.format('MMM D [at] h:mm A');
-    };
+      return date.format('MMM D [at] h:mm A')
+    }
 
     const formatDuration = (minutes) => {
       if (minutes < 60) {
-        return `${minutes}m`;
+        return `${minutes}m`
       }
-      const hrs = Math.floor(minutes / 60);
-      const mins = minutes % 60;
-      return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
-    };
+      const hrs = Math.floor(minutes / 60)
+      const mins = minutes % 60
+      return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`
+    }
 
     // Setup automatic refresh every 5 minutes
     const setupRefreshInterval = () => {
       refreshInterval.value = setInterval(() => {
-        fetchDashboardData();
-      }, 300000); // 5 minutes
-    };
+        fetchDashboardData()
+      }, 300000) // 5 minutes
+    }
 
     // Lifecycle hooks
     onMounted(() => {
-      fetchDashboardData();
-      setupRefreshInterval();
-    });
+      fetchDashboardData()
+      setupRefreshInterval()
+    })
 
     onBeforeUnmount(() => {
       if (refreshInterval.value) {
-        clearInterval(refreshInterval.value);
+        clearInterval(refreshInterval.value)
       }
-    });
+    })
 
     return {
       isLoading,
@@ -413,22 +422,24 @@ export default {
       requestsData,
       fetchDashboardData,
       formatDate,
-      formatDuration
-    };
-  }
-};
+      formatDuration,
+    }
+  },
+}
 </script>
 
 <style scoped>
 .card {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
   border-radius: 0.5rem;
   overflow: hidden;
 }
 
 a.card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 
 .list-group-item {

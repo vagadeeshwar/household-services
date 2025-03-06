@@ -9,8 +9,12 @@
       <div class="col-auto">
         <div class="d-flex align-items-center">
           <div class="form-check form-switch me-3">
-            <input class="form-check-input" type="checkbox" id="showCompleted"
-              v-model="showCompleted">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="showCompleted"
+              v-model="showCompleted"
+            />
             <label class="form-check-label" for="showCompleted">Show Completed</label>
           </div>
           <button class="btn btn-primary" @click="refreshSchedule">
@@ -32,9 +36,7 @@
     <div v-else-if="error" class="alert alert-danger" role="alert">
       <i class="bi bi-exclamation-triangle-fill me-2"></i>
       {{ error }}
-      <button @click="loadSchedule" class="btn btn-sm btn-outline-danger ms-2">
-        Retry
-      </button>
+      <button @click="loadSchedule" class="btn btn-sm btn-outline-danger ms-2">Retry</button>
     </div>
 
     <!-- Schedule Content -->
@@ -48,9 +50,7 @@
               <button class="btn btn-sm btn-outline-secondary" @click="prevWeek">
                 <i class="bi bi-chevron-left"></i>
               </button>
-              <button class="btn btn-sm btn-outline-secondary" @click="todayWeek">
-                Today
-              </button>
+              <button class="btn btn-sm btn-outline-secondary" @click="todayWeek">Today</button>
               <button class="btn btn-sm btn-outline-secondary" @click="nextWeek">
                 <i class="bi bi-chevron-right"></i>
               </button>
@@ -63,8 +63,12 @@
                 <thead>
                   <tr>
                     <th class="time-column"></th>
-                    <th v-for="(day, index) in weekDays" :key="index" class="text-center"
-                      :class="{ 'today': isToday(day.date) }">
+                    <th
+                      v-for="(day, index) in weekDays"
+                      :key="index"
+                      class="text-center"
+                      :class="{ today: isToday(day.date) }"
+                    >
                       <div class="day-header">
                         <div class="day-name">{{ formatDayName(day.date) }}</div>
                         <div class="day-date">{{ formatDayDate(day.date) }}</div>
@@ -77,18 +81,28 @@
                     <td class="time-column">
                       <div class="hour-label">{{ formatHourLabel(hour) }}</div>
                     </td>
-                    <td v-for="(day, dayIndex) in weekDays" :key="`${dayIndex}-${hour}`"
-                      class="schedule-cell" :class="{ 'today': isToday(day.date) }">
+                    <td
+                      v-for="(day, dayIndex) in weekDays"
+                      :key="`${dayIndex}-${hour}`"
+                      class="schedule-cell"
+                      :class="{ today: isToday(day.date) }"
+                    >
                       <!-- Service Appointments -->
-                      <template v-for="(event, eventIndex) in getEventsForHour(day.date, hour)"
-                        :key="eventIndex">
-                        <div class="appointment-card" :class="getAppointmentClass(event)"
+                      <template
+                        v-for="(event, eventIndex) in getEventsForHour(day.date, hour)"
+                        :key="eventIndex"
+                      >
+                        <div
+                          class="appointment-card"
+                          :class="getAppointmentClass(event)"
                           :style="getAppointmentStyle(event)"
-                          @click="viewAppointmentDetails(event)">
+                          @click="viewAppointmentDetails(event)"
+                        >
                           <div class="appointment-time">{{ formatAppointmentTime(event) }}</div>
                           <div class="appointment-title">{{ event.service.name }}</div>
-                          <div class="appointment-customer text-truncate">{{
-                            event.customer.user.full_name }}</div>
+                          <div class="appointment-customer text-truncate">
+                            {{ event.customer.user.full_name }}
+                          </div>
                         </div>
                       </template>
                     </td>
@@ -114,17 +128,26 @@
             </div>
             <!-- Appointments List -->
             <div v-else class="list-group list-group-flush">
-              <div v-for="(appointment, index) in todayAppointments" :key="index"
-                class="list-group-item">
+              <div
+                v-for="(appointment, index) in todayAppointments"
+                :key="index"
+                class="list-group-item"
+              >
                 <div class="d-flex justify-content-between align-items-center">
                   <div>
                     <span class="badge" :class="getStatusBadgeClass(appointment.status)">
-                      {{ formatTimeSlot(appointment.preferred_time,
-                        appointment.service.estimated_time) }}
+                      {{
+                        formatTimeSlot(
+                          appointment.preferred_time,
+                          appointment.service.estimated_time,
+                        )
+                      }}
                     </span>
                   </div>
-                  <button class="btn btn-sm btn-outline-primary"
-                    @click="viewAppointmentDetails(appointment)">
+                  <button
+                    class="btn btn-sm btn-outline-primary"
+                    @click="viewAppointmentDetails(appointment)"
+                  >
                     <i class="bi bi-eye"></i>
                   </button>
                 </div>
@@ -155,10 +178,13 @@
             </div>
             <!-- Appointments List -->
             <div v-else class="list-group list-group-flush">
-              <div v-for="(appointment, index) in upcomingAppointments" :key="index"
-                class="list-group-item">
-                <div class="small text-muted mb-1">{{ formatUpcomingDate(appointment.preferred_time)
-                  }}
+              <div
+                v-for="(appointment, index) in upcomingAppointments"
+                :key="index"
+                class="list-group-item"
+              >
+                <div class="small text-muted mb-1">
+                  {{ formatUpcomingDate(appointment.preferred_time) }}
                 </div>
                 <h6 class="mb-1">{{ appointment.service.name }}</h6>
                 <div class="d-flex align-items-center small text-muted">
@@ -178,8 +204,12 @@
         <div class="modal-content" v-if="selectedAppointment">
           <div class="modal-header">
             <h5 class="modal-title">Appointment Details</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <div class="row">
@@ -211,7 +241,8 @@
                           <i class="bi bi-hourglass-split text-primary me-2 fs-5"></i>
                           <div>
                             <div class="small text-muted">Duration</div>
-                            <div>{{ formatDuration(selectedAppointment.service.estimated_time) }}
+                            <div>
+                              {{ formatDuration(selectedAppointment.service.estimated_time) }}
                             </div>
                           </div>
                         </div>
@@ -238,7 +269,8 @@
 
                     <div class="mt-4">
                       <h6>Request Description</h6>
-                      <p>{{ selectedAppointment.description || 'No additional details provided.' }}
+                      <p>
+                        {{ selectedAppointment.description || 'No additional details provided.' }}
                       </p>
                     </div>
 
@@ -297,8 +329,13 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button v-if="selectedAppointment.status === 'assigned'" type="button"
-              class="btn btn-success" @click="completeAppointment" :disabled="isProcessing">
+            <button
+              v-if="selectedAppointment.status === 'assigned'"
+              type="button"
+              class="btn btn-success"
+              @click="completeAppointment"
+              :disabled="isProcessing"
+            >
               <span v-if="isProcessing" class="spinner-border spinner-border-sm me-1"></span>
               Mark as Completed
             </button>
@@ -308,38 +345,56 @@
     </div>
 
     <!-- Complete Appointment Modal -->
-    <div class="modal fade" id="completeAppointmentModal" tabindex="-1"
-      ref="completeAppointmentModal">
+    <div
+      class="modal fade"
+      id="completeAppointmentModal"
+      tabindex="-1"
+      ref="completeAppointmentModal"
+    >
       <div class="modal-dialog">
         <div class="modal-content" v-if="selectedAppointment">
           <div class="modal-header">
             <h5 class="modal-title">Complete Service</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <form @submit.prevent="submitCompletion">
               <div class="mb-3">
-                <label for="completionRemarks" class="form-label">Service Remarks <span
-                    class="text-danger">*</span></label>
-                <textarea id="completionRemarks" class="form-control" v-model="completionRemarks"
-                  rows="4" placeholder="Please provide details about the service completed..."
-                  :class="{ 'is-invalid': remarksError }" required></textarea>
+                <label for="completionRemarks" class="form-label"
+                  >Service Remarks <span class="text-danger">*</span></label
+                >
+                <textarea
+                  id="completionRemarks"
+                  class="form-control"
+                  v-model="completionRemarks"
+                  rows="4"
+                  placeholder="Please provide details about the service completed..."
+                  :class="{ 'is-invalid': remarksError }"
+                  required
+                ></textarea>
                 <div class="invalid-feedback" v-if="remarksError">
                   {{ remarksError }}
                 </div>
                 <div class="form-text">
                   Include important details about the work performed, materials used, and any
-                  follow-up
-                  recommendations.
+                  follow-up recommendations.
                 </div>
               </div>
             </form>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-success" @click="submitCompletion"
-              :disabled="isProcessing">
+            <button
+              type="button"
+              class="btn btn-success"
+              @click="submitCompletion"
+              :disabled="isProcessing"
+            >
               <span v-if="isProcessing" class="spinner-border spinner-border-sm me-1"></span>
               Complete Service
             </button>
@@ -351,307 +406,307 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
-import { useStore } from 'vuex';
-import moment from 'moment';
-import * as bootstrap from 'bootstrap';
+import { ref, computed, onMounted, watch } from 'vue'
+import { useStore } from 'vuex'
+import moment from 'moment'
+import * as bootstrap from 'bootstrap'
 
 export default {
   name: 'ProfessionalSchedule',
   setup() {
-    const store = useStore();
+    const store = useStore()
 
     // Refs for modals
-    const appointmentDetailModal = ref(null);
-    const completeAppointmentModal = ref(null);
-    let bsAppointmentDetailModal = null;
-    let bsCompleteAppointmentModal = null;
+    const appointmentDetailModal = ref(null)
+    const completeAppointmentModal = ref(null)
+    let bsAppointmentDetailModal = null
+    let bsCompleteAppointmentModal = null
 
     // State
-    const isLoading = ref(true);
-    const error = ref(null);
-    const showCompleted = ref(false);
-    const appointments = ref([]);
-    const currentWeekStart = ref(moment().startOf('week'));
-    const selectedAppointment = ref(null);
-    const completionRemarks = ref('');
-    const remarksError = ref('');
-    const isProcessing = ref(false);
+    const isLoading = ref(true)
+    const error = ref(null)
+    const showCompleted = ref(false)
+    const appointments = ref([])
+    const currentWeekStart = ref(moment().startOf('week'))
+    const selectedAppointment = ref(null)
+    const completionRemarks = ref('')
+    const remarksError = ref('')
+    const isProcessing = ref(false)
 
     // Computed properties
     const weekDays = computed(() => {
-      const days = [];
+      const days = []
       for (let i = 0; i < 7; i++) {
         days.push({
-          date: moment(currentWeekStart.value).add(i, 'days').toDate()
-        });
+          date: moment(currentWeekStart.value).add(i, 'days').toDate(),
+        })
       }
-      return days;
-    });
+      return days
+    })
 
     const displayHours = computed(() => {
       // Business hours from 9 AM to 6 PM
-      const hours = [];
+      const hours = []
       for (let i = 9; i <= 17; i++) {
-        hours.push(i);
+        hours.push(i)
       }
-      return hours;
-    });
+      return hours
+    })
 
     const todayAppointments = computed(() => {
-      const today = moment().startOf('day');
+      const today = moment().startOf('day')
       return appointments.value
-        .filter(app => {
-          const appDate = moment(app.preferred_time).startOf('day');
-          return appDate.isSame(today) && (showCompleted.value || app.status !== 'completed');
-        })
-        .sort((a, b) => moment(a.preferred_time).diff(moment(b.preferred_time)));
-    });
-
-    const upcomingAppointments = computed(() => {
-      const today = moment().startOf('day');
-      // eslint-disable-next-line no-unused-vars
-      const tomorrow = moment().add(1, 'day').startOf('day');
-
-      return appointments.value
-        .filter(app => {
-          const appDate = moment(app.preferred_time).startOf('day');
-          return appDate.isAfter(today) && app.status !== 'completed';
+        .filter((app) => {
+          const appDate = moment(app.preferred_time).startOf('day')
+          return appDate.isSame(today) && (showCompleted.value || app.status !== 'completed')
         })
         .sort((a, b) => moment(a.preferred_time).diff(moment(b.preferred_time)))
-        .slice(0, 5); // Show only next 5 upcoming appointments
-    });
+    })
+
+    const upcomingAppointments = computed(() => {
+      const today = moment().startOf('day')
+      // eslint-disable-next-line no-unused-vars
+      const tomorrow = moment().add(1, 'day').startOf('day')
+
+      return appointments.value
+        .filter((app) => {
+          const appDate = moment(app.preferred_time).startOf('day')
+          return appDate.isAfter(today) && app.status !== 'completed'
+        })
+        .sort((a, b) => moment(a.preferred_time).diff(moment(b.preferred_time)))
+        .slice(0, 5) // Show only next 5 upcoming appointments
+    })
 
     // Methods
     const loadSchedule = async () => {
-      isLoading.value = true;
-      error.value = null;
+      isLoading.value = true
+      error.value = null
 
       try {
         // Get start and end dates for fetching
-        const startDate = moment(currentWeekStart.value).format('YYYY-MM-DD');
-        const endDate = moment(currentWeekStart.value).add(6, 'days').format('YYYY-MM-DD');
+        const startDate = moment(currentWeekStart.value).format('YYYY-MM-DD')
+        const endDate = moment(currentWeekStart.value).add(6, 'days').format('YYYY-MM-DD')
 
         // Get requests for the current professional (both assigned and completed)
         const response = await store.dispatch('requests/fetchProfessionalRequests', {
-          type: 'all',  // Get all requests
+          type: 'all', // Get all requests
           startDate,
           endDate,
-          perPage: 100  // Get a larger number to cover the week
-        });
+          perPage: 100, // Get a larger number to cover the week
+        })
 
-        appointments.value = response.data || [];
+        appointments.value = response.data || []
       } catch (err) {
-        console.error('Error loading schedule:', err);
-        error.value = 'Failed to load your schedule. Please try again.';
+        console.error('Error loading schedule:', err)
+        error.value = 'Failed to load your schedule. Please try again.'
       } finally {
-        isLoading.value = false;
+        isLoading.value = false
       }
-    };
+    }
 
     const refreshSchedule = () => {
-      loadSchedule();
-    };
+      loadSchedule()
+    }
 
     const prevWeek = () => {
-      currentWeekStart.value = moment(currentWeekStart.value).subtract(1, 'week');
-      loadSchedule();
-    };
+      currentWeekStart.value = moment(currentWeekStart.value).subtract(1, 'week')
+      loadSchedule()
+    }
 
     const nextWeek = () => {
-      currentWeekStart.value = moment(currentWeekStart.value).add(1, 'week');
-      loadSchedule();
-    };
+      currentWeekStart.value = moment(currentWeekStart.value).add(1, 'week')
+      loadSchedule()
+    }
 
     const todayWeek = () => {
-      currentWeekStart.value = moment().startOf('week');
-      loadSchedule();
-    };
+      currentWeekStart.value = moment().startOf('week')
+      loadSchedule()
+    }
 
     const getEventsForHour = (date, hour) => {
-      const formattedDate = moment(date).format('YYYY-MM-DD');
+      const formattedDate = moment(date).format('YYYY-MM-DD')
 
-      return appointments.value.filter(app => {
+      return appointments.value.filter((app) => {
         // Filter by date and status if needed
-        const appDate = moment(app.preferred_time).format('YYYY-MM-DD');
-        const appHour = moment(app.preferred_time).hour();
+        const appDate = moment(app.preferred_time).format('YYYY-MM-DD')
+        const appHour = moment(app.preferred_time).hour()
 
         return (
           appDate === formattedDate &&
           appHour === hour &&
           (showCompleted.value || app.status !== 'completed')
-        );
-      });
-    };
+        )
+      })
+    }
 
     const viewAppointmentDetails = (appointment) => {
-      selectedAppointment.value = appointment;
-      bsAppointmentDetailModal.show();
-    };
+      selectedAppointment.value = appointment
+      bsAppointmentDetailModal.show()
+    }
 
     const completeAppointment = () => {
-      if (!selectedAppointment.value || selectedAppointment.value.status !== 'assigned') return;
+      if (!selectedAppointment.value || selectedAppointment.value.status !== 'assigned') return
 
-      bsAppointmentDetailModal.hide();
-      completionRemarks.value = '';
-      remarksError.value = '';
-      bsCompleteAppointmentModal.show();
-    };
+      bsAppointmentDetailModal.hide()
+      completionRemarks.value = ''
+      remarksError.value = ''
+      bsCompleteAppointmentModal.show()
+    }
 
     const submitCompletion = async () => {
-      if (!selectedAppointment.value || isProcessing.value) return;
+      if (!selectedAppointment.value || isProcessing.value) return
 
       // Validate remarks
       if (!completionRemarks.value.trim()) {
-        remarksError.value = 'Please provide remarks about the completed service';
-        return;
+        remarksError.value = 'Please provide remarks about the completed service'
+        return
       }
 
-      isProcessing.value = true;
+      isProcessing.value = true
       try {
         await store.dispatch('requests/completeRequest', {
           id: selectedAppointment.value.id,
-          remarks: completionRemarks.value.trim()
-        });
+          remarks: completionRemarks.value.trim(),
+        })
 
         window.showToast({
           type: 'success',
           title: 'Success',
-          message: 'Service has been marked as completed!'
-        });
+          message: 'Service has been marked as completed!',
+        })
 
-        bsCompleteAppointmentModal.hide();
-        loadSchedule(); // Refresh the schedule
+        bsCompleteAppointmentModal.hide()
+        loadSchedule() // Refresh the schedule
       } catch (error) {
         window.showToast({
           type: 'error',
           title: 'Error',
-          message: error.response?.data?.message || 'Failed to complete service. Please try again.'
-        });
+          message: error.response?.data?.message || 'Failed to complete service. Please try again.',
+        })
       } finally {
-        isProcessing.value = false;
+        isProcessing.value = false
       }
-    };
+    }
 
     // Formatting helpers
     const formatDayName = (date) => {
-      return moment(date).format('ddd');
-    };
+      return moment(date).format('ddd')
+    }
 
     const formatDayDate = (date) => {
-      return moment(date).format('MMM D');
-    };
+      return moment(date).format('MMM D')
+    }
 
     const formatHourLabel = (hour) => {
-      return moment().hour(hour).minute(0).format('h A');
-    };
+      return moment().hour(hour).minute(0).format('h A')
+    }
 
     const formatDateLong = (dateString) => {
-      return moment(dateString).format('dddd, MMMM D, YYYY h:mm A');
-    };
+      return moment(dateString).format('dddd, MMMM D, YYYY h:mm A')
+    }
 
     const formatDateOnly = (dateString) => {
-      return moment(dateString).format('MMM D, YYYY');
-    };
+      return moment(dateString).format('MMM D, YYYY')
+    }
 
     const formatDuration = (minutes) => {
-      const hours = Math.floor(minutes / 60);
-      const mins = minutes % 60;
+      const hours = Math.floor(minutes / 60)
+      const mins = minutes % 60
 
       if (hours === 0) {
-        return `${mins} minutes`;
+        return `${mins} minutes`
       } else if (mins === 0) {
-        return `${hours} hour${hours > 1 ? 's' : ''}`;
+        return `${hours} hour${hours > 1 ? 's' : ''}`
       } else {
-        return `${hours} hour${hours > 1 ? 's' : ''} ${mins} min`;
+        return `${hours} hour${hours > 1 ? 's' : ''} ${mins} min`
       }
-    };
+    }
 
     const formatTimeSlot = (startTime, duration) => {
-      const start = moment(startTime);
-      const end = moment(startTime).add(duration, 'minutes');
-      return `${start.format('h:mm A')} - ${end.format('h:mm A')}`;
-    };
+      const start = moment(startTime)
+      const end = moment(startTime).add(duration, 'minutes')
+      return `${start.format('h:mm A')} - ${end.format('h:mm A')}`
+    }
 
     const formatAppointmentTime = (appointment) => {
-      return moment(appointment.preferred_time).format('h:mm A');
-    };
+      return moment(appointment.preferred_time).format('h:mm A')
+    }
 
     const formatUpcomingDate = (dateString) => {
-      const date = moment(dateString);
+      const date = moment(dateString)
       // eslint-disable-next-line no-unused-vars
-      const today = moment().startOf('day');
-      const tomorrow = moment().add(1, 'day').startOf('day');
+      const today = moment().startOf('day')
+      const tomorrow = moment().add(1, 'day').startOf('day')
 
       if (date.isSame(tomorrow, 'day')) {
-        return `Tomorrow at ${date.format('h:mm A')}`;
+        return `Tomorrow at ${date.format('h:mm A')}`
       } else {
-        return date.format('ddd, MMM D [at] h:mm A');
+        return date.format('ddd, MMM D [at] h:mm A')
       }
-    };
+    }
 
     const formatPhone = (phone) => {
-      return `+91 ${phone}`;
-    };
+      return `+91 ${phone}`
+    }
 
     const formatStatus = (status) => {
       const statusMap = {
-        'created': 'Pending',
-        'assigned': 'In Progress',
-        'completed': 'Completed'
-      };
-      return statusMap[status] || status;
-    };
+        created: 'Pending',
+        assigned: 'In Progress',
+        completed: 'Completed',
+      }
+      return statusMap[status] || status
+    }
 
     const isToday = (date) => {
-      return moment(date).isSame(moment(), 'day');
-    };
+      return moment(date).isSame(moment(), 'day')
+    }
 
     const getAppointmentClass = (appointment) => {
       return {
-        'assigned': appointment.status === 'assigned',
-        'completed': appointment.status === 'completed',
-        'created': appointment.status === 'created'
-      };
-    };
+        assigned: appointment.status === 'assigned',
+        completed: appointment.status === 'completed',
+        created: appointment.status === 'created',
+      }
+    }
 
     const getAppointmentStyle = (appointment) => {
       // Calculate height based on duration (30 minutes = 50px height)
-      const durationInMinutes = appointment.service.estimated_time;
-      const heightPerMinute = 50 / 60; // 50px per hour
-      const height = Math.max(durationInMinutes * heightPerMinute, 25); // Min height: 25px
+      const durationInMinutes = appointment.service.estimated_time
+      const heightPerMinute = 50 / 60 // 50px per hour
+      const height = Math.max(durationInMinutes * heightPerMinute, 25) // Min height: 25px
 
       return {
-        height: `${height}px`
-      };
-    };
+        height: `${height}px`,
+      }
+    }
 
     const getStatusBadgeClass = (status) => {
       const classMap = {
-        'created': 'bg-warning',
-        'assigned': 'bg-info',
-        'completed': 'bg-success'
-      };
-      return classMap[status] || 'bg-secondary';
-    };
+        created: 'bg-warning',
+        assigned: 'bg-info',
+        completed: 'bg-success',
+      }
+      return classMap[status] || 'bg-secondary'
+    }
 
     // Watch for changes in showCompleted and reload if necessary
     watch(showCompleted, () => {
       // No need to reload data, just recompute filtered lists
-    });
+    })
 
     // Lifecycle hooks
     onMounted(() => {
       if (appointmentDetailModal.value) {
-        bsAppointmentDetailModal = new bootstrap.Modal(appointmentDetailModal.value);
+        bsAppointmentDetailModal = new bootstrap.Modal(appointmentDetailModal.value)
       }
 
       if (completeAppointmentModal.value) {
-        bsCompleteAppointmentModal = new bootstrap.Modal(completeAppointmentModal.value);
+        bsCompleteAppointmentModal = new bootstrap.Modal(completeAppointmentModal.value)
       }
 
-      loadSchedule();
-    });
+      loadSchedule()
+    })
 
     return {
       isLoading,
@@ -696,10 +751,10 @@ export default {
       isToday,
       getAppointmentClass,
       getAppointmentStyle,
-      getStatusBadgeClass
-    };
-  }
-};
+      getStatusBadgeClass,
+    }
+  },
+}
 </script>
 
 <style scoped>
@@ -754,7 +809,9 @@ export default {
   overflow: hidden;
   z-index: 1;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .appointment-card:hover {

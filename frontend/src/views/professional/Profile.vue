@@ -27,15 +27,25 @@
                     <!-- Username (Read-only) -->
                     <div class="col-md-6">
                       <label class="form-label">Username</label>
-                      <input type="text" class="form-control" :value="user.username" readonly disabled />
+                      <input
+                        type="text"
+                        class="form-control"
+                        :value="user.username"
+                        readonly
+                        disabled
+                      />
                     </div>
 
                     <!-- Email -->
                     <div class="col-md-6">
                       <label for="email" class="form-label">Email</label>
-                      <input type="email" id="email" v-model="form.email"
+                      <input
+                        type="email"
+                        id="email"
+                        v-model="form.email"
                         :class="['form-control', { 'is-invalid': v$.form.email.$error }]"
-                        @input="v$.form.email.$touch()" />
+                        @input="v$.form.email.$touch()"
+                      />
                       <div class="invalid-feedback" v-if="v$.form.email.$error">
                         {{ v$.form.email.$errors[0]?.$message }}
                       </div>
@@ -44,9 +54,13 @@
                     <!-- Full Name -->
                     <div class="col-md-6">
                       <label for="fullName" class="form-label">Full Name</label>
-                      <input type="text" id="fullName" v-model="form.fullName"
+                      <input
+                        type="text"
+                        id="fullName"
+                        v-model="form.fullName"
                         :class="['form-control', { 'is-invalid': v$.form.fullName.$error }]"
-                        @input="v$.form.fullName.$touch()" />
+                        @input="v$.form.fullName.$touch()"
+                      />
                       <div class="invalid-feedback" v-if="v$.form.fullName.$error">
                         {{ v$.form.fullName.$errors[0]?.$message }}
                       </div>
@@ -57,9 +71,14 @@
                       <label for="phone" class="form-label">Phone</label>
                       <div class="input-group">
                         <span class="input-group-text">+91</span>
-                        <input type="tel" id="phone" v-model="form.phone"
+                        <input
+                          type="tel"
+                          id="phone"
+                          v-model="form.phone"
                           :class="['form-control', { 'is-invalid': v$.form.phone.$error }]"
-                          @input="v$.form.phone.$touch()" maxlength="10" />
+                          @input="v$.form.phone.$touch()"
+                          maxlength="10"
+                        />
                       </div>
                       <div class="invalid-feedback" v-if="v$.form.phone.$error">
                         {{ v$.form.phone.$errors[0]?.$message }}
@@ -69,9 +88,13 @@
                     <!-- Address -->
                     <div class="col-12">
                       <label for="address" class="form-label">Address</label>
-                      <textarea id="address" v-model="form.address"
+                      <textarea
+                        id="address"
+                        v-model="form.address"
                         :class="['form-control', { 'is-invalid': v$.form.address.$error }]"
-                        @input="v$.form.address.$touch()" rows="3"></textarea>
+                        @input="v$.form.address.$touch()"
+                        rows="3"
+                      ></textarea>
                       <div class="invalid-feedback" v-if="v$.form.address.$error">
                         {{ v$.form.address.$errors[0]?.$message }}
                       </div>
@@ -80,9 +103,14 @@
                     <!-- PIN Code -->
                     <div class="col-md-6">
                       <label for="pinCode" class="form-label">PIN Code</label>
-                      <input type="text" id="pinCode" v-model="form.pinCode"
+                      <input
+                        type="text"
+                        id="pinCode"
+                        v-model="form.pinCode"
                         :class="['form-control', { 'is-invalid': v$.form.pinCode.$error }]"
-                        @input="v$.form.pinCode.$touch()" maxlength="6" />
+                        @input="v$.form.pinCode.$touch()"
+                        maxlength="6"
+                      />
                       <div class="invalid-feedback" v-if="v$.form.pinCode.$error">
                         {{ v$.form.pinCode.$errors[0]?.$message }}
                       </div>
@@ -97,9 +125,13 @@
                     <!-- Description -->
                     <div class="col-12">
                       <label for="description" class="form-label">Professional Description</label>
-                      <textarea id="description" v-model="form.description"
+                      <textarea
+                        id="description"
+                        v-model="form.description"
                         :class="['form-control', { 'is-invalid': v$.form.description.$error }]"
-                        @input="v$.form.description.$touch()" rows="4"></textarea>
+                        @input="v$.form.description.$touch()"
+                        rows="4"
+                      ></textarea>
                       <div class="invalid-feedback" v-if="v$.form.description.$error">
                         {{ v$.form.description.$errors[0]?.$message }}
                       </div>
@@ -109,7 +141,9 @@
                     <div class="col-md-6">
                       <label class="form-label">Service Type</label>
                       <p class="form-control-plaintext">{{ user.service_type || 'N/A' }}</p>
-                      <small class="text-muted">To change service type, visit the Service section</small>
+                      <small class="text-muted"
+                        >To change service type, visit the Service section</small
+                      >
                     </div>
 
                     <div class="col-md-6">
@@ -122,9 +156,7 @@
                 <!-- Action Buttons -->
                 <div class="col-12">
                   <div class="d-flex gap-2 justify-content-end">
-                    <button type="button" class="btn btn-light" @click="cancelEdit">
-                      Cancel
-                    </button>
+                    <button type="button" class="btn btn-light" @click="cancelEdit">Cancel</button>
                     <button type="submit" class="btn btn-success" :disabled="isLoading">
                       <span v-if="isLoading" class="spinner-border spinner-border-sm me-2"></span>
                       {{ isLoading ? 'Saving Changes...' : 'Save Changes' }}
@@ -267,24 +299,36 @@
             <div class="modal-body">
               <div class="mb-3">
                 <label class="form-label">Current Password</label>
-                <input type="password" v-model="passwordForm.oldPassword"
-                  :class="['form-control', { 'is-invalid': passwordError }]" required />
+                <input
+                  type="password"
+                  v-model="passwordForm.oldPassword"
+                  :class="['form-control', { 'is-invalid': passwordError }]"
+                  required
+                />
                 <div class="invalid-feedback" v-if="passwordError">
                   {{ passwordError }}
                 </div>
               </div>
               <div class="mb-3">
                 <label class="form-label">New Password</label>
-                <input type="password" v-model="passwordForm.newPassword"
-                  :class="['form-control', { 'is-invalid': newPasswordError }]" required />
+                <input
+                  type="password"
+                  v-model="passwordForm.newPassword"
+                  :class="['form-control', { 'is-invalid': newPasswordError }]"
+                  required
+                />
                 <div class="invalid-feedback" v-if="newPasswordError">
                   {{ newPasswordError }}
                 </div>
               </div>
               <div class="mb-3">
                 <label class="form-label">Confirm New Password</label>
-                <input type="password" v-model="passwordForm.confirmPassword"
-                  :class="['form-control', { 'is-invalid': confirmPasswordError }]" required />
+                <input
+                  type="password"
+                  v-model="passwordForm.confirmPassword"
+                  :class="['form-control', { 'is-invalid': confirmPasswordError }]"
+                  required
+                />
                 <div class="invalid-feedback" v-if="confirmPasswordError">
                   {{ confirmPasswordError }}
                 </div>
@@ -319,8 +363,12 @@
               </div>
               <div class="mb-3">
                 <label class="form-label">Enter your password to confirm</label>
-                <input type="password" v-model="deleteForm.password"
-                  :class="['form-control', { 'is-invalid': deleteError }]" required />
+                <input
+                  type="password"
+                  v-model="deleteForm.password"
+                  :class="['form-control', { 'is-invalid': deleteError }]"
+                  required
+                />
                 <div class="invalid-feedback" v-if="deleteError">
                   {{ deleteError }}
                 </div>
@@ -350,7 +398,6 @@ import { required, email, minLength, maxLength, helpers } from '@vuelidate/valid
 
 import moment from 'moment'
 import * as bootstrap from 'bootstrap'
-
 
 export default {
   name: 'ProfessionalProfile',
@@ -385,19 +432,19 @@ export default {
       phone: '',
       address: '',
       pinCode: '',
-      description: ''
+      description: '',
     })
 
     // Password Change Form
     const passwordForm = reactive({
       oldPassword: '',
       newPassword: '',
-      confirmPassword: ''
+      confirmPassword: '',
     })
 
     // Delete Account Form
     const deleteForm = reactive({
-      password: ''
+      password: '',
     })
     const phoneValidator = helpers.regex(/^[1-9]\d{9}$/)
     const pincodeValidator = helpers.regex(/^[1-9]\d{5}$/)
@@ -415,82 +462,91 @@ export default {
           minLength: createCustomValidator('Username must be at least 4 characters', minLength(4)),
           alphaNum: createCustomValidator(
             'Username can only contain letters, numbers, and underscores',
-            usernameValidator
-          )
+            usernameValidator,
+          ),
         },
         email: {
           required: createCustomValidator('Email is required', required),
-          email: createCustomValidator('Please enter a valid email address', email)
+          email: createCustomValidator('Please enter a valid email address', email),
         },
         fullName: {
           required: createCustomValidator('Full name is required', required),
           minLength: createCustomValidator('Full name must be at least 4 characters', minLength(4)),
-          validName: createCustomValidator('Please enter a valid name', nameValidator)
+          validName: createCustomValidator('Please enter a valid name', nameValidator),
         },
         phone: {
           required: createCustomValidator('Phone number is required', required),
           validPhone: createCustomValidator(
             'Please enter a valid 10-digit phone number',
-            phoneValidator
-          )
+            phoneValidator,
+          ),
         },
         pinCode: {
           required: createCustomValidator('PIN code is required', required),
           validPin: createCustomValidator(
             'Please enter a valid 6-digit PIN code',
-            pincodeValidator
-          )
+            pincodeValidator,
+          ),
         },
         address: {
           required: createCustomValidator('Address is required', required),
           minLength: createCustomValidator('Address is too short', minLength(10)),
-          maxLength: createCustomValidator('Address is too long', maxLength(200))
+          maxLength: createCustomValidator('Address is too long', maxLength(200)),
         },
         description: {
           required: createCustomValidator('Professional description is required', required),
-          minLength: createCustomValidator('Description must be at least 10 characters', minLength(10)),
-          maxLength: createCustomValidator('Description cannot exceed 1000 characters', maxLength(1000))
+          minLength: createCustomValidator(
+            'Description must be at least 10 characters',
+            minLength(10),
+          ),
+          maxLength: createCustomValidator(
+            'Description cannot exceed 1000 characters',
+            maxLength(1000),
+          ),
         },
         serviceTypeId: {
-          required: createCustomValidator('Please select a service type', required)
+          required: createCustomValidator('Please select a service type', required),
         },
         experienceYears: {
           required: createCustomValidator('Years of experience is required', required),
           validExperience: createCustomValidator(
             'Experience must be between 0 and 50 years',
-            value => !isNaN(value) && value >= 0 && value <= 50
-          )
+            (value) => !isNaN(value) && value >= 0 && value <= 50,
+          ),
         },
         password: {
           required: createCustomValidator('Password is required', required),
           minLength: createCustomValidator('Password must be at least 8 characters', minLength(8)),
           strongPassword: createCustomValidator(
             'Password must include uppercase, lowercase, number, and special character',
-            helpers.regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
-          )
+            helpers.regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/),
+          ),
         },
         confirmPassword: {
           required: createCustomValidator('Please confirm your password', required),
           sameAsPassword: createCustomValidator(
             'Passwords must match',
-            (value, formData) => value === formData.password
-          )
+            (value, formData) => value === formData.password,
+          ),
         },
         verificationDocument: {
           required: createCustomValidator('Please upload verification documents', required),
           validFile: createCustomValidator(
             'Please upload a valid file (PDF, JPG, or PNG under 5MB)',
-            value => {
+            (value) => {
               if (!value) return true
               const validTypes = ['application/pdf', 'image/jpeg', 'image/png']
               return validTypes.includes(value.type) && value.size <= 5 * 1024 * 1024
-            }
-          )
+            },
+          ),
         },
         termsAccepted: {
-          required: createCustomValidator('You must accept the terms and conditions', value => value === true)
-        }
-      }
+          required: createCustomValidator(
+            'You must accept the terms and conditions',
+            (value) => value === true,
+          ),
+        },
+      },
     }
 
     const v$ = useVuelidate(rules, { form })
@@ -514,7 +570,7 @@ export default {
       Object.assign(passwordForm, {
         oldPassword: '',
         newPassword: '',
-        confirmPassword: ''
+        confirmPassword: '',
       })
       passwordError.value = ''
       newPasswordError.value = ''
@@ -549,13 +605,13 @@ export default {
           phone: form.phone,
           address: form.address,
           pinCode: form.pinCode,
-          description: form.description
+          description: form.description,
         })
 
         window.showToast({
           type: 'success',
           title: 'Profile Updated',
-          message: 'Your profile has been updated successfully.'
+          message: 'Your profile has been updated successfully.',
         })
 
         isEditing.value = false
@@ -563,7 +619,7 @@ export default {
         window.showToast({
           type: 'error',
           title: 'Update Failed',
-          message: error.response?.data?.message || 'Failed to update profile.'
+          message: error.response?.data?.message || 'Failed to update profile.',
         })
       } finally {
         isLoading.value = false
@@ -574,7 +630,6 @@ export default {
       resetForms()
       bsPasswordModal.show()
     }
-
 
     const handlePasswordChange = async () => {
       try {
@@ -587,18 +642,17 @@ export default {
         passwordLoading.value = true
         await store.dispatch('auth/changePassword', {
           oldPassword: passwordForm.oldPassword,
-          newPassword: passwordForm.newPassword
+          newPassword: passwordForm.newPassword,
         })
 
         bsPasswordModal.hide()
         window.showToast({
           type: 'success',
           title: 'Success',
-          message: 'Password changed successfully'
+          message: 'Password changed successfully',
         })
         resetForms()
         router.push('/login')
-
       } catch (error) {
         passwordError.value = error.response?.data?.message || 'Failed to change password'
       } finally {
@@ -615,14 +669,13 @@ export default {
       deleteLoading.value = true
       try {
         await store.dispatch('auth/deleteAccount', {
-          password: deleteForm.password
+          password: deleteForm.password,
         })
-
 
         window.showToast({
           type: 'success',
           title: 'Account Deleted',
-          message: 'Your account has been deleted successfully.'
+          message: 'Your account has been deleted successfully.',
         })
 
         router.push('/login')
@@ -656,9 +709,9 @@ export default {
       showPasswordModal,
       handlePasswordChange,
       showDeleteModal,
-      handleDeleteAccount
+      handleDeleteAccount,
     }
-  }
+  },
 }
 </script>
 

@@ -31,7 +31,6 @@ class DeleteAccountSchema(BaseSchema):
     from marshmallow import Schema, fields, validate
 
 
-
 actions = ActivityLogActions.get_all_actions()
 actions.append("all")
 

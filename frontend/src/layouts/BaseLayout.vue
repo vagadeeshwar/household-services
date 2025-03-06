@@ -47,16 +47,16 @@ export default defineComponent({
 
   components: {
     TheNavbar,
-    Toast
+    Toast,
   },
 
   setup() {
     const currentYear = new Date().getFullYear()
 
     return {
-      currentYear
+      currentYear,
     }
-  }
+  },
 })
 </script>
 
