@@ -9,34 +9,58 @@ const DEFAULT_TTL = 5 * 60 * 1000 // 5 minutes
 
 // TTL Configuration per endpoint type
 const TTL_CONFIG = {
-  LIST: 2 * 60 * 1000, // Lists: 2 minutes
-  DETAIL: 5 * 60 * 1000, // Detail views: 5 minutes
-  SEARCH: 1 * 60 * 1000, // Search results: 1 minute
-  DROPDOWN: 15 * 60 * 1000, // Dropdown and static data: 15 minutes
-  DASHBOARD: 1 * 60 * 1000, // Dashboard stats: 1 minute
-  DEFAULT: 3 * 60 * 1000, // Default: 3 minutes
+  LIST: 10 * 60 * 1000, // Lists: 10 minutes
+  DETAIL: 10 * 60 * 1000, // Detail views: 10 minutes
+  SEARCH: 10 * 60 * 1000, // Search results: 10 minute
+  DROPDOWN: 10 * 60 * 1000, // Dropdown and static data: 10 minutes
+  DASHBOARD: 10 * 60 * 1000, // Dashboard stats: 10 minute
+  DEFAULT: 10 * 60 * 1000, // Default: 10 minutes
 }
 
 /**
  * Generate a cache key from a URL and params
  */
 function generateCacheKey(url, params = {}) {
-  // Sort params to ensure consistent keys regardless of object property order
-  const sortedParams = Object.keys(params)
-    .sort()
-    .reduce((result, key) => {
-      if (params[key] !== undefined && params[key] !== null) {
-        result[key] = params[key]
-      }
-      return result
-    }, {})
+  // Create a new object to avoid reference issues
+  const cleanedParams = {}
 
-  const queryString =
-    Object.keys(sortedParams).length > 0 ? `?${new URLSearchParams(sortedParams).toString()}` : ''
+  // Process parameters to ensure consistent serialization
+  Object.keys(params)
+    .sort()
+    .forEach((key) => {
+      const value = params[key]
+      if (value !== undefined && value !== null) {
+        // Handle Date objects consistently
+        if (value instanceof Date) {
+          cleanedParams[key] = value.toISOString().split('T')[0] // Use consistent YYYY-MM-DD format
+        } else if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+          // Standardize date strings to just the date portion (strip time if present)
+          if (value.includes('T')) {
+            cleanedParams[key] = value.split('T')[0]
+          } else {
+            cleanedParams[key] = value
+          }
+        } else {
+          cleanedParams[key] = value
+        }
+      }
+    })
+
+  // Create a consistent query string
+  const queryParams = new URLSearchParams()
+  Object.keys(cleanedParams)
+    .sort()
+    .forEach((key) => {
+      queryParams.append(key, cleanedParams[key])
+    })
+
+  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : ''
+
+  // Debug logging (remove in production)
+  console.debug(`Cache key generated for ${url}${queryString}`)
 
   return `${url}${queryString}`
 }
-
 const state = {
   // Store cache entries with URL-based keys
   entries: {},
@@ -55,10 +79,20 @@ const getters = {
       const key = generateCacheKey(url, params)
       const metadata = state.metadata[key]
 
-      if (!metadata) return false
+      if (!metadata) {
+        console.debug(`Cache check: MISS - Key not found: ${key}`)
+        return false
+      }
 
       // Check if cache has expired
-      return Date.now() < metadata.expiry
+      const isValid = Date.now() < metadata.expiry
+      console.debug(`Cache check: ${isValid ? 'HIT' : 'EXPIRED'} - Key: ${key}`, {
+        now: new Date(),
+        expiry: new Date(metadata.expiry),
+        ttlRemaining: Math.round((metadata.expiry - Date.now()) / 1000) + 's',
+      })
+
+      return isValid
     },
 
   /**
@@ -73,7 +107,9 @@ const getters = {
         return null
       }
 
-      return state.entries[key]
+      const data = state.entries[key]
+      console.debug(`Returning cached data for: ${key}`)
+      return data
     },
 }
 
@@ -133,24 +169,37 @@ const actions = {
    * Perform a cached API request
    */
   async fetchWithCache(
-    { dispatch, getters },
+    { getters, commit },
     { apiCall, url, params = {}, ttl, cacheType = 'DEFAULT', forceRefresh = false },
   ) {
+    // Generate cache key
+    const cacheKey = generateCacheKey(url, params)
+
+    // Log cache hit/miss
+    console.debug(`Cache request for ${url}`, {
+      params,
+      cacheKey,
+      cacheExists: getters.isCached(url, params),
+      forceRefresh,
+    })
     // Return cached data if it exists and we're not forcing a refresh
     if (!forceRefresh && getters.isCached(url, params)) {
+      console.debug('✅ Cache HIT:', cacheKey)
       return getters.getCachedData(url, params)
     }
+
+    console.debug('❌ Cache MISS:', cacheKey)
 
     // Otherwise make the API call and cache the result
     const data = await apiCall()
 
-    // Cache the result
-    dispatch('setCacheData', {
-      url,
-      params,
+    // Cache the result - use explicit key to ensure consistency
+    const effectiveTtl = ttl || TTL_CONFIG[cacheType] || TTL_CONFIG.DEFAULT
+
+    commit('SET_CACHE_DATA', {
+      key: cacheKey,
       data,
-      ttl,
-      cacheType,
+      expiry: Date.now() + effectiveTtl,
     })
 
     return data

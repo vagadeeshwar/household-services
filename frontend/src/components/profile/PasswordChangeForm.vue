@@ -11,11 +11,19 @@
         <div class="mb-3">
           <label for="currentPassword" class="form-label">Current Password</label>
           <div class="input-group">
-            <input :type="showCurrentPassword ? 'text' : 'password'" class="form-control"
-              id="currentPassword" v-model="formData.currentPassword"
-              :class="{ 'is-invalid': validationErrors.currentPassword }" required />
-            <button class="btn btn-outline-secondary" type="button"
-              @click="showCurrentPassword = !showCurrentPassword">
+            <input
+              :type="showCurrentPassword ? 'text' : 'password'"
+              class="form-control"
+              id="currentPassword"
+              v-model="formData.currentPassword"
+              :class="{ 'is-invalid': validationErrors.currentPassword }"
+              required
+            />
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              @click="showCurrentPassword = !showCurrentPassword"
+            >
               <i class="bi" :class="showCurrentPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
             </button>
             <div class="invalid-feedback">{{ validationErrors.currentPassword }}</div>
@@ -25,29 +33,45 @@
         <div class="mb-3">
           <label for="newPassword" class="form-label">New Password</label>
           <div class="input-group">
-            <input :type="showNewPassword ? 'text' : 'password'" class="form-control"
-              id="newPassword" v-model="formData.newPassword"
-              :class="{ 'is-invalid': validationErrors.newPassword }" required />
-            <button class="btn btn-outline-secondary" type="button"
-              @click="showNewPassword = !showNewPassword">
+            <input
+              :type="showNewPassword ? 'text' : 'password'"
+              class="form-control"
+              id="newPassword"
+              v-model="formData.newPassword"
+              :class="{ 'is-invalid': validationErrors.newPassword }"
+              required
+            />
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              @click="showNewPassword = !showNewPassword"
+            >
               <i class="bi" :class="showNewPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
             </button>
             <div class="invalid-feedback">{{ validationErrors.newPassword }}</div>
           </div>
           <div class="form-text">
-            Password must be at least 8 characters long and include uppercase, lowercase,
-            number, and special character.
+            Password must be at least 8 characters long and include uppercase, lowercase, number,
+            and special character.
           </div>
         </div>
 
         <div class="mb-3">
           <label for="confirmPassword" class="form-label">Confirm New Password</label>
           <div class="input-group">
-            <input :type="showConfirmPassword ? 'text' : 'password'" class="form-control"
-              id="confirmPassword" v-model="formData.confirmPassword"
-              :class="{ 'is-invalid': validationErrors.confirmPassword }" required />
-            <button class="btn btn-outline-secondary" type="button"
-              @click="showConfirmPassword = !showConfirmPassword">
+            <input
+              :type="showConfirmPassword ? 'text' : 'password'"
+              class="form-control"
+              id="confirmPassword"
+              v-model="formData.confirmPassword"
+              :class="{ 'is-invalid': validationErrors.confirmPassword }"
+              required
+            />
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              @click="showConfirmPassword = !showConfirmPassword"
+            >
               <i class="bi" :class="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
             </button>
             <div class="invalid-feedback">{{ validationErrors.confirmPassword }}</div>
@@ -73,148 +97,148 @@
 </template>
 
 <script>
-import { ref, reactive } from 'vue';
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
+import { ref, reactive } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'PasswordChangeForm',
 
   setup() {
-    const store = useStore();
-    const router = useRouter();
+    const store = useStore()
+    const router = useRouter()
 
-    const showForm = ref(false);
-    const isSubmitting = ref(false);
+    const showForm = ref(false)
+    const isSubmitting = ref(false)
 
     // Password visibility toggles
-    const showCurrentPassword = ref(false);
-    const showNewPassword = ref(false);
-    const showConfirmPassword = ref(false);
+    const showCurrentPassword = ref(false)
+    const showNewPassword = ref(false)
+    const showConfirmPassword = ref(false)
 
     // Form data
     const formData = reactive({
       currentPassword: '',
       newPassword: '',
-      confirmPassword: ''
-    });
+      confirmPassword: '',
+    })
 
     // Validation errors
     const validationErrors = reactive({
       currentPassword: '',
       newPassword: '',
-      confirmPassword: ''
-    });
+      confirmPassword: '',
+    })
 
     // Methods
     const toggleFormVisibility = () => {
-      showForm.value = true;
-      resetForm();
-    };
+      showForm.value = true
+      resetForm()
+    }
 
     const cancelForm = () => {
-      showForm.value = false;
-      resetForm();
-    };
+      showForm.value = false
+      resetForm()
+    }
 
     const resetForm = () => {
       // Clear form data
-      formData.currentPassword = '';
-      formData.newPassword = '';
-      formData.confirmPassword = '';
+      formData.currentPassword = ''
+      formData.newPassword = ''
+      formData.confirmPassword = ''
 
       // Clear validation errors
-      validationErrors.currentPassword = '';
-      validationErrors.newPassword = '';
-      validationErrors.confirmPassword = '';
-    };
+      validationErrors.currentPassword = ''
+      validationErrors.newPassword = ''
+      validationErrors.confirmPassword = ''
+    }
 
     const validateForm = () => {
-      let isValid = true;
+      let isValid = true
 
       // Reset validation errors
-      validationErrors.currentPassword = '';
-      validationErrors.newPassword = '';
-      validationErrors.confirmPassword = '';
+      validationErrors.currentPassword = ''
+      validationErrors.newPassword = ''
+      validationErrors.confirmPassword = ''
 
       // Validate current password
       if (!formData.currentPassword) {
-        validationErrors.currentPassword = 'Current password is required';
-        isValid = false;
+        validationErrors.currentPassword = 'Current password is required'
+        isValid = false
       }
 
       // Validate new password
       if (!formData.newPassword) {
-        validationErrors.newPassword = 'New password is required';
-        isValid = false;
+        validationErrors.newPassword = 'New password is required'
+        isValid = false
       } else if (formData.newPassword.length < 8) {
-        validationErrors.newPassword = 'Password must be at least 8 characters';
-        isValid = false;
+        validationErrors.newPassword = 'Password must be at least 8 characters'
+        isValid = false
       } else if (!/[A-Z]/.test(formData.newPassword)) {
-        validationErrors.newPassword = 'Password must contain an uppercase letter';
-        isValid = false;
+        validationErrors.newPassword = 'Password must contain an uppercase letter'
+        isValid = false
       } else if (!/[a-z]/.test(formData.newPassword)) {
-        validationErrors.newPassword = 'Password must contain a lowercase letter';
-        isValid = false;
+        validationErrors.newPassword = 'Password must contain a lowercase letter'
+        isValid = false
       } else if (!/\d/.test(formData.newPassword)) {
-        validationErrors.newPassword = 'Password must contain a number';
-        isValid = false;
+        validationErrors.newPassword = 'Password must contain a number'
+        isValid = false
       } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.newPassword)) {
-        validationErrors.newPassword = 'Password must contain a special character';
-        isValid = false;
+        validationErrors.newPassword = 'Password must contain a special character'
+        isValid = false
       }
 
       // Validate confirm password
       if (!formData.confirmPassword) {
-        validationErrors.confirmPassword = 'Please confirm your new password';
-        isValid = false;
+        validationErrors.confirmPassword = 'Please confirm your new password'
+        isValid = false
       } else if (formData.newPassword !== formData.confirmPassword) {
-        validationErrors.confirmPassword = 'Passwords do not match';
-        isValid = false;
+        validationErrors.confirmPassword = 'Passwords do not match'
+        isValid = false
       }
 
-      return isValid;
-    };
+      return isValid
+    }
 
     const handleSubmit = async () => {
-      if (!validateForm()) return;
+      if (!validateForm()) return
 
-      isSubmitting.value = true;
+      isSubmitting.value = true
       try {
         // Call API to change password
         await store.dispatch('auth/changePassword', {
           params: {
             old_password: formData.currentPassword,
-            new_password: formData.newPassword
-          }
-        });
+            new_password: formData.newPassword,
+          },
+        })
 
         // Show success message
         window.showToast({
           type: 'success',
           title: 'Password Changed',
-          message: 'Your password has been changed successfully. Please login again.'
-        });
+          message: 'Your password has been changed successfully. Please login again.',
+        })
 
         // Log out and redirect to login
-        await store.dispatch('auth/logout');
-        router.push('/login');
+        await store.dispatch('auth/logout')
+        router.push('/login')
       } catch (error) {
         // Show error toast
         window.showToast({
           type: 'error',
           title: 'Change Failed',
-          message: error.response?.data?.detail || 'Failed to change password'
-        });
+          message: error.response?.data?.detail || 'Failed to change password',
+        })
 
         // Set validation error for current password
         if (error.response?.status === 401) {
-          validationErrors.currentPassword = 'Current password is incorrect';
+          validationErrors.currentPassword = 'Current password is incorrect'
         }
       } finally {
-        isSubmitting.value = false;
+        isSubmitting.value = false
       }
-    };
+    }
 
     return {
       showForm,
@@ -226,8 +250,8 @@ export default {
       showConfirmPassword,
       toggleFormVisibility,
       cancelForm,
-      handleSubmit
-    };
-  }
-};
+      handleSubmit,
+    }
+  },
+}
 </script>

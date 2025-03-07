@@ -8,9 +8,7 @@
     </div>
     <div class="card-body p-4">
       <div v-if="!showForm" class="text-center py-4">
-        <p class="text-muted">
-          Delete your account permanently. This action cannot be undone.
-        </p>
+        <p class="text-muted">Delete your account permanently. This action cannot be undone.</p>
       </div>
 
       <div v-else>
@@ -19,8 +17,8 @@
             <i class="bi bi-exclamation-triangle-fill me-2"></i>Warning!
           </h5>
           <p>
-            You are about to permanently delete your account. This action cannot be undone and
-            will result in the permanent loss of all your data.
+            You are about to permanently delete your account. This action cannot be undone and will
+            result in the permanent loss of all your data.
           </p>
           <hr />
           <p class="mb-0">
@@ -33,11 +31,19 @@
           <div class="mb-3">
             <label for="password" class="form-label">Enter your password to confirm</label>
             <div class="input-group">
-              <input :type="showPassword ? 'text' : 'password'" class="form-control" id="password"
-                v-model="formData.password" :class="{ 'is-invalid': validationErrors.password }"
-                required />
-              <button class="btn btn-outline-secondary" type="button"
-                @click="showPassword = !showPassword">
+              <input
+                :type="showPassword ? 'text' : 'password'"
+                class="form-control"
+                id="password"
+                v-model="formData.password"
+                :class="{ 'is-invalid': validationErrors.password }"
+                required
+              />
+              <button
+                class="btn btn-outline-secondary"
+                type="button"
+                @click="showPassword = !showPassword"
+              >
                 <i class="bi" :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
               </button>
               <div class="invalid-feedback">{{ validationErrors.password }}</div>
@@ -48,25 +54,33 @@
             <button type="button" class="btn btn-outline-secondary" @click="cancelForm">
               Cancel
             </button>
-            <button type="submit" class="btn btn-danger">
-              Proceed with Deletion
-            </button>
+            <button type="submit" class="btn btn-danger">Proceed with Deletion</button>
           </div>
         </form>
       </div>
     </div>
 
     <!-- Confirmation Modal -->
-    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1"
-      aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true" ref="confirmModal">
+    <div
+      class="modal fade"
+      id="deleteConfirmationModal"
+      tabindex="-1"
+      aria-labelledby="deleteConfirmationModalLabel"
+      aria-hidden="true"
+      ref="confirmModal"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header bg-danger text-white">
             <h5 class="modal-title" id="deleteConfirmationModalLabel">
               <i class="bi bi-exclamation-triangle-fill me-2"></i>Final Confirmation
             </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-              aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <p>Are you absolutely sure you want to delete your account?</p>
@@ -81,11 +95,13 @@
             <p class="text-danger fw-bold">This action CANNOT be undone.</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              Cancel
-            </button>
-            <button type="button" class="btn btn-danger" @click="deleteAccount"
-              :disabled="isDeleting">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              @click="deleteAccount"
+              :disabled="isDeleting"
+            >
               <span v-if="isDeleting" class="spinner-border spinner-border-sm me-2"></span>
               Yes, Delete My Account
             </button>
@@ -97,120 +113,120 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue';
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
-import * as bootstrap from 'bootstrap';
+import { ref, reactive, onMounted } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
+import * as bootstrap from 'bootstrap'
 
 export default {
   name: 'AccountDeleteForm',
 
   setup() {
-    const store = useStore();
-    const router = useRouter();
+    const store = useStore()
+    const router = useRouter()
 
-    const showForm = ref(false);
-    const showPassword = ref(false);
-    const isDeleting = ref(false);
-    const confirmModal = ref(null);
-    let bsConfirmModal = null;
+    const showForm = ref(false)
+    const showPassword = ref(false)
+    const isDeleting = ref(false)
+    const confirmModal = ref(null)
+    let bsConfirmModal = null
 
     // Form data
     const formData = reactive({
-      password: ''
-    });
+      password: '',
+    })
 
     // Validation errors
     const validationErrors = reactive({
-      password: ''
-    });
+      password: '',
+    })
 
     // Methods
     const toggleFormVisibility = () => {
-      showForm.value = true;
-      resetForm();
-    };
+      showForm.value = true
+      resetForm()
+    }
 
     const cancelForm = () => {
-      showForm.value = false;
-      resetForm();
-    };
+      showForm.value = false
+      resetForm()
+    }
 
     const resetForm = () => {
-      formData.password = '';
-      validationErrors.password = '';
-    };
+      formData.password = ''
+      validationErrors.password = ''
+    }
 
     const validateForm = () => {
-      validationErrors.password = '';
+      validationErrors.password = ''
 
       if (!formData.password) {
-        validationErrors.password = 'Password is required';
-        return false;
+        validationErrors.password = 'Password is required'
+        return false
       }
 
-      return true;
-    };
+      return true
+    }
 
     const showConfirmationModal = () => {
-      if (!validateForm()) return;
+      if (!validateForm()) return
 
       if (bsConfirmModal) {
-        bsConfirmModal.show();
+        bsConfirmModal.show()
       }
-    };
+    }
 
     const deleteAccount = async () => {
-      isDeleting.value = true;
+      isDeleting.value = true
       try {
         // Call API to delete account
         await store.dispatch('auth/deleteAccount', {
-          password: formData.password
-        });
+          password: formData.password,
+        })
 
         // Close modal
         if (bsConfirmModal) {
-          bsConfirmModal.hide();
+          bsConfirmModal.hide()
         }
 
         // Show success message
         window.showToast({
           type: 'success',
           title: 'Account Deleted',
-          message: 'Your account has been successfully deleted'
-        });
+          message: 'Your account has been successfully deleted',
+        })
 
         // Log out and redirect to home
-        await store.dispatch('auth/logout');
-        router.push('/');
+        await store.dispatch('auth/logout')
+        router.push('/')
       } catch (error) {
         // Show error toast
         window.showToast({
           type: 'error',
           title: 'Deletion Failed',
-          message: error.response?.data?.detail || 'Failed to delete account'
-        });
+          message: error.response?.data?.detail || 'Failed to delete account',
+        })
 
         // Set validation error for password
         if (error.response?.status === 401) {
-          validationErrors.password = 'Password is incorrect';
+          validationErrors.password = 'Password is incorrect'
         }
 
         // Close modal if open
         if (bsConfirmModal) {
-          bsConfirmModal.hide();
+          bsConfirmModal.hide()
         }
       } finally {
-        isDeleting.value = false;
+        isDeleting.value = false
       }
-    };
+    }
 
     // Initialize modal
     onMounted(() => {
       if (confirmModal.value) {
-        bsConfirmModal = new bootstrap.Modal(confirmModal.value);
+        bsConfirmModal = new bootstrap.Modal(confirmModal.value)
       }
-    });
+    })
 
     return {
       showForm,
@@ -222,8 +238,8 @@ export default {
       toggleFormVisibility,
       cancelForm,
       showConfirmationModal,
-      deleteAccount
-    };
-  }
-};
+      deleteAccount,
+    }
+  },
+}
 </script>

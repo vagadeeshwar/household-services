@@ -115,9 +115,7 @@
             </li>
             <li class="page-item"
               :class="{ disabled: activityFilters.page === activityPagination.pages }">
-              <button @click="changePage(activityFilters.page + 1)" class="page-link">
-                Next
-              </button>
+              <button @click="changePage(activityFilters.page + 1)" class="page-link">Next</button>
             </li>
           </ul>
         </div>
@@ -166,36 +164,38 @@ export default {
         // Fetch professionals
         const profResponse = await store.dispatch('professionals/fetchProfessionals', {
           params: {
-            per_page: 100
-          }
+            per_page: 100,
+          },
         });
 
         // Fetch customers
         const custResponse = await store.dispatch('customers/fetchCustomers', {
           params: {
-            per_page: 100
-          }
+            per_page: 100,
+          },
         });
 
         // Format user lists
-        const professionals = (profResponse.data || []).map(prof => ({
+        const professionals = (profResponse.data || []).map((prof) => ({
           id: prof.professional_id,
           name: prof.full_name,
-          role: 'professional'
+          role: 'professional',
         }));
 
-        const customers = (custResponse.data || []).map(cust => ({
+        const customers = (custResponse.data || []).map((cust) => ({
           id: cust.customer_id,
           name: cust.full_name,
-          role: 'customer'
+          role: 'customer',
         }));
 
         // Add current admin
-        const admins = [{
-          id: currentUser.value.id,
-          name: `${currentUser.value.full_name} (You)`,
-          role: 'admin'
-        }];
+        const admins = [
+          {
+            id: currentUser.value.id,
+            name: `${currentUser.value.full_name} (You)`,
+            role: 'admin',
+          },
+        ];
 
         // Combine all users
         allUsers.value = [...admins, ...professionals, ...customers];
@@ -232,7 +232,7 @@ export default {
       }
 
       // Find the selected user's role in the allUsers list
-      const selectedUser = allUsers.value.find(user => user.id === activityFilters.value.userId);
+      const selectedUser = allUsers.value.find((user) => user.id === activityFilters.value.userId);
       return selectedUser ? selectedUser.role : 'customer'; // Default to customer if not found
     });
 
@@ -256,24 +256,23 @@ export default {
 
     const fetchActivityLogs = async (forceRefresh = false) => {
       isLoadingActivity.value = true;
-
+      const params = {
+        action: activityFilters.value.action,
+        page: activityFilters.value.page,
+        per_page: activityFilters.value.perPage,
+        start_date: activityFilters.value.startDate
+          ? new Date(activityFilters.value.startDate).toISOString()
+          : null,
+        end_date: activityFilters.value.endDate
+          ? new Date(activityFilters.value.endDate + 'T23:59:59').toISOString()
+          : null
+      };
       try {
         // Admin viewing other user's logs
         if (isAdmin.value && activityFilters.value.userId) {
           const response = await store.dispatch('stats/fetchOthersActivityLogs',
             {
-              params: {
-                id: activityFilters.value.userId,
-                action: activityFilters.value.action,
-                page: activityFilters.value.page,
-                per_page: activityFilters.value.perPage,
-                start_date: activityFilters.value.startDate
-                  ? new Date(activityFilters.value.startDate).toISOString()
-                  : null,
-                end_date: activityFilters.value.endDate
-                  ? new Date(activityFilters.value.endDate + 'T23:59:59').toISOString()
-                  : null
-              },
+              params: params,
               id: activityFilters.value.userId,
               forceRefresh: forceRefresh
             },
@@ -285,17 +284,7 @@ export default {
         // User viewing their own logs
         else {
           const response = await store.dispatch('stats/fetchActivityLogs', {
-            params: {
-              action: activityFilters.value.action,
-              page: activityFilters.value.page,
-              per_page: activityFilters.value.perPage,
-              start_date: activityFilters.value.startDate
-                ? new Date(activityFilters.value.startDate).toISOString()
-                : null,
-              end_date: activityFilters.value.endDate
-                ? new Date(activityFilters.value.endDate + 'T23:59:59').toISOString()
-                : null
-            },
+            params: params,
             forceRefresh: forceRefresh
           });
 
@@ -311,7 +300,7 @@ export default {
 
     // Helper to get users filtered by role
     const getUsersByRole = (role) => {
-      return allUsers.value.filter(user => user.role === role);
+      return allUsers.value.filter((user) => user.role === role);
     };
 
     const clearFilters = () => {
@@ -334,49 +323,65 @@ export default {
     };
 
     // Watch for filter changes to reset pagination
-    watch(() => activityFilters.value.action, (newVal, oldVal) => {
-      if (newVal !== oldVal) {
-        activityFilters.value.page = 1;
-        activityFilters.value.startDate = null;
-        activityFilters.value.endDate = null;
-        // No need to call fetchActivityLogs here as it's called by @change
-      }
-    });
+    watch(
+      () => activityFilters.value.action,
+      (newVal, oldVal) => {
+        if (newVal !== oldVal) {
+          activityFilters.value.page = 1;
+          activityFilters.value.startDate = null;
+          activityFilters.value.endDate = null;
+          // No need to call fetchActivityLogs here as it's called by @change
+        }
+      },
+    );
 
-    watch(() => activityFilters.value.startDate, (newVal, oldVal) => {
-      if (newVal && activityFilters.value.endDate &&
-        new Date(newVal) > new Date(activityFilters.value.endDate)) {
-        activityFilters.value.endDate = null;
-      }
+    watch(
+      () => activityFilters.value.startDate,
+      (newVal, oldVal) => {
+        if (
+          newVal &&
+          activityFilters.value.endDate &&
+          new Date(newVal) > new Date(activityFilters.value.endDate)
+        ) {
+          activityFilters.value.endDate = null;
+        }
 
-      if (newVal !== oldVal) {
-        activityFilters.value.page = 1;
-        // No need to call fetchActivityLogs here as it's called by @change
-      }
-    });
-    watch(() => activityFilters.value.endDate, (newVal, oldVal) => {
-      if (newVal && activityFilters.value.startDate &&
-        new Date(newVal) < new Date(activityFilters.value.startDate)) {
-        activityFilters.value.startDate = null;
-      }
+        if (newVal !== oldVal) {
+          activityFilters.value.page = 1;
+          // No need to call fetchActivityLogs here as it's called by @change
+        }
+      },
+    );
+    watch(
+      () => activityFilters.value.endDate,
+      (newVal, oldVal) => {
+        if (
+          newVal &&
+          activityFilters.value.startDate &&
+          new Date(newVal) < new Date(activityFilters.value.startDate)
+        ) {
+          activityFilters.value.startDate = null;
+        }
 
-      if (newVal !== oldVal) {
-        activityFilters.value.page = 1;
-        // No need to call fetchActivityLogs here as it's called by @change
-      }
-    });
+        if (newVal !== oldVal) {
+          activityFilters.value.page = 1;
+          // No need to call fetchActivityLogs here as it's called by @change
+        }
+      },
+    );
 
-    watch(() => activityFilters.value.userId, (newVal, oldVal) => {
-      if (newVal !== oldVal) {
-        activityFilters.value.page = 1;
-        activityFilters.value.startDate = null;
-        activityFilters.value.endDate = null;
-        activityFilters.value.action = "all";
-        // No need to call fetchActivityLogs here as it's called by @change
-      }
-    });
-
-
+    watch(
+      () => activityFilters.value.userId,
+      (newVal, oldVal) => {
+        if (newVal !== oldVal) {
+          activityFilters.value.page = 1;
+          activityFilters.value.startDate = null;
+          activityFilters.value.endDate = null;
+          activityFilters.value.action = 'all';
+          // No need to call fetchActivityLogs here as it's called by @change
+        }
+      },
+    );
 
     // Lifecycle hooks
     onMounted(() => {
@@ -407,9 +412,9 @@ export default {
       allUsers,
       isLoadingUsers,
       getUsersByRole,
-      selectedUserRole
+      selectedUserRole,
     };
-  }
+  },
 };
 </script>
 

@@ -28,6 +28,7 @@ export const actionTypes = {
     { value: 'review_submit', label: 'Review Submission' },
   ],
   professional: [
+    { value: 'all', label: 'All Actions' },
     { value: 'user_login', label: 'User Login' },
     { value: 'user_register', label: 'User Registration' },
     { value: 'user_delete', label: 'User Deletion' },

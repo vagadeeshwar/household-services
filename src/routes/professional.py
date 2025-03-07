@@ -139,7 +139,7 @@ def register_professional():
 @professional_bp.route("/professionals", methods=["GET"])
 @professional_bp.route("/professionals/<int:profile_id>", methods=["GET"])
 @token_required
-@cached_with_auth(timeout=120)
+@cached_with_auth(timeout=300)
 def list_professionals(current_user, profile_id=None):
     try:
         if profile_id is not None:

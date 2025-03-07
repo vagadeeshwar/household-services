@@ -21,10 +21,10 @@ const getters = {
 }
 
 const actions = {
-  async fetchCustomers({ commit }, params = {}) {
+  async fetchCustomers({ commit }, { params = {}, forceRefresh = false }) {
     try {
       commit('SET_LOADING', true)
-      const response = await customer.getAll(params)
+      const response = await customer.getAll(params, forceRefresh)
       commit('SET_CUSTOMERS', response.data)
       commit('SET_PAGINATION', response.pagination)
       return response
@@ -36,10 +36,10 @@ const actions = {
     }
   },
 
-  async fetchCustomerById({ commit }, id) {
+  async fetchCustomerById({ commit }, { params = {}, id, forceRefresh = false }) {
     try {
       commit('SET_LOADING', true)
-      const response = await customer.getById(id)
+      const response = await customer.getById(id, forceRefresh, params)
       commit('SET_SELECTED_CUSTOMER', response)
       return response
     } catch (error) {

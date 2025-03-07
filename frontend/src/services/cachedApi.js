@@ -21,6 +21,8 @@ const cachedApi = {
    * @returns {Promise<any>} - API response data
    */
   async get(url, { params = {}, ttl, forceRefresh = false, cacheType = 'DEFAULT' } = {}) {
+    console.debug('Cache request for:', url, params)
+
     return store.dispatch('apiCache/fetchWithCache', {
       apiCall: () => api.get(url, { params }).then((response) => response.data),
       url,
@@ -40,6 +42,8 @@ const cachedApi = {
    * @returns {Promise<any>} - API response data with pagination
    */
   async getPaginated(url, params = {}, { ttl, forceRefresh = false } = {}) {
+    forceRefresh = forceRefresh === true
+    
     return this.get(url, {
       params,
       ttl,
@@ -56,6 +60,8 @@ const cachedApi = {
    * @returns {Promise<any>} - API response data
    */
   async getById(url, { ttl, forceRefresh = false } = {}) {
+    forceRefresh = forceRefresh === true
+
     return this.get(url, {
       ttl,
       forceRefresh,

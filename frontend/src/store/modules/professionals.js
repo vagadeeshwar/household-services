@@ -21,10 +21,10 @@ const getters = {
 }
 
 const actions = {
-  async fetchProfessionals({ commit }, params = {}) {
+  async fetchProfessionals({ commit }, { params = {}, forceRefresh = false }) {
     try {
       commit('SET_LOADING', true)
-      const response = await professional.getAll(params)
+      const response = await professional.getAll(params, forceRefresh)
       commit('SET_PROFESSIONALS', response.data)
       commit('SET_PAGINATION', response.pagination)
       return response
@@ -36,10 +36,10 @@ const actions = {
     }
   },
 
-  async fetchProfessionalById({ commit }, id) {
+  async fetchProfessionalById({ commit }, { params = {}, forceRefresh = false, id }) {
     try {
       commit('SET_LOADING', true)
-      const response = await professional.getById(id)
+      const response = await professional.getById(params, id, forceRefresh)
       commit('SET_SELECTED_PROFESSIONAL', response)
       return response
     } catch (error) {

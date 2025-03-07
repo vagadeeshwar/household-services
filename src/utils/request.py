@@ -1,13 +1,12 @@
 from datetime import datetime, timedelta
-from typing import Optional, Tuple, Dict, List
+
 from sqlalchemy import func
 
 from src.constants import (
     REQUEST_STATUS_ASSIGNED,
     REQUEST_STATUS_COMPLETED,
 )
-
-from src.models import ServiceRequest, ProfessionalProfile, Service
+from src.models import ProfessionalProfile, Service, ServiceRequest
 from src.utils.cache import cache
 
 
@@ -25,7 +24,7 @@ def _get_cache_key_schedule(
 
 def check_booking_availability(
     professional_id: int, preferred_time: datetime, service_duration: int
-) -> Tuple[bool, Optional[str]]:
+) -> tuple[bool, str | None]:
     """
     Check if a professional is available for a booking time slot.
     Args:
@@ -120,8 +119,8 @@ def check_booking_availability(
 
 
 def _check_availability_from_cached_data(
-    cached_data: List[Dict], preferred_time: datetime, service_duration: int
-) -> Tuple[bool, Optional[str]]:
+    cached_data: list[dict], preferred_time: datetime, service_duration: int
+) -> tuple[bool, str | None]:
     """Check availability using cached data"""
     booking_end_time = preferred_time + timedelta(minutes=service_duration)
 
@@ -186,7 +185,7 @@ def get_professional_schedule(
     professional_id: int,
     start_date: datetime.date,
     end_date: datetime.date,
-    service_id: Optional[int] = None,
+    service_id: int | None = None,
 ) -> dict:
     """Get professional's schedule including booked and available slots"""
 

@@ -28,7 +28,11 @@
       "jsconfig.json",
       "src/views/customer",
       "src/views/professional",
-      "src/views/public"
+      "src/views/public",
+      "src/views/admin/Customers.vue",
+      "src/views/admin/Professionals.vue",
+      "src/views/admin/Reports.vue",
+      "src/views/admin/Services.vue"
     ]
   }
 }
