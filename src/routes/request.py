@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 
 from flask import Blueprint, request
@@ -86,7 +86,7 @@ def create_service_request(current_user):
             preferred_time=data["preferred_time"],
             description=data.get("description", ""),
             status=REQUEST_STATUS_CREATED,
-            date_of_request=datetime.utcnow(),
+            date_of_request=datetime.now(timezone.utc),
         )
 
         db.session.add(service_request)
@@ -462,7 +462,7 @@ def accept_request(current_user, request_id):
 
         service_request.professional_id = professional.id
         service_request.status = REQUEST_STATUS_ASSIGNED
-        service_request.date_of_assignment = datetime.utcnow()
+        service_request.date_of_assignment = datetime.now(timezone.utc)
 
         log = ActivityLog(
             user_id=current_user.id,
@@ -536,7 +536,7 @@ def complete_service(current_user, request_id):
         estimated_completion_time = service_request.preferred_time + timedelta(
             minutes=service_request.service.estimated_time
         )
-        current_time = datetime.utcnow()
+        current_time = datetime.now(timezone.utc)
 
         if current_time < estimated_completion_time:
             remaining_minutes = int(

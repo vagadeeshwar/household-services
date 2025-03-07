@@ -1,65 +1,41 @@
 import api from './api'
+import cachedApi from './cachedApi'
 
 class AuthService {
-  async login(credentials) {
-    const response = await api.post('/login', credentials, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+  async login(data) {
+    const response = await api.post('/login', data)
     return response.data
   }
 
   async getProfile() {
-    const response = await api.get('/profile')
-    return response.data
+    return await cachedApi.get('/profile')
   }
 
   async registerCustomer(data) {
-    const response = await api.post('/register/customer', {
-      username: data.username,
-      email: data.email,
-      password: data.password,
-      full_name: data.fullName,
-      phone: data.phone,
-      address: data.address,
-      pin_code: data.pinCode,
-    })
+    const response = await api.post('/register/customer', data)
     return response.data
   }
 
-  async registerProfessional(formData) {
+  async registerProfessional(data) {
     const headers = {
       'Content-Type': 'multipart/form-data',
     }
-    const response = await api.post('/register/professional', formData, { headers })
+    const response = await api.post('/register/professional', data, { headers })
     return response.data
   }
 
   async updateProfile(data) {
-    const response = await api.put('/profile', {
-      email: data.email,
-      full_name: data.fullName,
-      phone: data.phone,
-      address: data.address,
-      pin_code: data.pinCode,
-      ...(data.description && { description: data.description }),
-    })
+    const response = await api.put('/profile', data)
     return response.data
   }
 
-  async changePassword(oldPassword, newPassword) {
-    const response = await api.post('/change-password', {
-      old_password: oldPassword,
-      new_password: newPassword,
-    })
+  async changePassword(data) {
+    const response = await api.post('/change-password', data)
     return response.data
   }
 
-  async deleteAccount(password) {
-    const response = await api.delete('/delete-account', {
-      password: { password },
-    })
+  async deleteAccount(data) {
+    const response = await api.delete('/delete-account', data)
     return response.data
   }
 }

@@ -32,6 +32,7 @@
             <label for="password" class="form-label">Enter your password to confirm</label>
             <div class="input-group">
               <input
+                autocomplete="current-password"
                 :type="showPassword ? 'text' : 'password'"
                 class="form-control"
                 id="password"
@@ -109,11 +110,17 @@
         </div>
       </div>
     </div>
+
+    <!-- Add the FormNavigationGuard component -->
+    <FormNavigationGuard
+      :when="hasUnsavedChanges"
+      message="You have entered your password for account deletion. Are you sure you want to leave this page?"
+    />
   </div>
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import * as bootstrap from 'bootstrap'
@@ -129,12 +136,23 @@ export default {
     const showPassword = ref(false)
     const isDeleting = ref(false)
     const confirmModal = ref(null)
+    const hasUnsavedChanges = ref(false)
     let bsConfirmModal = null
 
     // Form data
     const formData = reactive({
       password: '',
     })
+
+    // Watch for changes to detect unsaved password
+    watch(
+      () => formData.password,
+      (newVal) => {
+        if (showForm.value) {
+          hasUnsavedChanges.value = newVal.length > 0
+        }
+      },
+    )
 
     // Validation errors
     const validationErrors = reactive({
@@ -148,6 +166,13 @@ export default {
     }
 
     const cancelForm = () => {
+      // Check for unsaved changes
+      if (hasUnsavedChanges.value) {
+        if (!confirm('You have entered your password. Are you sure you want to cancel?')) {
+          return
+        }
+      }
+
       showForm.value = false
       resetForm()
     }
@@ -155,6 +180,7 @@ export default {
     const resetForm = () => {
       formData.password = ''
       validationErrors.password = ''
+      hasUnsavedChanges.value = false
     }
 
     const validateForm = () => {
@@ -183,6 +209,9 @@ export default {
         await store.dispatch('auth/deleteAccount', {
           password: formData.password,
         })
+
+        // Clear any unsaved changes flag
+        hasUnsavedChanges.value = false
 
         // Close modal
         if (bsConfirmModal) {
@@ -235,6 +264,7 @@ export default {
       formData,
       validationErrors,
       confirmModal,
+      hasUnsavedChanges,
       toggleFormVisibility,
       cancelForm,
       showConfirmationModal,

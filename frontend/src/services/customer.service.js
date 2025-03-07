@@ -6,12 +6,12 @@ class Customer {
     return await cachedApi.getPaginated('customers', params, { forceRefresh })
   }
 
-  async getById(id, forceRefresh = false) {
-    return await cachedApi.getById(`customers/${id}`, { forceRefresh })
+  async getById(id, params = {}, forceRefresh = false) {
+    return await cachedApi.getById(`customers/${id}`, params, { forceRefresh })
   }
 
-  async block(id, reason) {
-    const response = await api.post(`customers/${id}/block`, { reason })
+  async block(id, data) {
+    const response = await api.post(`customers/${id}/block`, data)
     return response.data
   }
 }

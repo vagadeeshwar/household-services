@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from http import HTTPStatus
 
 from flask import Blueprint, request
@@ -48,7 +48,7 @@ def login():
         )
 
     try:
-        user.last_login = datetime.utcnow()
+        user.last_login = datetime.now(timezone.utc)
 
         log = ActivityLog(
             user_id=user.id,

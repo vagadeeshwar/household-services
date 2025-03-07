@@ -2,7 +2,7 @@ import base64
 import os
 from http import HTTPStatus
 
-from flask import Blueprint, current_app, request
+from flask import Blueprint, current_app, request, send_from_directory
 from marshmallow import ValidationError
 from sqlalchemy import func
 
@@ -223,8 +223,22 @@ def list_professionals(current_user, profile_id=None):
             page=params["page"], per_page=params["per_page"], error_out=False
         )
 
+        # Get serialized data
+        professionals_data = professionals_output_schema.dump(paginated.items)
+
+        # Apply consistent field filtering for non-admin users
+        if current_user.role != "admin":
+            sensitive_fields = [
+                "verification_documents",
+                "created_at",
+                "last_login",
+            ]
+            for prof in professionals_data:
+                for field in sensitive_fields:
+                    prof.pop(field, None)
+
         return APIResponse.success(
-            data=professionals_output_schema.dump(paginated.items),
+            data=professionals_data,
             message="Professionals retrieved successfully",
             pagination={
                 "total": paginated.total,
@@ -568,4 +582,171 @@ def get_professional_reviews(current_user):
             f"Error retrieving reviews: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
+        )
+
+
+@professional_bp.route("/professionals/<int:profile_id>/document", methods=["GET"])
+@token_required
+@role_required("admin")
+def download_verification_document(current_user, profile_id):
+    """Download a professional's verification document securely.
+
+    Only accessible by admins with proper authentication.
+    Returns the document with appropriate headers for download.
+    """
+    try:
+        # Get the professional profile
+        profile = ProfessionalProfile.query.get_or_404(profile_id)
+
+        if not profile.verification_documents:
+            return APIResponse.error(
+                "No verification document found",
+                HTTPStatus.NOT_FOUND,
+                "DocumentNotFound",
+            )
+
+        # Check for document existence
+        document_path = os.path.join(
+            current_app.root_path, UPLOAD_FOLDER, profile.verification_documents
+        )
+
+        if not os.path.exists(document_path):
+            return APIResponse.error(
+                "Document file not found on server",
+                HTTPStatus.NOT_FOUND,
+                "FileNotFound",
+            )
+
+        # Get file extension to determine content type
+        _, file_extension = os.path.splitext(profile.verification_documents)
+
+        # Map common extensions to MIME types
+        content_type = {
+            ".pdf": "application/pdf",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".png": "image/png",
+        }.get(file_extension.lower(), "application/octet-stream")
+
+        # Get professional's name for the filename
+        professional_user = User.query.get(profile.user_id)
+        safe_name = "".join(
+            c for c in professional_user.full_name if c.isalnum() or c in "._- "
+        )
+
+        # Log the download
+        log = ActivityLog(
+            user_id=current_user.id,
+            entity_id=profile.id,
+            action="document_download",
+            description=f"Downloaded verification document for professional {professional_user.username}",
+        )
+        db.session.add(log)
+        db.session.commit()
+
+        # Return the file as an attachment with a proper filename
+        download_name = f"verification_{safe_name}{file_extension}"
+
+        return send_from_directory(
+            os.path.dirname(document_path),
+            os.path.basename(document_path),
+            as_attachment=True,
+            download_name=download_name,
+            mimetype=content_type,
+        )
+
+    except Exception as e:
+        current_app.logger.error(f"Error downloading document: {str(e)}")
+        return APIResponse.error(
+            f"Error downloading document: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DownloadError",
+        )
+
+
+@professional_bp.route("/my-document", methods=["GET"])
+@token_required
+@role_required("professional")
+def download_own_verification_document(current_user):
+    """Download your own verification document.
+
+    Allows professionals to download their own verification document.
+    Returns the document with appropriate headers for download.
+    """
+    try:
+        # Ensure user has a professional profile
+        if not current_user.professional_profile:
+            return APIResponse.error(
+                "Professional profile not found",
+                HTTPStatus.NOT_FOUND,
+                "ProfileNotFound",
+            )
+
+        # Check if document exists
+        if not current_user.professional_profile.verification_documents:
+            return APIResponse.error(
+                "No verification document found",
+                HTTPStatus.NOT_FOUND,
+                "DocumentNotFound",
+            )
+
+        # Check for document existence on filesystem
+        document_path = os.path.join(
+            current_app.root_path,
+            UPLOAD_FOLDER,
+            current_user.professional_profile.verification_documents,
+        )
+
+        if not os.path.exists(document_path):
+            return APIResponse.error(
+                "Document file not found on server",
+                HTTPStatus.NOT_FOUND,
+                "FileNotFound",
+            )
+
+        # Get file extension to determine content type
+        _, file_extension = os.path.splitext(
+            current_user.professional_profile.verification_documents
+        )
+
+        # Map common extensions to MIME types
+        content_type = {
+            ".pdf": "application/pdf",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".png": "image/png",
+        }.get(file_extension.lower(), "application/octet-stream")
+
+        # Generate a safe filename
+        safe_name = "".join(
+            c for c in current_user.full_name if c.isalnum() or c in "._- "
+        )
+
+        # Log the download
+        log = ActivityLog(
+            user_id=current_user.id,
+            entity_id=current_user.professional_profile.id,
+            action="document_download",
+            description=f"Professional {current_user.username} downloaded their own verification document",
+        )
+        db.session.add(log)
+        db.session.commit()
+
+        # Return the file as an attachment with a proper filename
+        download_name = f"verification_{safe_name}{file_extension}"
+
+        return send_from_directory(
+            os.path.dirname(document_path),
+            os.path.basename(document_path),
+            as_attachment=True,
+            download_name=download_name,
+            mimetype=content_type,
+        )
+
+    except Exception as e:
+        current_app.logger.error(f"Error downloading document: {str(e)}")
+        return APIResponse.error(
+            f"Error downloading document: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DownloadError",
         )

@@ -6,12 +6,8 @@ class Export {
     return response.data
   }
 
-  async generateServiceReport(params = {}) {
-    const response = await api.post('exports/service-requests', {
-      professional_id: params.professionalId,
-      start_date: params.startDate,
-      end_date: params.endDate,
-    })
+  async generateServiceReport(data) {
+    const response = await api.post('exports/service-requests', data)
     return response.data
   }
 

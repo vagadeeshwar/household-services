@@ -66,7 +66,6 @@
   </div>
 </template>
 <script>
-import { service } from '@/services' // Import the service directly
 import { computed, onMounted, ref } from 'vue'
 import { useStore } from 'vuex'
 
@@ -86,10 +85,11 @@ export default {
         loading.value = true
         error.value = null
 
-        // Call the API service directly instead of using store
-        const response = await service.getActive({
-          page: 1,
-          per_page: 9,
+        const response = await store.dispatch('services/fetchActiveServices', {
+          params: {
+            page: 1,
+            per_page: 9,
+          },
         })
 
         if (response?.data) {

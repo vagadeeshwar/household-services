@@ -21,7 +21,7 @@ const getters = {
 }
 
 const actions = {
-  async fetchCustomers({ commit }, { params = {}, forceRefresh = false }) {
+  async fetchCustomers({ commit }, { params = {}, forceRefresh = false } = {}) {
     try {
       commit('SET_LOADING', true)
       const response = await customer.getAll(params, forceRefresh)
@@ -36,7 +36,7 @@ const actions = {
     }
   },
 
-  async fetchCustomerById({ commit }, { params = {}, id, forceRefresh = false }) {
+  async fetchCustomerById({ commit }, { params = {}, id, forceRefresh = false } = {}) {
     try {
       commit('SET_LOADING', true)
       const response = await customer.getById(id, forceRefresh, params)
@@ -50,10 +50,10 @@ const actions = {
     }
   },
 
-  async blockCustomer({ commit }, { id, reason }) {
+  async blockCustomer({ commit }, { id, data }) {
     try {
       commit('SET_LOADING', true)
-      const response = await customer.block(id, reason)
+      const response = await customer.block(id, data)
       commit('UPDATE_CUSTOMER', response)
       return response
     } catch (error) {

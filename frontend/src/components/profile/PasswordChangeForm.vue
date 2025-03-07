@@ -12,6 +12,7 @@
           <label for="currentPassword" class="form-label">Current Password</label>
           <div class="input-group">
             <input
+              autocomplete="current-password"
               :type="showCurrentPassword ? 'text' : 'password'"
               class="form-control"
               id="currentPassword"
@@ -34,6 +35,7 @@
           <label for="newPassword" class="form-label">New Password</label>
           <div class="input-group">
             <input
+              autocomplete="new-password"
               :type="showNewPassword ? 'text' : 'password'"
               class="form-control"
               id="newPassword"
@@ -60,6 +62,7 @@
           <label for="confirmPassword" class="form-label">Confirm New Password</label>
           <div class="input-group">
             <input
+              autocomplete="new-password"
               :type="showConfirmPassword ? 'text' : 'password'"
               class="form-control"
               id="confirmPassword"
@@ -93,11 +96,17 @@
         <p class="text-muted">You can change your password for security reasons.</p>
       </div>
     </div>
+
+    <!-- Add the FormNavigationGuard component -->
+    <FormNavigationGuard
+      :when="hasUnsavedChanges"
+      message="You have unsaved changes to your password. Are you sure you want to leave?"
+    />
   </div>
 </template>
 
 <script>
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 
@@ -110,6 +119,7 @@ export default {
 
     const showForm = ref(false)
     const isSubmitting = ref(false)
+    const hasUnsavedChanges = ref(false) // Add this to track unsaved changes
 
     // Password visibility toggles
     const showCurrentPassword = ref(false)
@@ -122,6 +132,28 @@ export default {
       newPassword: '',
       confirmPassword: '',
     })
+
+    // Original form data for comparison
+    const originalFormData = reactive({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    })
+
+    // Watch for changes to detect unsaved edits
+    watch(
+      formData,
+      () => {
+        if (showForm.value) {
+          // Check if any field has content
+          hasUnsavedChanges.value =
+            formData.currentPassword !== originalFormData.currentPassword ||
+            formData.newPassword !== originalFormData.newPassword ||
+            formData.confirmPassword !== originalFormData.confirmPassword
+        }
+      },
+      { deep: true },
+    )
 
     // Validation errors
     const validationErrors = reactive({
@@ -137,7 +169,15 @@ export default {
     }
 
     const cancelForm = () => {
+      // If there are unsaved changes, confirm before closing
+      if (hasUnsavedChanges.value) {
+        if (!confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+          return
+        }
+      }
+
       showForm.value = false
+      hasUnsavedChanges.value = false
       resetForm()
     }
 
@@ -147,10 +187,18 @@ export default {
       formData.newPassword = ''
       formData.confirmPassword = ''
 
+      // Reset original form data
+      originalFormData.currentPassword = ''
+      originalFormData.newPassword = ''
+      originalFormData.confirmPassword = ''
+
       // Clear validation errors
       validationErrors.currentPassword = ''
       validationErrors.newPassword = ''
       validationErrors.confirmPassword = ''
+
+      // Reset the unsaved changes flag
+      hasUnsavedChanges.value = false
     }
 
     const validateForm = () => {
@@ -207,11 +255,14 @@ export default {
       try {
         // Call API to change password
         await store.dispatch('auth/changePassword', {
-          params: {
+          data: {
             old_password: formData.currentPassword,
             new_password: formData.newPassword,
           },
         })
+
+        // Clear unsaved changes state
+        hasUnsavedChanges.value = false
 
         // Show success message
         window.showToast({
@@ -243,6 +294,7 @@ export default {
     return {
       showForm,
       isSubmitting,
+      hasUnsavedChanges,
       formData,
       validationErrors,
       showCurrentPassword,

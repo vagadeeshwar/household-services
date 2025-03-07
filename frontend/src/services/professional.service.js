@@ -6,8 +6,8 @@ class Professional {
     return cachedApi.getPaginated('professionals', params, { forceRefresh })
   }
 
-  async getById(id, forceRefresh = false) {
-    return await cachedApi.getById(`professionals/${id}`, { forceRefresh })
+  async getById(id, params = {}, forceRefresh = false) {
+    return await cachedApi.getById(`professionals/${id}`, params, { forceRefresh })
   }
 
   async verify(id) {

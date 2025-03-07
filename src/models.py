@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import CheckConstraint, Index
@@ -16,8 +16,10 @@ from src.constants import (
 class TimestampMixin:
     """Mixin for created and updated timestamps"""
 
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    created_at = db.Column(
+        db.DateTime, nullable=False, default=datetime.now(timezone.utc)
+    )
+    updated_at = db.Column(db.DateTime, onupdate=datetime.now(timezone.utc))
 
 
 class User(db.Model, TimestampMixin):
@@ -186,7 +188,9 @@ class ServiceRequest(db.Model, TimestampMixin):
         ),
     )
 
-    date_of_request = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    date_of_request = db.Column(
+        db.DateTime, default=datetime.now(timezone.utc), nullable=False
+    )
     preferred_time = db.Column(db.DateTime, nullable=False)
     description = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), nullable=False, default=REQUEST_STATUS_CREATED)
@@ -261,7 +265,9 @@ class ActivityLog(db.Model, TimestampMixin):
     )
     description = db.Column(db.Text, nullable=False)
 
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(
+        db.DateTime, nullable=False, default=datetime.now(timezone.utc)
+    )
 
     __table_args__ = (
         db.CheckConstraint(

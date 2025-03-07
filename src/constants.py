@@ -18,6 +18,7 @@ USER_REGISTER = "user_register"
 USER_PROFILE_UPDATE = "profile_update"
 USER_PASSWORD_CHANGE = "password_change"
 USER_DELETE = "user_delete"
+DOCUMENT_DOWNLOAD = "document_download"
 
 # Professional Management Actions
 PROFESSIONAL_VERIFY = "professional_verify"
@@ -76,6 +77,7 @@ class ActivityLogActions:
     USER_PROFILE_UPDATE = USER_PROFILE_UPDATE
     USER_PASSWORD_CHANGE = USER_PASSWORD_CHANGE
     USER_DELETE = USER_DELETE
+    DOCUMENT_DOWNLOAD = DOCUMENT_DOWNLOAD
 
     # Professional Management
     PROFESSIONAL_VERIFY = PROFESSIONAL_VERIFY

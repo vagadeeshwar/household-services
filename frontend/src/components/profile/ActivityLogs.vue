@@ -12,10 +12,16 @@
           <!-- Action Filter -->
           <div class="flex-grow-1">
             <label class="form-label text-muted small mb-1">Filter by Action</label>
-            <select v-model="activityFilters.action" class="form-select form-select-sm"
-              @change="fetchActivityLogs">
-              <option v-for="action in actionTypes[selectedUserRole]" :key="action.value"
-                :value="action.value">
+            <select
+              v-model="activityFilters.action"
+              class="form-select form-select-sm"
+              @change="fetchActivityLogs"
+            >
+              <option
+                v-for="action in actionTypes[selectedUserRole]"
+                :key="action.value"
+                :value="action.value"
+              >
                 {{ action.label }}
               </option>
             </select>
@@ -24,9 +30,13 @@
           <!-- Replace the user ID input with this select -->
           <div v-if="isAdmin" class="flex-grow-1">
             <label class="form-label text-muted small mb-1" for="user-filter">Select User</label>
-            <select id="user-filter" class="form-select form-select-sm"
-              v-model="activityFilters.userId" @change="fetchActivityLogs"
-              :disabled="isLoadingUsers">
+            <select
+              id="user-filter"
+              class="form-select form-select-sm"
+              v-model="activityFilters.userId"
+              @change="fetchActivityLogs"
+              :disabled="isLoadingUsers"
+            >
               <option v-if="isLoadingUsers" value="">Loading users...</option>
 
               <optgroup label="Admin">
@@ -36,8 +46,11 @@
               </optgroup>
 
               <optgroup label="Professionals">
-                <option v-for="user in getUsersByRole('professional')" :key="user.id"
-                  :value="user.id">
+                <option
+                  v-for="user in getUsersByRole('professional')"
+                  :key="user.id"
+                  :value="user.id"
+                >
                   {{ user.name }}
                 </option>
               </optgroup>
@@ -53,13 +66,21 @@
           <!-- Date Range Filter -->
           <div class="flex-grow-1">
             <label class="form-label text-muted small mb-1">Start Date</label>
-            <input type="date" class="form-control form-control-sm"
-              v-model="activityFilters.startDate" @change="fetchActivityLogs" />
+            <input
+              type="date"
+              class="form-control form-control-sm"
+              v-model="activityFilters.startDate"
+              @change="fetchActivityLogs"
+            />
           </div>
           <div class="flex-grow-1">
             <label class="form-label text-muted small mb-1">End Date</label>
-            <input type="date" class="form-control form-control-sm"
-              v-model="activityFilters.endDate" @change="fetchActivityLogs" />
+            <input
+              type="date"
+              class="form-control form-control-sm"
+              v-model="activityFilters.endDate"
+              @change="fetchActivityLogs"
+            />
           </div>
           <div class="align-self-end">
             <button class="btn btn-sm btn-outline-secondary" @click="clearFilters">
@@ -87,7 +108,7 @@
           </div>
           <div class="flex-grow-1">
             <p class="mb-1">{{ log.description }}</p>
-            <small class="text-muted">{{ formatActivityDate(log.created_at) }}</small>
+            <small class="text-muted">{{ formatRelativeTime(log.created_at) }}</small>
           </div>
           <span :class="['badge align-self-start', getActivityBadgeClass(log.action)]">
             {{ formatActionType(log.action) }}
@@ -109,12 +130,18 @@
                 Previous
               </button>
             </li>
-            <li v-for="pageNum in displayedPages" :key="pageNum" class="page-item"
-              :class="{ active: activityFilters.page === pageNum }">
+            <li
+              v-for="pageNum in displayedPages"
+              :key="pageNum"
+              class="page-item"
+              :class="{ active: activityFilters.page === pageNum }"
+            >
               <button @click="changePage(pageNum)" class="page-link">{{ pageNum }}</button>
             </li>
-            <li class="page-item"
-              :class="{ disabled: activityFilters.page === activityPagination.pages }">
+            <li
+              class="page-item"
+              :class="{ disabled: activityFilters.page === activityPagination.pages }"
+            >
               <button @click="changePage(activityFilters.page + 1)" class="page-link">Next</button>
             </li>
           </ul>
@@ -125,29 +152,29 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
-import { useStore } from 'vuex';
-import moment from 'moment';
-import { actionTypes, actionBadges, actionIcons } from '@/assets/actionTypes';
+import { ref, computed, onMounted, watch } from 'vue'
+import { useStore } from 'vuex'
+import { actionTypes, actionBadges, actionIcons } from '@/assets/actionTypes'
+import { formatRelativeTime } from '@/utils/date'
 
 export default {
   name: 'ActivityLogs',
 
   setup() {
-    const store = useStore();
+    const store = useStore()
     // Add to setup()
-    const allUsers = ref([]);
-    const isLoadingUsers = ref(false);
+    const allUsers = ref([])
+    const isLoadingUsers = ref(false)
 
     // Get current user from store
-    const currentUser = computed(() => store.getters['auth/currentUser']);
-    const userRole = computed(() => store.getters['auth/userRole']);
-    const isAdmin = computed(() => userRole.value === 'admin');
+    const currentUser = computed(() => store.getters['auth/currentUser'])
+    const userRole = computed(() => store.getters['auth/userRole'])
+    const isAdmin = computed(() => userRole.value === 'admin')
 
     // Activity logs
-    const activityLogs = ref([]);
-    const isLoadingActivity = ref(false);
-    const activityPagination = ref({});
+    const activityLogs = ref([])
+    const isLoadingActivity = ref(false)
+    const activityPagination = ref({})
     const activityFilters = ref({
       action: 'all',
       page: 1,
@@ -155,38 +182,38 @@ export default {
       startDate: null,
       endDate: null,
       userId: currentUser.value.id, // Only used by admins
-    });
+    })
 
     // Function to fetch users for dropdown
     const fetchAllUsers = async () => {
-      isLoadingUsers.value = true;
+      isLoadingUsers.value = true
       try {
         // Fetch professionals
         const profResponse = await store.dispatch('professionals/fetchProfessionals', {
           params: {
             per_page: 100,
           },
-        });
+        })
 
         // Fetch customers
         const custResponse = await store.dispatch('customers/fetchCustomers', {
           params: {
             per_page: 100,
           },
-        });
+        })
 
         // Format user lists
         const professionals = (profResponse.data || []).map((prof) => ({
           id: prof.professional_id,
           name: prof.full_name,
           role: 'professional',
-        }));
+        }))
 
         const customers = (custResponse.data || []).map((cust) => ({
           id: cust.customer_id,
           name: cust.full_name,
           role: 'customer',
-        }));
+        }))
 
         // Add current admin
         const admins = [
@@ -195,67 +222,62 @@ export default {
             name: `${currentUser.value.full_name} (You)`,
             role: 'admin',
           },
-        ];
+        ]
 
         // Combine all users
-        allUsers.value = [...admins, ...professionals, ...customers];
+        allUsers.value = [...admins, ...professionals, ...customers]
       } catch (err) {
-        console.error('Error fetching users:', err);
+        console.error('Error fetching users:', err)
       } finally {
-        isLoadingUsers.value = false;
+        isLoadingUsers.value = false
       }
-    };
+    }
 
     // Computed properties
     const displayedPages = computed(() => {
-      const pages = [];
-      const maxVisiblePages = 5;
-      const totalPages = activityPagination.value?.pages || 1;
+      const pages = []
+      const maxVisiblePages = 5
+      const totalPages = activityPagination.value?.pages || 1
 
-      let startPage = Math.max(1, activityFilters.value.page - Math.floor(maxVisiblePages / 2));
-      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      let startPage = Math.max(1, activityFilters.value.page - Math.floor(maxVisiblePages / 2))
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
 
       if (endPage - startPage + 1 < maxVisiblePages) {
-        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        startPage = Math.max(1, endPage - maxVisiblePages + 1)
       }
 
       for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
+        pages.push(i)
       }
 
-      return pages;
-    });
+      return pages
+    })
 
     const selectedUserRole = computed(() => {
       if (!isAdmin.value || activityFilters.value.userId === currentUser.value.id) {
-        return userRole.value; // Current user's role
+        return userRole.value // Current user's role
       }
 
       // Find the selected user's role in the allUsers list
-      const selectedUser = allUsers.value.find((user) => user.id === activityFilters.value.userId);
-      return selectedUser ? selectedUser.role : 'customer'; // Default to customer if not found
-    });
-
-    // Methods
-    const formatActivityDate = (dateString) => {
-      return dateString ? moment(dateString).fromNow() : 'N/A';
-    };
+      const selectedUser = allUsers.value.find((user) => user.id === activityFilters.value.userId)
+      return selectedUser ? selectedUser.role : 'customer' // Default to customer if not found
+    })
 
     const formatActionType = (action) => {
-      const found = actionTypes[userRole.value].find((a) => a.value === action);
-      return found ? found.label : action;
-    };
+      const found = actionTypes[userRole.value].find((a) => a.value === action)
+      return found ? found.label : action
+    }
 
     const getActivityIcon = (action) => {
-      return actionIcons[action] || 'bi-activity';
-    };
+      return actionIcons[action] || 'bi-activity'
+    }
 
     const getActivityBadgeClass = (action) => {
-      return actionBadges[action] || 'bg-secondary';
-    };
+      return actionBadges[action] || 'bg-secondary'
+    }
 
     const fetchActivityLogs = async (forceRefresh = false) => {
-      isLoadingActivity.value = true;
+      isLoadingActivity.value = true
       const params = {
         action: activityFilters.value.action,
         page: activityFilters.value.page,
@@ -265,75 +287,73 @@ export default {
           : null,
         end_date: activityFilters.value.endDate
           ? new Date(activityFilters.value.endDate + 'T23:59:59').toISOString()
-          : null
-      };
+          : null,
+      }
       try {
         // Admin viewing other user's logs
         if (isAdmin.value && activityFilters.value.userId) {
-          const response = await store.dispatch('stats/fetchOthersActivityLogs',
-            {
-              params: params,
-              id: activityFilters.value.userId,
-              forceRefresh: forceRefresh
-            },
-          );
+          const response = await store.dispatch('stats/fetchOthersActivityLogs', {
+            params: params,
+            id: activityFilters.value.userId,
+            forceRefresh: forceRefresh,
+          })
 
-          activityLogs.value = response.data || [];
-          activityPagination.value = response.pagination || {};
+          activityLogs.value = response.data || []
+          activityPagination.value = response.pagination || {}
         }
         // User viewing their own logs
         else {
           const response = await store.dispatch('stats/fetchActivityLogs', {
             params: params,
-            forceRefresh: forceRefresh
-          });
+            forceRefresh: forceRefresh,
+          })
 
-          activityLogs.value = response.data || [];
-          activityPagination.value = response.pagination || {};
+          activityLogs.value = response.data || []
+          activityPagination.value = response.pagination || {}
         }
       } catch (err) {
-        console.error('Error fetching activity logs:', err);
+        console.error('Error fetching activity logs:', err)
       } finally {
-        isLoadingActivity.value = false;
+        isLoadingActivity.value = false
       }
-    };
+    }
 
     // Helper to get users filtered by role
     const getUsersByRole = (role) => {
-      return allUsers.value.filter((user) => user.role === role);
-    };
+      return allUsers.value.filter((user) => user.role === role)
+    }
 
     const clearFilters = () => {
-      activityFilters.value.action = 'all';
-      activityFilters.value.startDate = null;
-      activityFilters.value.endDate = null;
-      activityFilters.value.page = 1;
+      activityFilters.value.action = 'all'
+      activityFilters.value.startDate = null
+      activityFilters.value.endDate = null
+      activityFilters.value.page = 1
 
       if (isAdmin.value) {
-        activityFilters.value.userId = currentUser.value.id;
+        activityFilters.value.userId = currentUser.value.id
       }
 
-      fetchActivityLogs();
-    };
+      fetchActivityLogs()
+    }
 
     const changePage = (page) => {
-      if (page < 1 || page > activityPagination.value.pages) return;
-      activityFilters.value.page = page;
-      fetchActivityLogs();
-    };
+      if (page < 1 || page > activityPagination.value.pages) return
+      activityFilters.value.page = page
+      fetchActivityLogs()
+    }
 
     // Watch for filter changes to reset pagination
     watch(
       () => activityFilters.value.action,
       (newVal, oldVal) => {
         if (newVal !== oldVal) {
-          activityFilters.value.page = 1;
-          activityFilters.value.startDate = null;
-          activityFilters.value.endDate = null;
+          activityFilters.value.page = 1
+          activityFilters.value.startDate = null
+          activityFilters.value.endDate = null
           // No need to call fetchActivityLogs here as it's called by @change
         }
       },
-    );
+    )
 
     watch(
       () => activityFilters.value.startDate,
@@ -343,15 +363,15 @@ export default {
           activityFilters.value.endDate &&
           new Date(newVal) > new Date(activityFilters.value.endDate)
         ) {
-          activityFilters.value.endDate = null;
+          activityFilters.value.endDate = null
         }
 
         if (newVal !== oldVal) {
-          activityFilters.value.page = 1;
+          activityFilters.value.page = 1
           // No need to call fetchActivityLogs here as it's called by @change
         }
       },
-    );
+    )
     watch(
       () => activityFilters.value.endDate,
       (newVal, oldVal) => {
@@ -360,37 +380,37 @@ export default {
           activityFilters.value.startDate &&
           new Date(newVal) < new Date(activityFilters.value.startDate)
         ) {
-          activityFilters.value.startDate = null;
+          activityFilters.value.startDate = null
         }
 
         if (newVal !== oldVal) {
-          activityFilters.value.page = 1;
+          activityFilters.value.page = 1
           // No need to call fetchActivityLogs here as it's called by @change
         }
       },
-    );
+    )
 
     watch(
       () => activityFilters.value.userId,
       (newVal, oldVal) => {
         if (newVal !== oldVal) {
-          activityFilters.value.page = 1;
-          activityFilters.value.startDate = null;
-          activityFilters.value.endDate = null;
-          activityFilters.value.action = 'all';
+          activityFilters.value.page = 1
+          activityFilters.value.startDate = null
+          activityFilters.value.endDate = null
+          activityFilters.value.action = 'all'
           // No need to call fetchActivityLogs here as it's called by @change
         }
       },
-    );
+    )
 
     // Lifecycle hooks
     onMounted(() => {
       if (isAdmin.value) {
-        fetchAllUsers();
+        fetchAllUsers()
       }
       // Fetch activity logs
-      fetchActivityLogs();
-    });
+      fetchActivityLogs()
+    })
 
     return {
       currentUser,
@@ -402,7 +422,7 @@ export default {
       activityFilters,
       displayedPages,
       actionTypes,
-      formatActivityDate,
+      formatRelativeTime,
       formatActionType,
       getActivityIcon,
       getActivityBadgeClass,
@@ -413,9 +433,9 @@ export default {
       isLoadingUsers,
       getUsersByRole,
       selectedUserRole,
-    };
+    }
   },
-};
+}
 </script>
 
 <style scoped>

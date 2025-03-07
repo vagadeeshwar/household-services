@@ -1,6 +1,8 @@
 <template>
   <div class="container py-5">
-    <FormNavigationGuard :when="Object.keys(form).some((key) => form[key] !== initialForm[key])" />
+    <FormNavigationGuard
+      :when="!submitSuccessful && Object.keys(form).some((key) => form[key] !== initialForm[key])"
+    />
     <div class="row justify-content-center">
       <div class="col-md-8 col-lg-6">
         <div class="card shadow-sm">
@@ -20,6 +22,7 @@
                 <div class="col-12">
                   <label for="username" class="form-label">Username</label>
                   <input
+                    autocomplete="username"
                     type="text"
                     id="username"
                     v-model="form.username"
@@ -135,6 +138,7 @@
                   <label for="password" class="form-label">Password</label>
                   <div class="input-group">
                     <input
+                      autocomplete="new-password"
                       :type="showPassword ? 'text' : 'password'"
                       id="password"
                       v-model="form.password"
@@ -155,6 +159,7 @@
                 <div class="col-md-6">
                   <label for="confirmPassword" class="form-label">Confirm Password</label>
                   <input
+                    autocomplete="new-password"
                     type="password"
                     id="confirmPassword"
                     v-model="form.confirmPassword"
@@ -245,6 +250,7 @@ export default {
     const store = useStore()
     const router = useRouter()
     const form = reactive({ ...initialForm })
+    const submitSuccessful = ref(false)
 
     const isLoading = ref(false)
     const showPassword = ref(false)
@@ -324,7 +330,17 @@ export default {
       try {
         // eslint-disable-next-line no-unused-vars
         const { confirmPassword, termsAccepted, ...formData } = form
-        await store.dispatch('auth/registerCustomer', formData)
+        const data = {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          full_name: formData.fullName,
+          phone: formData.phone,
+          address: formData.address,
+          pin_code: formData.pinCode,
+        }
+        await store.dispatch('auth/registerCustomer', { data: data })
+        submitSuccessful.value = true
 
         window.showToast({
           type: 'success',
@@ -356,6 +372,7 @@ export default {
       handleSubmit,
       togglePassword,
       initialForm,
+      submitSuccessful,
     }
   },
 }

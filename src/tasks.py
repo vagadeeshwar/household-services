@@ -1,7 +1,7 @@
 import csv
 import os
 import traceback
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from celery.schedules import crontab
 
@@ -38,9 +38,9 @@ def send_daily_reminders():
                 pending_requests = ServiceRequest.query.filter(
                     ServiceRequest.professional_id == professional.id,
                     ServiceRequest.status == REQUEST_STATUS_ASSIGNED,
-                    ServiceRequest.preferred_time >= datetime.utcnow(),
+                    ServiceRequest.preferred_time >= datetime.now(timezone.utc),
                     ServiceRequest.preferred_time
-                    <= datetime.utcnow() + timedelta(days=1),
+                    <= datetime.now(timezone.utc) + timedelta(days=1),
                 ).all()
 
                 if pending_requests:
@@ -63,8 +63,8 @@ def generate_monthly_reports():
         try:
             # Get all active users
             users = User.query.filter_by(is_active=True).all()
-            month = (datetime.utcnow() - timedelta(days=1)).strftime("%B %Y")
-            start_date = datetime.utcnow().replace(day=1) - timedelta(days=1)
+            month = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%B %Y")
+            start_date = datetime.now(timezone.utc).replace(day=1) - timedelta(days=1)
 
             for user in users:
                 report_data = {

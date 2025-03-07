@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from marshmallow import Schema, ValidationError, fields, validate, validates
 
@@ -17,7 +17,7 @@ class ServiceRequestInputSchema(Schema):
     @validates("preferred_time")
     def validate_preferred_time(self, value):
         """Validate preferred_time constraints"""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # Check if time is in the past
         if value <= now:

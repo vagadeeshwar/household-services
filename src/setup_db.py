@@ -2,7 +2,7 @@ import logging
 import os
 import random
 import uuid
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
 
 from faker import Faker
 
@@ -105,7 +105,7 @@ def create_dummy_data():
             pin_code="110001",
             role=USER_ROLE_ADMIN,
             is_active=True,
-            last_login=datetime.utcnow(),
+            last_login=datetime.now(timezone.utc),
         )
         admin.set_password("Admin@123")
         db.session.add(admin)
@@ -180,7 +180,7 @@ def create_professionals(services, admin_id):
         pin_code=generate_valid_pincode(),
         role=USER_ROLE_PROFESSIONAL,
         is_active=0,
-        last_login=datetime.utcnow()
+        last_login=datetime.now(timezone.utc)
         - timedelta(days=90)
         - timedelta(days=random.randint(0, 30)),
     )
@@ -201,12 +201,12 @@ def create_professionals(services, admin_id):
     db.session.flush()
 
     try:
-        base_date = datetime.utcnow() - timedelta(days=90)
+        base_date = datetime.now(timezone.utc) - timedelta(days=90)
 
         for i in range(10):  # Increased number of professionals
             service = random.choice(services)
-            username = f"pro{i+1}"
-            email = f"pro{i+1}@service.com"
+            username = f"pro{i + 1}"
+            email = f"pro{i + 1}@service.com"
             is_active = random.random() < 0.8  # 80% chance of being active
 
             # Create user with initial pending status
@@ -221,7 +221,7 @@ def create_professionals(services, admin_id):
                 is_active=is_active,
                 last_login=base_date - timedelta(days=random.randint(0, 30)),
             )
-            user.set_password(f"Pro@{i+1}123")
+            user.set_password(f"Pro@{i + 1}123")
             db.session.add(user)
             db.session.flush()
 
@@ -375,7 +375,7 @@ def create_professionals(services, admin_id):
 
 def create_customers():
     customers = []
-    base_date = datetime.utcnow() - timedelta(days=90)
+    base_date = datetime.now(timezone.utc) - timedelta(days=90)
     user = User(
         username="hamsanadam",
         email="hamsanadamdevotional@gmail.com",
@@ -386,7 +386,7 @@ def create_customers():
         role=USER_ROLE_CUSTOMER,
         is_active=1,
         created_at=base_date + timedelta(days=random.randint(0, 30)),
-        last_login=datetime.utcnow() - timedelta(days=random.randint(0, 30)),
+        last_login=datetime.now(timezone.utc) - timedelta(days=random.randint(0, 30)),
     )
     user.set_password("Hamsanadam@123")
     db.session.add(user)
@@ -398,8 +398,8 @@ def create_customers():
 
     try:
         for i in range(15):  # Increased number for more variety
-            username = f"customer{i+1}"
-            email = f"customer{i+1}@email.com"
+            username = f"customer{i + 1}"
+            email = f"customer{i + 1}@email.com"
             is_active = random.random() < 0.9  # 90% chance of being active
 
             user = User(
@@ -412,9 +412,10 @@ def create_customers():
                 role=USER_ROLE_CUSTOMER,
                 is_active=is_active,
                 created_at=base_date + timedelta(days=random.randint(0, 30)),
-                last_login=datetime.utcnow() - timedelta(days=random.randint(0, 30)),
+                last_login=datetime.now(timezone.utc)
+                - timedelta(days=random.randint(0, 30)),
             )
-            user.set_password(f"Customer@{i+1}123")
+            user.set_password(f"Customer@{i + 1}123")
             db.session.add(user)
             db.session.flush()
 
@@ -615,7 +616,7 @@ def create_services(admin_id):
     ]
 
     try:
-        base_date = datetime.utcnow() - timedelta(days=90)
+        base_date = datetime.now(timezone.utc) - timedelta(days=90)
 
         for data in service_data:
             service = Service(
@@ -702,9 +703,9 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
         service_id=1,
         customer_id=1,
         professional_id=None,
-        date_of_request=datetime.utcnow(),
+        date_of_request=datetime.now(timezone.utc),
         preferred_time=datetime.combine(
-            (datetime.utcnow() + timedelta(days=1)).date(), time(16, 0)
+            (datetime.now(timezone.utc) + timedelta(days=1)).date(), time(16, 0)
         ),
         description="Need ",
         status="created",
@@ -716,7 +717,7 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
     db.session.flush()
 
     try:
-        base_date = datetime.utcnow() - timedelta(days=90)
+        base_date = datetime.now(timezone.utc) - timedelta(days=90)
 
         for customer in customers:
             for _ in range(random.randint(2, 5)):  # 2-5 requests per customer
@@ -736,10 +737,15 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
                     ).time(),
                 )
 
-                current_time = datetime.utcnow()
+                current_time = datetime.now(timezone.utc)
                 estimated_completion = preferred_time + timedelta(
                     minutes=service.estimated_time
                 )
+
+                if estimated_completion.tzinfo is None:
+                    estimated_completion = estimated_completion.replace(
+                        tzinfo=timezone.utc
+                    )
 
                 # Determine status based on time
                 if estimated_completion < current_time:

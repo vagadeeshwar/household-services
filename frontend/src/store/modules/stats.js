@@ -17,7 +17,7 @@ const getters = {
 }
 
 const actions = {
-  async fetchActivityLogs({ commit }, { params = {}, forceRefresh = false }) {
+  async fetchActivityLogs({ commit }, { params = {}, forceRefresh = false } = {}) {
     try {
       commit('SET_LOADING', true)
       const response = await stats.getActivityLogs(params, forceRefresh)
@@ -30,7 +30,7 @@ const actions = {
       commit('SET_LOADING', false)
     }
   },
-  async fetchOthersActivityLogs({ commit }, { params = {}, id, forceRefresh = false }) {
+  async fetchOthersActivityLogs({ commit }, { params = {}, id, forceRefresh = false } = {}) {
     try {
       commit('SET_LOADING', true)
       const response = await stats.getOthersActivityLogs(params, id, forceRefresh)

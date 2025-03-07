@@ -14,6 +14,7 @@
               <div class="mb-3">
                 <label for="username" class="form-label">Username</label>
                 <input
+                  autocomplete="username"
                   type="text"
                   id="username"
                   v-model="form.username"
@@ -32,6 +33,7 @@
                 <label for="password" class="form-label">Password</label>
                 <div class="input-group">
                   <input
+                    autocomplete="current-password"
                     :type="showPassword ? 'text' : 'password'"
                     id="password"
                     v-model="form.password"
@@ -123,8 +125,10 @@ export default {
         isLoading.value = true
 
         await store.dispatch('auth/login', {
-          username: form.username.trim(),
-          password: form.password,
+          data: {
+            username: form.username.trim(),
+            password: form.password,
+          },
         })
 
         const user = store.getters['auth/currentUser']
@@ -149,23 +153,64 @@ export default {
 
         await router.replace(defaultRoute)
       } catch (error) {
-        let errorMessage = 'Login failed. Please check your credentials.'
-
-        // Handle specific error messages from backend
-        if (error.response?.data?.message) {
-          errorMessage = error.response.data.message
-        } else if (error.message === 'Invalid user role') {
-          errorMessage = 'Invalid account type. Please contact support.'
-        }
-
-        window.showToast({
-          type: 'error',
-          title: 'Login Failed',
-          message: errorMessage,
-        })
+        handleLoginError(error)
       } finally {
         isLoading.value = false
       }
+    }
+
+    const handleLoginError = (error) => {
+      let errorTitle = 'Login Failed'
+      let errorMessage = 'Login failed. Please check your credentials.'
+
+      // Handle errors based on error_type from the API response
+      if (error.response?.data) {
+        const { error_type, detail } = error.response.data
+
+        // Use the backend error message if available
+        if (detail) {
+          errorMessage = detail
+        }
+
+        // Enhanced error handling based on error_type
+        if (error_type) {
+          switch (error_type) {
+            case 'InvalidCredentials':
+              errorTitle = 'Invalid Credentials'
+              errorMessage = 'Username or password is incorrect. Please try again.'
+              break
+            case 'InactiveAccount':
+              errorTitle = 'Account Deactivated'
+              errorMessage =
+                'Your account has been deactivated. Please contact support for assistance.'
+              break
+            case 'UnverifiedProfessional':
+              errorTitle = 'Account Not Verified'
+              errorMessage =
+                'Your professional account is pending verification. Please wait for admin approval or contact support.'
+              break
+            case 'DatabaseError':
+              errorTitle = 'System Error'
+              errorMessage = 'A system error occurred. Please try again later or contact support.'
+              break
+            default:
+              // Keep the error message from the detail if no specific handling
+              break
+          }
+        }
+      } else if (error.message === 'Invalid user role') {
+        errorTitle = 'Account Error'
+        errorMessage = 'Invalid account type. Please contact support.'
+      } else if (error.message) {
+        // If it's a JavaScript error with message
+        errorMessage = error.message
+      }
+
+      window.showToast({
+        type: 'error',
+        title: errorTitle,
+        message: errorMessage,
+      })
     }
 
     const togglePassword = () => {

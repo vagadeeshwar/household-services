@@ -1,6 +1,8 @@
 <template>
   <div class="container py-5">
-    <FormNavigationGuard :when="Object.keys(form).some((key) => form[key] !== initialForm[key])" />
+    <FormNavigationGuard
+      :when="!submitSuccessful && Object.keys(form).some((key) => form[key] !== initialForm[key])"
+    />
 
     <div class="row justify-content-center">
       <div class="col-md-8 col-lg-6">
@@ -21,6 +23,7 @@
                 <div class="col-12">
                   <label for="username" class="form-label">Username</label>
                   <input
+                    autocomplete="username"
                     type="text"
                     id="username"
                     v-model="form.username"
@@ -226,6 +229,7 @@
                   <label for="password" class="form-label">Password</label>
                   <div class="input-group">
                     <input
+                      autocomplete="new-password"
                       :type="showPassword ? 'text' : 'password'"
                       id="password"
                       v-model="form.password"
@@ -246,6 +250,7 @@
                 <div class="col-md-6">
                   <label for="confirmPassword" class="form-label">Confirm Password</label>
                   <input
+                    autocomplete="new-password"
                     type="password"
                     id="confirmPassword"
                     v-model="form.confirmPassword"
@@ -341,6 +346,7 @@ export default {
     const store = useStore()
     const router = useRouter()
     const fileInput = ref(null)
+    const submitSuccessful = ref(false)
 
     const form = reactive({ ...initialForm })
     const services = ref([])
@@ -491,14 +497,25 @@ export default {
       isLoading.value = true
 
       try {
-        const formData = new FormData()
-        Object.keys(form).forEach((key) => {
-          if (key !== 'confirmPassword' && key !== 'termsAccepted') {
-            formData.append(key, form[key])
-          }
-        })
+        const data = new FormData()
+        data.append('username', form.username)
+        data.append('email', form.email)
+        data.append('password', form.password)
+        data.append('full_name', form.fullName)
+        data.append('phone', form.phone)
+        data.append('address', form.address)
+        data.append('pin_code', form.pinCode)
+        data.append('experience_years', form.experienceYears)
+        data.append('description', form.description)
+        data.append('service_type_id', form.serviceTypeId)
 
-        await store.dispatch('auth/registerProfessional', formData)
+        // Append the file correctly
+        if (form.verificationDocument) {
+          data.append('verification_document', form.verificationDocument)
+        }
+
+        await store.dispatch('auth/registerProfessional', { data: data })
+        submitSuccessful.value = true
 
         window.showToast({
           type: 'success',
@@ -535,16 +552,26 @@ export default {
       try {
         const response = await store.dispatch('services/fetchActiveServices')
         services.value = response.data || []
-      } catch {
-        window.showToast({
-          type: 'error',
-          title: 'Error',
-          message: 'Failed to load service types.Please refresh and try again.',
-        })
+      } catch (error) {
+        console.error('Error loading services:', error)
+        // Only show toast if it's not the initial page load
+        if (!initialLoad.value) {
+          window.showToast({
+            type: 'error',
+            title: 'Error',
+            message: 'Failed to load service types. Please refresh and try again.',
+          })
+        }
       }
     }
 
-    onMounted(fetchActiveServices)
+    // Track if this is the initial load
+    const initialLoad = ref(true)
+    onMounted(() => {
+      fetchActiveServices().then(() => {
+        initialLoad.value = false
+      })
+    })
 
     return {
       form,
@@ -557,6 +584,7 @@ export default {
       handleFileChange,
       togglePassword,
       initialForm,
+      submitSuccessful,
     }
   },
 }

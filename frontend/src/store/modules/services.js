@@ -21,10 +21,10 @@ const getters = {
 }
 
 const actions = {
-  async fetchActiveServices({ commit }, params = {}) {
+  async fetchActiveServices({ commit }, { params = {}, forceRefresh = false } = {}) {
     try {
       commit('SET_LOADING', true)
-      const response = await service.getActive(params)
+      const response = await service.getActive(params, forceRefresh)
       commit('SET_SERVICES', response.data)
       commit('SET_PAGINATION', response.pagination)
       return response
@@ -35,10 +35,10 @@ const actions = {
       commit('SET_LOADING', false)
     }
   },
-  async fetchAllServices({ commit }, params = {}) {
+  async fetchAllServices({ commit }, { params = {}, forceRefresh = false } = {}) {
     try {
       commit('SET_LOADING', true)
-      const response = await service.getAll(params)
+      const response = await service.getAll(params, forceRefresh)
       commit('SET_SERVICES', response.data)
       commit('SET_PAGINATION', response.pagination)
       return response
@@ -50,10 +50,10 @@ const actions = {
     }
   },
 
-  async fetchActiveServiceById({ commit }, id) {
+  async fetchActiveServiceById({ commit }, { id, params = {}, forceRefresh = false } = {}) {
     try {
       commit('SET_LOADING', true)
-      const response = await service.getActiveById(id)
+      const response = await service.getActiveById(id, params, forceRefresh)
       commit('SET_SELECTED_SERVICE', response)
       return response
     } catch (error) {
@@ -64,10 +64,10 @@ const actions = {
     }
   },
 
-  async fetchAllServiceById({ commit }, id) {
+  async fetchAllServiceById({ commit }, { id, params = {}, forceRefresh = false } = {}) {
     try {
       commit('SET_LOADING', true)
-      const response = await service.getAllById(id)
+      const response = await service.getAllById(id, params, forceRefresh)
       commit('SET_SELECTED_SERVICE', response)
       return response
     } catch (error) {
@@ -78,7 +78,7 @@ const actions = {
     }
   },
 
-  async createService({ commit }, data) {
+  async createService({ commit }, { data }) {
     try {
       commit('SET_LOADING', true)
       const response = await service.create(data)
@@ -106,7 +106,7 @@ const actions = {
     }
   },
 
-  async toggleService({ commit }, id) {
+  async toggleService({ commit }, { id }) {
     try {
       commit('SET_LOADING', true)
       const response = await service.toggle(id)
@@ -120,7 +120,7 @@ const actions = {
     }
   },
 
-  async deleteService({ commit }, id) {
+  async deleteService({ commit }, { id }) {
     try {
       commit('SET_LOADING', true)
       await service.delete(id)

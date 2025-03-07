@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, post_dump, validate
+from marshmallow import Schema, fields, validate
 
 from src.schemas.base import (
     BaseProfileUpdateSchema,
@@ -35,21 +35,6 @@ class ProfessionalOutputSchema(BaseUserSchema):
     verification_documents = fields.Str(
         attribute="professional_profile.verification_documents", dump_only=True
     )
-
-    @post_dump(pass_many=True)
-    def remove_sensitive_fields(self, data, many, **kwargs):
-        from flask import g
-
-        if not hasattr(g, "current_user") or g.current_user.role != "admin":
-            sensitive_fields = ["verification_documents", "created_at", "last_login"]
-            if many:
-                for item in data:
-                    for field in sensitive_fields:
-                        item.pop(field, None)
-            else:
-                for field in sensitive_fields:
-                    data.pop(field, None)
-        return data
 
 
 class ProfessionalQuerySchema(Schema):

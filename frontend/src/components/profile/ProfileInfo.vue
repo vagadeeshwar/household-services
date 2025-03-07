@@ -13,7 +13,7 @@
           <i class="bi bi-person-circle fs-2"></i>
         </div>
         <div class="ms-3">
-          <h4 class="mb-1">{{ userData.full_name }}</h4>
+          <h4 class="mb-1">{{ userData?.full_name }}</h4>
           <p class="mb-0 opacity-75">{{ formatRoleTitle(userData.role) }}</p>
         </div>
       </div>
@@ -26,19 +26,12 @@
     <!-- Body -->
     <div class="card-body p-4">
       <!-- Success Alert -->
-      <div
-        v-if="showSuccessMessage"
-        class="alert alert-success alert-dismissible fade show mb-4"
-        role="alert"
-      >
+      <div v-if="showSuccessMessage" class="alert alert-success alert-dismissible fade show mb-4"
+        role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
         Your profile has been updated successfully!
-        <button
-          type="button"
-          class="btn-close"
-          @click="showSuccessMessage = false"
-          aria-label="Close"
-        ></button>
+        <button type="button" class="btn-close" @click="showSuccessMessage = false"
+          aria-label="Close"></button>
       </div>
 
       <!-- View Mode -->
@@ -97,12 +90,8 @@
                 <label class="form-label text-muted">Average Rating</label>
                 <p class="fw-medium">
                   <span class="text-warning">
-                    <i
-                      v-for="i in 5"
-                      :key="i"
-                      class="bi"
-                      :class="i <= Math.round(userData.average_rating) ? 'bi-star-fill' : 'bi-star'"
-                    ></i>
+                    <i v-for="i in 5" :key="i" class="bi"
+                      :class="i <= Math.round(userData.average_rating) ? 'bi-star-fill' : 'bi-star'"></i>
                   </span>
                   {{ userData.average_rating.toFixed(1) }}
                 </p>
@@ -121,11 +110,8 @@
                 <span class="badge" :class="userData.is_active ? 'bg-success' : 'bg-danger'">
                   {{ userData.is_active ? 'Active' : 'Inactive' }}
                 </span>
-                <span
-                  v-if="isUserProfessional"
-                  class="badge ms-2"
-                  :class="userData.is_verified ? 'bg-success' : 'bg-warning'"
-                >
+                <span v-if="isUserProfessional" class="badge ms-2"
+                  :class="userData.is_verified ? 'bg-success' : 'bg-warning'">
                   {{ userData.is_verified ? 'Verified' : 'Pending Verification' }}
                 </span>
               </p>
@@ -147,13 +133,8 @@
         <div class="row g-3">
           <div class="col-md-6">
             <label for="email" class="form-label">Email</label>
-            <input
-              type="email"
-              class="form-control"
-              id="email"
-              v-model="v$.email.$model"
-              :class="{ 'is-invalid': v$.email.$error }"
-            />
+            <input type="email" class="form-control" id="email" v-model="v$.email.$model"
+              :class="{ 'is-invalid': v$.email.$error }" />
             <div v-if="v$.email.$error" class="invalid-feedback">
               <span v-if="v$.email.required.$invalid">Email is required</span>
               <span v-else-if="v$.email.email.$invalid">Please enter a valid email address</span>
@@ -162,89 +143,60 @@
 
           <div class="col-md-6">
             <label for="fullName" class="form-label">Full Name</label>
-            <input
-              type="text"
-              class="form-control"
-              id="fullName"
-              v-model="v$.full_name.$model"
-              :class="{ 'is-invalid': v$.full_name.$error }"
-            />
+            <input type="text" class="form-control" id="fullName" v-model="v$.full_name.$model"
+              :class="{ 'is-invalid': v$.full_name.$error }" />
             <div v-if="v$.full_name.$error" class="invalid-feedback">
               <span v-if="v$.full_name.required.$invalid">Full name is required</span>
-              <span v-else-if="v$.full_name.minLength.$invalid"
-                >Full name must be at least 4 characters</span
-              >
+              <span v-else-if="v$.full_name.minLength.$invalid">Full name must be at least 4
+                characters</span>
             </div>
           </div>
 
           <div class="col-md-6">
             <label for="phone" class="form-label">Phone</label>
-            <input
-              type="text"
-              class="form-control"
-              id="phone"
-              v-model="v$.phone.$model"
-              :class="{ 'is-invalid': v$.phone.$error }"
-            />
+            <input type="text" class="form-control" id="phone" v-model="v$.phone.$model"
+              :class="{ 'is-invalid': v$.phone.$error }" />
             <div v-if="v$.phone.$error" class="invalid-feedback">
               <span v-if="v$.phone.required.$invalid">Phone number is required</span>
-              <span v-else-if="v$.phone.phoneFormat.$invalid"
-                >Phone number must be 10 digits and not start with 0</span
-              >
+              <span v-else-if="v$.phone.phoneFormat.$invalid">Phone number must be 10 digits and not
+                start
+                with 0</span>
             </div>
           </div>
 
           <div class="col-md-6">
             <label for="pinCode" class="form-label">PIN Code</label>
-            <input
-              type="text"
-              class="form-control"
-              id="pinCode"
-              v-model="v$.pin_code.$model"
-              :class="{ 'is-invalid': v$.pin_code.$error }"
-            />
+            <input type="text" class="form-control" id="pinCode" v-model="v$.pin_code.$model"
+              :class="{ 'is-invalid': v$.pin_code.$error }" />
             <div v-if="v$.pin_code.$error" class="invalid-feedback">
               <span v-if="v$.pin_code.required.$invalid">PIN code is required</span>
-              <span v-else-if="v$.pin_code.pinCodeFormat.$invalid"
-                >PIN code must be 6 digits and not start with 0</span
-              >
+              <span v-else-if="v$.pin_code.pinCodeFormat.$invalid">PIN code must be 6 digits and not
+                start
+                with 0</span>
             </div>
           </div>
 
           <div class="col-12">
             <label for="address" class="form-label">Address</label>
-            <textarea
-              class="form-control"
-              id="address"
-              rows="3"
-              v-model="v$.address.$model"
-              :class="{ 'is-invalid': v$.address.$error }"
-            ></textarea>
+            <textarea class="form-control" id="address" rows="3" v-model="v$.address.$model"
+              :class="{ 'is-invalid': v$.address.$error }"></textarea>
             <div v-if="v$.address.$error" class="invalid-feedback">
               <span v-if="v$.address.required.$invalid">Address is required</span>
-              <span v-else-if="v$.address.minLength.$invalid"
-                >Address must be at least 5 characters</span
-              >
+              <span v-else-if="v$.address.minLength.$invalid">Address must be at least 5
+                characters</span>
             </div>
           </div>
 
           <!-- Professional-specific fields -->
           <div class="col-12" v-if="isUserProfessional && userData.description !== undefined">
             <label for="description" class="form-label">Professional Description</label>
-            <textarea
-              class="form-control"
-              id="description"
-              rows="4"
-              v-model="v$.description.$model"
-              :class="{ 'is-invalid': v$.description.$error }"
-            ></textarea>
+            <textarea class="form-control" id="description" rows="4" v-model="v$.description.$model"
+              :class="{ 'is-invalid': v$.description.$error }"></textarea>
             <div v-if="v$.description.$error" class="invalid-feedback">
-              <span v-if="v$.description.required.$invalid"
-                >Professional description is required</span
-              >
-              <span v-else-if="v$.description.minLength.$invalid"
-                >Description must be at least 10 characters</span
-              >
+              <span v-if="v$.description.required.$invalid">Professional description is
+                required</span>
+              <span v-else-if="v$.description.minLength.$invalid">Description must be at least 10
+                characters</span>
             </div>
             <div class="form-text">Describe your expertise and services you provide.</div>
           </div>
@@ -263,19 +215,17 @@
     </div>
 
     <!-- Form Navigation Guard -->
-    <FormNavigationGuard
-      :when="hasUnsavedChanges"
-      message="You have unsaved changes. Are you sure you want to leave?"
-    />
+    <FormNavigationGuard :when="hasUnsavedChanges"
+      message="You have unsaved changes. Are you sure you want to leave?" />
   </div>
 </template>
 
 <script>
-import { ref, computed, reactive, watch } from 'vue'
-import { useStore } from 'vuex'
-import { useVuelidate } from '@vuelidate/core'
-import { required, email, minLength, helpers, maxLength } from '@vuelidate/validators'
-import moment from 'moment'
+import { ref, computed, reactive, watch } from 'vue';
+import { useStore } from 'vuex';
+import { useVuelidate } from '@vuelidate/core';
+import { required, email, minLength, helpers, maxLength } from '@vuelidate/validators';
+import moment from 'moment';
 
 export default {
   name: 'UnifiedProfileComponent',
@@ -283,38 +233,38 @@ export default {
   emits: ['profile-updated'],
 
   setup({ emit }) {
-    const store = useStore()
-    const editMode = ref(false)
-    const isSubmitting = ref(false)
-    const hasUnsavedChanges = ref(false)
-    const showSuccessMessage = ref(false)
+    const store = useStore();
+    const editMode = ref(false);
+    const isSubmitting = ref(false);
+    const hasUnsavedChanges = ref(false);
+    const showSuccessMessage = ref(false);
 
     // Get user data and loading state from Vuex store
-    const userData = computed(() => store.getters['auth/currentUser'])
-    const isLoading = computed(() => store.getters['auth/isLoading'])
+    const userData = computed(() => store.getters['auth/currentUser']);
+    const isLoading = computed(() => store.getters['auth/isLoading']);
 
     // Computed properties for user role and formatted dates
-    const isUserProfessional = computed(() => userData.value?.role === 'professional')
+    const isUserProfessional = computed(() => userData.value?.role === 'professional');
     const formattedLastLogin = computed(() =>
       userData.value?.last_login
         ? moment(userData.value.last_login).format('MMM DD, YYYY hh:mm A')
         : 'N/A',
-    )
+    );
     const formattedCreatedAt = computed(() =>
       userData.value?.created_at
         ? moment(userData.value.created_at).format('MMM DD, YYYY hh:mm A')
         : 'N/A',
-    )
+    );
 
     // Get actual service name instead of just ID for professionals
     const serviceName = computed(() => {
-      if (!isUserProfessional.value) return ''
+      if (!isUserProfessional.value) return '';
 
       // Attempt to get service from store if available
-      const services = store.getters['services/allServices'] || []
-      const service = services.find((s) => s.id === userData.value.service_type_id)
-      return service ? service.name : `Service #${userData.value.service_type_id}`
-    })
+      const services = store.getters['services/allServices'] || [];
+      const service = services.find((s) => s.id === userData.value.service_type_id);
+      return service ? service.name : `Service #${userData.value.service_type_id}`;
+    });
 
     // Form data
     const formData = reactive({
@@ -324,7 +274,7 @@ export default {
       address: '',
       pin_code: '',
       description: '',
-    })
+    });
 
     // Original form data for change detection
     const originalFormData = reactive({
@@ -334,11 +284,11 @@ export default {
       address: '',
       pin_code: '',
       description: '',
-    })
+    });
 
     // Custom validators
-    const phoneFormat = helpers.regex(/^[1-9]\d{9}$/)
-    const pinCodeFormat = helpers.regex(/^[1-9][0-9]{5}$/)
+    const phoneFormat = helpers.regex(/^[1-9]\d{9}$/);
+    const pinCodeFormat = helpers.regex(/^[1-9][0-9]{5}$/);
 
     // Vuelidate rules
     const rules = computed(() => {
@@ -348,84 +298,84 @@ export default {
         phone: { required, phoneFormat },
         pin_code: { required, pinCodeFormat },
         address: { required, minLength: minLength(5), maxLength: maxLength(200) },
-      }
+      };
 
       // Add professional-specific rules if needed
       if (isUserProfessional.value && userData.value?.description !== undefined) {
-        baseRules.description = { required, minLength: minLength(10), maxLength: maxLength(1000) }
+        baseRules.description = { required, minLength: minLength(10), maxLength: maxLength(1000) };
       }
 
-      return baseRules
-    })
+      return baseRules;
+    });
 
     // Initialize Vuelidate
-    const v$ = useVuelidate(rules, formData)
+    const v$ = useVuelidate(rules, formData);
 
     // Watch for changes to detect unsaved edits
     watch(
       formData,
       () => {
         if (editMode.value) {
-          hasUnsavedChanges.value = !objectsEqual(formData, originalFormData)
+          hasUnsavedChanges.value = !objectsEqual(formData, originalFormData);
         }
       },
       { deep: true },
-    )
+    );
 
     // Helper to compare objects
     const objectsEqual = (obj1, obj2) => {
-      return JSON.stringify(obj1) === JSON.stringify(obj2)
-    }
+      return JSON.stringify(obj1) === JSON.stringify(obj2);
+    };
 
     // Utility functions
     const formatRoleTitle = (role) => {
-      if (!role) return ''
-      return role.charAt(0).toUpperCase() + role.slice(1)
-    }
+      if (!role) return '';
+      return role.charAt(0).toUpperCase() + role.slice(1);
+    };
 
     // Methods
     const toggleEditMode = () => {
-      resetForm()
-      editMode.value = true
-    }
+      resetForm();
+      editMode.value = true;
+    };
 
     const cancelEdit = () => {
       if (hasUnsavedChanges.value) {
         if (!confirm('You have unsaved changes. Are you sure you want to cancel?')) {
-          return
+          return;
         }
       }
-      editMode.value = false
-      hasUnsavedChanges.value = false
-      resetForm()
-    }
+      editMode.value = false;
+      hasUnsavedChanges.value = false;
+      resetForm();
+    };
 
     const resetForm = () => {
       // Reset form data from user data
-      formData.email = userData.value?.email || ''
-      formData.full_name = userData.value?.full_name || ''
-      formData.phone = userData.value?.phone || ''
-      formData.address = userData.value?.address || ''
-      formData.pin_code = userData.value?.pin_code || ''
+      formData.email = userData.value?.email || '';
+      formData.full_name = userData.value?.full_name || '';
+      formData.phone = userData.value?.phone || '';
+      formData.address = userData.value?.address || '';
+      formData.pin_code = userData.value?.pin_code || '';
 
       // Professional fields
       if (isUserProfessional.value) {
-        formData.description = userData.value?.description || ''
+        formData.description = userData.value?.description || '';
       }
 
       // Store original form data for change detection
-      Object.assign(originalFormData, { ...formData })
+      Object.assign(originalFormData, { ...formData });
 
       // Reset validation
-      v$.value.$reset()
-    }
+      v$.value.$reset();
+    };
 
     const handleSubmit = async () => {
       // Validate the form using Vuelidate
-      const isFormValid = await v$.value.$validate()
-      if (!isFormValid) return
+      const isFormValid = await v$.value.$validate();
+      if (!isFormValid) return;
 
-      isSubmitting.value = true
+      isSubmitting.value = true;
       try {
         // Prepare update data
         const updateData = {
@@ -434,70 +384,70 @@ export default {
           phone: formData.phone,
           address: formData.address,
           pin_code: formData.pin_code,
-        }
+        };
 
         // Add description for professionals
         if (isUserProfessional.value && formData.description !== undefined) {
-          updateData.description = formData.description
+          updateData.description = formData.description;
         }
 
         // Update profile via Vuex
-        await store.dispatch('auth/updateProfile', { params: updateData })
+        await store.dispatch('auth/updateProfile', { params: updateData });
 
         // Show success message
-        showSuccessMessage.value = true
+        showSuccessMessage.value = true;
 
         // Also show toast notification
         window.showToast({
           type: 'success',
           title: 'Profile Updated',
           message: 'Your profile has been updated successfully',
-        })
+        });
 
         // Exit edit mode
-        editMode.value = false
-        hasUnsavedChanges.value = false
+        editMode.value = false;
+        hasUnsavedChanges.value = false;
 
         // Emit event to parent component
-        emit('profile-updated')
+        emit('profile-updated');
 
         // Auto-hide success message after 5 seconds
         setTimeout(() => {
-          showSuccessMessage.value = false
-        }, 5000)
+          showSuccessMessage.value = false;
+        }, 5000);
       } catch (error) {
         // Show error toast
         window.showToast({
           type: 'error',
           title: 'Update Failed',
           message: error.response?.data?.detail || 'Failed to update profile',
-        })
+        });
 
         // Handle API validation errors
         if (error.response?.data?.errors) {
-          const serverErrors = error.response.data.errors
+          const serverErrors = error.response.data.errors;
           // Map server errors to form fields
           Object.keys(serverErrors).forEach((key) => {
             if (v$.value[key]) {
-              v$.value[key].$setErrors([serverErrors[key]])
+              v$.value[key].$setErrors([serverErrors[key]]);
             }
-          })
+          });
         }
       } finally {
-        isSubmitting.value = false
+        isSubmitting.value = false;
       }
-    }
+    };
 
     // Initialize form data when userData changes
     watch(
       userData,
       () => {
         if (userData.value) {
-          resetForm()
+          resetForm();
         }
       },
       { immediate: true },
-    )
+    );
 
     return {
       // State
@@ -521,9 +471,9 @@ export default {
       toggleEditMode,
       cancelEdit,
       handleSubmit,
-    }
+    };
   },
-}
+};
 </script>
 
 <style scoped>

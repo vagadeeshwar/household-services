@@ -13,6 +13,7 @@ export const actionTypes = {
     { value: 'service_restore', label: 'Service Restore' },
     { value: 'service_deactivate', label: 'Service Deactivate' },
     { value: 'service_delete', label: 'Service Delete' },
+    { value: 'document_download', label: 'Document Download' },
   ],
   customer: [
     { value: 'all', label: 'All Actions' },
@@ -38,6 +39,7 @@ export const actionTypes = {
     { value: 'request_complete', label: 'Request Complete' },
     { value: 'document_update', label: 'Document Updated' },
     { value: 'review_report', label: 'Review Report' },
+    { value: 'document_download', label: 'Document Download' },
   ],
 }
 
@@ -65,6 +67,7 @@ export const actionIcons = {
   request_cancel: 'bi-x-circle',
   review_submit: 'bi-star',
   review_report: 'bi-flag',
+  document_download: 'bi-file-earmark-arrow-down',
 }
 
 export const actionBadges = {
@@ -91,4 +94,5 @@ export const actionBadges = {
   request_cancel: 'bg-danger',
   review_submit: 'bg-success',
   review_report: 'bg-danger',
+  document_download: 'bg-info',
 }

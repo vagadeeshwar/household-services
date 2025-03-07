@@ -43,7 +43,7 @@ const cachedApi = {
    */
   async getPaginated(url, params = {}, { ttl, forceRefresh = false } = {}) {
     forceRefresh = forceRefresh === true
-    
+
     return this.get(url, {
       params,
       ttl,

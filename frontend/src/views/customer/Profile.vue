@@ -31,7 +31,7 @@ import AccountDeleteForm from '@/components/profile/AccountDeleteForm.vue'
 import ActivityLogs from '@/components/profile/ActivityLogs.vue'
 
 export default {
-  name: 'AdminProfile',
+  name: 'CustomerProfile',
   components: {
     ProfileInfo,
     PasswordChangeForm,

@@ -19,7 +19,7 @@ const getters = {
 }
 
 const actions = {
-  async checkExportStatus({ commit }, id) {
+  async checkExportStatus({ commit }, { id }) {
     try {
       commit('SET_LOADING', { type: 'status', value: true })
       const response = await exportService.getStatus(id)
@@ -33,10 +33,10 @@ const actions = {
     }
   },
 
-  async generateServiceReport({ commit }, params = {}) {
+  async generateServiceReport({ commit }, { data }) {
     try {
       commit('SET_LOADING', { type: 'generate', value: true })
-      const response = await exportService.generateServiceReport(params)
+      const response = await exportService.generateServiceReport(data)
       commit('SET_CURRENT_EXPORT', response)
       commit('ADD_EXPORT', response)
       return response
@@ -48,10 +48,10 @@ const actions = {
     }
   },
 
-  async downloadReport({ commit }, filename) {
+  async downloadReport({ commit }, { data }) {
     try {
       commit('SET_LOADING', { type: 'download', value: true })
-      const response = await exportService.download(filename)
+      const response = await exportService.download(data)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)

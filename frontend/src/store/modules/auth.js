@@ -1,7 +1,20 @@
 import { auth } from '@/services'
 
 const state = {
-  user: JSON.parse(localStorage.getItem('user')),
+  user: JSON.parse(localStorage.getItem('user')) || {
+    id: null,
+    username: '',
+    email: '',
+    full_name: '',
+    phone: '',
+    address: '',
+    pin_code: '',
+    role: '',
+    is_active: false,
+    created_at: null,
+    last_login: null,
+    // Add default values for all user properties used in your app (will be used while the api response is being fetched)
+  },
   token: localStorage.getItem('access_token'),
   loading: false,
   error: null,
@@ -19,12 +32,12 @@ const getters = {
 }
 
 const actions = {
-  async login({ commit }, credentials) {
+  async login({ commit }, { data }) {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
 
     try {
-      const loginResponse = await auth.login(credentials)
+      const loginResponse = await auth.login(data)
 
       if (!loginResponse?.data?.token) {
         throw new Error('Invalid login response')
@@ -49,7 +62,7 @@ const actions = {
     }
   },
 
-  async registerCustomer({ commit }, data) {
+  async registerCustomer({ commit }, { data }) {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
 
@@ -64,12 +77,12 @@ const actions = {
     }
   },
 
-  async registerProfessional({ commit }, formData) {
+  async registerProfessional({ commit }, { data }) {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
 
     try {
-      const response = await auth.registerProfessional(formData)
+      const response = await auth.registerProfessional(data)
       return response.data
     } catch (error) {
       commit('SET_ERROR', error.response?.data?.message || 'Registration failed')
@@ -79,7 +92,7 @@ const actions = {
     }
   },
 
-  async updateProfile({ commit }, data) {
+  async updateProfile({ commit }, { data }) {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
 
@@ -95,12 +108,12 @@ const actions = {
     }
   },
 
-  async changePassword({ commit }, { oldPassword, newPassword }) {
+  async changePassword({ commit }, { data }) {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
 
     try {
-      const response = await auth.changePassword(oldPassword, newPassword)
+      const response = await auth.changePassword(data)
       commit('CLEAR_AUTH')
       return response.data
     } catch (error) {
@@ -111,12 +124,12 @@ const actions = {
     }
   },
 
-  async deleteAccount({ commit }, { password }) {
+  async deleteAccount({ commit }, { data }) {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
 
     try {
-      const response = await auth.deleteAccount(password)
+      const response = await auth.deleteAccount(data)
       commit('CLEAR_AUTH')
       return response.data
     } catch (error) {
