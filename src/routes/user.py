@@ -75,7 +75,9 @@ def change_password(current_user):
 
     if not current_user.check_password(data["old_password"]):
         return APIResponse.error(
-            "Current password is incorrect", HTTPStatus.UNAUTHORIZED, "InvalidPassword"
+            "Current password is incorrect",
+            HTTPStatus.UNPROCESSABLE_ENTITY,
+            "InvalidPassword",
         )
 
     try:
@@ -164,7 +166,7 @@ def delete_account(current_user):
 
     if not current_user.check_password(data["password"]):
         return APIResponse.error(
-            "Incorrect password", HTTPStatus.UNAUTHORIZED, "InvalidPassword"
+            "Incorrect password", HTTPStatus.UNPROCESSABLE_ENTITY, "InvalidPassword"
         )
 
     try:

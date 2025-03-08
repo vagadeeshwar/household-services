@@ -6,7 +6,9 @@ import moment from 'moment'
  * @returns {string} Formatted relative time
  */
 export const formatRelativeTime = (dateString) => {
-  return dateString ? moment.utc(dateString).local().fromNow() : 'N/A'
+  if (!dateString) return 'N/A'
+  // Ensure we're treating the input date as UTC and converting to local time
+  return moment.utc(dateString).local().fromNow()
 }
 
 /**
@@ -17,4 +19,32 @@ export const formatRelativeTime = (dateString) => {
  */
 export const formatDateTime = (dateString, format = 'MMM DD, YYYY hh:mm A') => {
   return dateString ? moment.utc(dateString).local().format(format) : 'N/A'
+}
+
+/**
+ * Format a UTC date string to date only (no time)
+ * @param {string} dateString - UTC date string from the API
+ * @returns {string} Formatted date string
+ */
+export const formatDate = (dateString) => {
+  return dateString ? moment.utc(dateString).local().format('MMM DD, YYYY') : 'N/A'
+}
+
+/**
+ * Format a UTC date string to time only (no date)
+ * @param {string} dateString - UTC date string from the API
+ * @returns {string} Formatted time string
+ */
+export const formatTime = (dateString) => {
+  return dateString ? moment.utc(dateString).local().format('hh:mm A') : 'N/A'
+}
+
+/**
+ * For client-side timestamps (not from the backend)
+ * @param {Date|string} date - Local date object or string
+ * @param {string} format - Optional moment format string
+ * @returns {string} Formatted date string
+ */
+export const formatLocalDateTime = (date, format = 'MMM DD, YYYY hh:mm A') => {
+  return date ? moment(date).format(format) : 'N/A'
 }

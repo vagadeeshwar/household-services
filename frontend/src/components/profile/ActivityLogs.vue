@@ -26,7 +26,6 @@
               </option>
             </select>
           </div>
-
           <!-- Replace the user ID input with this select -->
           <div v-if="isAdmin" class="flex-grow-1">
             <label class="form-label text-muted small mb-1" for="user-filter">Select User</label>
@@ -38,13 +37,11 @@
               :disabled="isLoadingUsers"
             >
               <option v-if="isLoadingUsers" value="">Loading users...</option>
-
               <optgroup label="Admin">
                 <option v-for="user in getUsersByRole('admin')" :key="user.id" :value="user.id">
                   {{ user.name }}
                 </option>
               </optgroup>
-
               <optgroup label="Professionals">
                 <option
                   v-for="user in getUsersByRole('professional')"
@@ -54,7 +51,6 @@
                   {{ user.name }}
                 </option>
               </optgroup>
-
               <optgroup label="Customers">
                 <option v-for="user in getUsersByRole('customer')" :key="user.id" :value="user.id">
                   {{ user.name }}
@@ -62,7 +58,6 @@
               </optgroup>
             </select>
           </div>
-
           <!-- Date Range Filter -->
           <div class="flex-grow-1">
             <label class="form-label text-muted small mb-1">Start Date</label>
@@ -116,7 +111,6 @@
         </div>
       </li>
     </ul>
-
     <!-- Pagination -->
     <div class="card-footer bg-white py-3">
       <div class="row align-items-center">
@@ -150,7 +144,6 @@
     </div>
   </div>
 </template>
-
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
@@ -159,7 +152,6 @@ import { formatRelativeTime } from '@/utils/date'
 
 export default {
   name: 'ActivityLogs',
-
   setup() {
     const store = useStore()
     // Add to setup()
@@ -278,6 +270,7 @@ export default {
 
     const fetchActivityLogs = async (forceRefresh = false) => {
       isLoadingActivity.value = true
+
       const params = {
         action: activityFilters.value.action,
         page: activityFilters.value.page,
@@ -289,6 +282,7 @@ export default {
           ? new Date(activityFilters.value.endDate + 'T23:59:59').toISOString()
           : null,
       }
+
       try {
         // Admin viewing other user's logs
         if (isAdmin.value && activityFilters.value.userId) {
@@ -297,7 +291,6 @@ export default {
             id: activityFilters.value.userId,
             forceRefresh: forceRefresh,
           })
-
           activityLogs.value = response.data || []
           activityPagination.value = response.pagination || {}
         }
@@ -307,7 +300,6 @@ export default {
             params: params,
             forceRefresh: forceRefresh,
           })
-
           activityLogs.value = response.data || []
           activityPagination.value = response.pagination || {}
         }
@@ -372,6 +364,7 @@ export default {
         }
       },
     )
+
     watch(
       () => activityFilters.value.endDate,
       (newVal, oldVal) => {
@@ -408,6 +401,7 @@ export default {
       if (isAdmin.value) {
         fetchAllUsers()
       }
+
       // Fetch activity logs
       fetchActivityLogs()
     })
@@ -437,7 +431,6 @@ export default {
   },
 }
 </script>
-
 <style scoped>
 .activity-icon {
   display: flex;

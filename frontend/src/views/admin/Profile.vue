@@ -5,24 +5,17 @@
       <div class="col-lg-8">
         <ProfileInfo />
       </div>
-
-      <!-- Activity Logs Section -->
-      <div class="col-lg-8">
-        <ActivityLogs />
-      </div>
     </div>
   </div>
 </template>
 
 <script>
 import ProfileInfo from '@/components/profile/ProfileInfo.vue'
-import ActivityLogs from '@/components/profile/ActivityLogs.vue'
 
 export default {
   name: 'AdminProfile',
   components: {
     ProfileInfo,
-    ActivityLogs,
   },
 }
 </script>

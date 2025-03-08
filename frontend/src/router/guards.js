@@ -31,7 +31,6 @@ export const setupGuards = (router) => {
         window.showToast({
           type: 'warning',
           title: 'Access Restricted',
-          message: 'You do not have permission to access this page',
         })
         next({ name: 'NotFound' })
         return

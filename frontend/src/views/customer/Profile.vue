@@ -15,11 +15,6 @@
       <div class="col-lg-8">
         <AccountDeleteForm />
       </div>
-
-      <!-- Activity Logs Section -->
-      <div class="col-lg-8">
-        <ActivityLogs />
-      </div>
     </div>
   </div>
 </template>
@@ -28,7 +23,6 @@
 import ProfileInfo from '@/components/profile/ProfileInfo.vue'
 import PasswordChangeForm from '@/components/profile/PasswordChangeForm.vue'
 import AccountDeleteForm from '@/components/profile/AccountDeleteForm.vue'
-import ActivityLogs from '@/components/profile/ActivityLogs.vue'
 
 export default {
   name: 'CustomerProfile',
@@ -36,7 +30,6 @@ export default {
     ProfileInfo,
     PasswordChangeForm,
     AccountDeleteForm,
-    ActivityLogs,
   },
 }
 </script>

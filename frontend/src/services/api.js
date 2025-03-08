@@ -60,7 +60,7 @@ api.interceptors.response.use(
       router.push('/login')
       window.showToast({
         type: 'error',
-        title: 'Session Expired',
+        title: 'Session Expired/Unauthorized',
         message: 'Please login again',
       })
     }
@@ -82,7 +82,6 @@ api.interceptors.response.use(
         title: 'Access Denied',
         message: data.message || 'You do not have permission to perform this action',
       })
-      router.push('/not-found')
     }
 
     // Handle not found

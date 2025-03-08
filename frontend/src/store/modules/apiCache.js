@@ -9,12 +9,12 @@ const DEFAULT_TTL = 5 * 60 * 1000 // 5 minutes
 
 // TTL Configuration per endpoint type
 const TTL_CONFIG = {
-  LIST: 10 * 60 * 1000, // Lists: 10 minutes
-  DETAIL: 10 * 60 * 1000, // Detail views: 10 minutes
-  SEARCH: 10 * 60 * 1000, // Search results: 10 minute
-  DROPDOWN: 10 * 60 * 1000, // Dropdown and static data: 10 minutes
-  DASHBOARD: 10 * 60 * 1000, // Dashboard stats: 10 minute
-  DEFAULT: 10 * 60 * 1000, // Default: 10 minutes
+  LIST: 3 * 60 * 1000, // Lists: 3 minutes
+  DETAIL: 3 * 60 * 1000, // Detail views: 3 minutes
+  SEARCH: 3 * 60 * 1000, // Search results: 3 minutes
+  DROPDOWN: 3 * 60 * 1000, // Dropdown and static data: 3 minutes
+  DASHBOARD: 3 * 60 * 1000, // Dashboard stats: 3 minutes
+  DEFAULT: 3 * 60 * 1000, // Default: 3 minutes
 }
 
 /**

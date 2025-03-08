@@ -207,7 +207,9 @@ export default {
       try {
         // Call API to delete account
         await store.dispatch('auth/deleteAccount', {
-          password: formData.password,
+          data: {
+            password: formData.password,
+          },
         })
 
         // Clear any unsaved changes flag
@@ -222,7 +224,6 @@ export default {
         window.showToast({
           type: 'success',
           title: 'Account Deleted',
-          message: 'Your account has been successfully deleted',
         })
 
         // Log out and redirect to home
@@ -230,10 +231,10 @@ export default {
         router.push('/')
       } catch (error) {
         // Show error toast
+
         window.showToast({
           type: 'error',
-          title: 'Deletion Failed',
-          message: error.response?.data?.detail || 'Failed to delete account',
+          title: error.response?.data?.detail,
         })
 
         // Set validation error for password

@@ -120,7 +120,11 @@ export default {
     })
 
     // Dynamic profile route
-    const profileRoute = computed(() => `/${userRole.value}/profile`)
+    const profileRoute = computed(() => {
+      // Remove any leading/trailing slashes from the role
+      const sanitizedRole = userRole.value.replace(/^\/+|\/+$/g, '')
+      return `/${sanitizedRole}/profile`
+    })
 
     const handleLogout = async () => {
       try {

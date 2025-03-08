@@ -268,7 +268,6 @@ export default {
         window.showToast({
           type: 'success',
           title: 'Password Changed',
-          message: 'Your password has been changed successfully. Please login again.',
         })
 
         // Log out and redirect to login
@@ -278,8 +277,7 @@ export default {
         // Show error toast
         window.showToast({
           type: 'error',
-          title: 'Change Failed',
-          message: error.response?.data?.detail || 'Failed to change password',
+          title: error.response?.data?.detail || 'Failed to change password',
         })
 
         // Set validation error for current password

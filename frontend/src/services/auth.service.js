@@ -35,7 +35,7 @@ class AuthService {
   }
 
   async deleteAccount(data) {
-    const response = await api.delete('/delete-account', data)
+    const response = await api.delete('/delete-account', { data: data })
     return response.data
   }
 }

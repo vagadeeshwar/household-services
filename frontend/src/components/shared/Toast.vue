@@ -1,4 +1,3 @@
-# src/components/shared/Toast.vue
 <template>
   <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div
@@ -13,7 +12,7 @@
       <div class="toast-header" :class="headerClasses(toast)">
         <i :class="['bi', iconClass(toast.type), 'me-2']"></i>
         <strong class="me-auto">{{ toast.title }}</strong>
-        <small>{{ timeAgo(toast.timestamp) }}</small>
+        <small>{{ formatRelativeTime(toast.timestamp) }}</small>
         <button type="button" class="btn-close" @click="removeToast(toast.id)"></button>
       </div>
       <div class="toast-body" :class="{ 'text-white': toast.type }">
@@ -22,10 +21,9 @@
     </div>
   </div>
 </template>
-
 <script>
 import { ref, onMounted } from 'vue'
-import moment from 'moment'
+import { formatRelativeTime } from '@/utils/date'
 
 export default {
   name: 'Toast',
@@ -66,8 +64,6 @@ export default {
       }
     }
 
-    const timeAgo = (timestamp) => moment(timestamp).fromNow()
-
     const addToast = (toast) => {
       const id = nextId++
       const newToast = {
@@ -77,9 +73,7 @@ export default {
         type: toast.type,
         message: toast.message,
       }
-
       toasts.value.push(newToast)
-
       // Auto remove after duration
       setTimeout(() => {
         removeToast(id)
@@ -103,13 +97,12 @@ export default {
       toastClasses,
       headerClasses,
       iconClass,
-      timeAgo,
+      formatRelativeTime,
       removeToast,
     }
   },
 }
 </script>
-
 <style scoped>
 .toast-container {
   z-index: 1050;

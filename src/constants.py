@@ -52,6 +52,10 @@ REVIEW_REPORT = "review_report"
 REVIEW_DISMISS = "review_dismiss"
 REVIEW_REMOVE = "review_remove"
 
+# EXPORT_GENERATE = "export_generate"
+# EXPORT_DOWNLOAD = "export_download"
+# EXPORT_COMPLETE = "export_complete"
+
 # Payment Related Actions (if needed in future)
 # PAYMENT_INITIATE = "payment_initiate"
 # PAYMENT_SUCCESS = "payment_success"
