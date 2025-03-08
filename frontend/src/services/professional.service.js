@@ -24,9 +24,19 @@ class Professional {
     return cachedApi.getPaginated('professionals/reviews', params, { forceRefresh })
   }
 
-  async updateDocument(params = {}) {
-    const response = await api.uploadFile('professionals/document', params)
+  async updateDocument(data) {
+    const headers = {
+      'Content-Type': 'multipart/form-data',
+    }
+    const response = await api.put('document', data, { headers })
     return response.data
+  }
+
+  async downloadDocument() {
+    const response = await api.get('my-document', {
+      responseType: 'blob',
+    })
+    return response
   }
 
   async updateService(params = {}) {

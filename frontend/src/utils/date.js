@@ -48,3 +48,23 @@ export const formatTime = (dateString) => {
 export const formatLocalDateTime = (date, format = 'MMM DD, YYYY hh:mm A') => {
   return date ? moment(date).format(format) : 'N/A'
 }
+
+/**
+ * Format minutes to a human-readable duration
+ * @param {number} minutes - Total minutes
+ * @returns {string} Formatted duration string
+ */
+export const formatDuration = (minutes) => {
+  if (!minutes) return 'N/A'
+
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+
+  if (hours > 0 && mins > 0) {
+    return `${hours}h ${mins}m`
+  } else if (hours > 0) {
+    return `${hours}h`
+  } else {
+    return `${mins}m`
+  }
+}

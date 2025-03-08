@@ -338,7 +338,7 @@ def block_professional(current_user, profile_id):
         )
 
 
-@professional_bp.route("/professionals/document", methods=["PUT"])
+@professional_bp.route("/document", methods=["PUT"])
 @token_required
 @role_required("professional")
 def update_verification_document(current_user):

@@ -2,10 +2,70 @@
   <div class="container py-4">
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1 class="h3 mb-0">Service Management</h1>
+      <div>
+        <h1 class="h3 mb-0">Service Management</h1>
+        <p class="text-muted">Manage all household services from one place</p>
+      </div>
       <button class="btn btn-primary" @click="showCreateModal">
         <i class="bi bi-plus-circle me-2"></i>Add Service
       </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Search</label>
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search services..."
+                v-model="filters.search"
+                @input="debouncedSearch"
+              />
+              <button
+                class="btn btn-outline-secondary"
+                type="button"
+                @click="clearSearch"
+                :disabled="!filters.search"
+              >
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" v-model="filters.status" @change="applyFilters">
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Sort By</label>
+            <select class="form-select" v-model="filters.sortBy" @change="applyFilters">
+              <option value="id">ID</option>
+              <option value="name">Name</option>
+              <option value="base_price">Price</option>
+              <option value="estimated_time">Duration</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Order</label>
+            <div class="d-flex">
+              <select class="form-select" v-model="filters.sortOrder" @change="applyFilters">
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
+              <button class="btn btn-outline-secondary ms-2" @click="resetFilters">
+                <i class="bi bi-arrow-counterclockwise"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Status Indicator -->
@@ -20,42 +80,39 @@
     <div v-else-if="error" class="alert alert-danger" role="alert">
       <i class="bi bi-exclamation-triangle-fill me-2"></i>
       {{ error }}
-      <button @click="fetchServices" class="btn btn-sm btn-outline-danger ms-2">Retry</button>
+      <button @click="fetchServices(true)" class="btn btn-sm btn-outline-danger ms-2">Retry</button>
     </div>
 
     <!-- Services Table -->
     <div v-else class="card shadow-sm">
       <div class="card-header bg-white py-3">
-        <div class="row align-items-center">
-          <div class="col-md-6">
-            <h5 class="mb-0">Service Management</h5>
-          </div>
-          <div class="col-md-6">
-            <div class="d-flex justify-content-md-end align-items-center">
-              <div class="input-group" style="max-width: 200px">
-                <input
-                  type="text"
-                  class="form-control form-control-sm"
-                  placeholder="Search..."
-                  v-model="searchQuery"
-                  @input="handleSearch"
-                />
-                <button class="btn btn-sm btn-outline-secondary" type="button" @click="clearSearch">
-                  <i class="bi bi-x"></i>
-                </button>
-              </div>
-            </div>
-          </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Services</h5>
+          <span class="badge bg-primary">{{ filteredServices.length }} services</span>
         </div>
       </div>
-      <div class="table-responsive">
+
+      <!-- Table for medium and larger screens -->
+      <div class="table-responsive d-none d-md-block">
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light">
             <tr>
-              <th scope="col">#</th>
-              <th scope="col">Service Name</th>
-              <th scope="col">Base Price</th>
-              <th scope="col">Duration</th>
+              <th scope="col" @click="sortBy('id')" class="sortable-header">
+                ID
+                <i v-if="filters.sortBy === 'id'" :class="getSortIcon()"></i>
+              </th>
+              <th scope="col" @click="sortBy('name')" class="sortable-header">
+                Service Name
+                <i v-if="filters.sortBy === 'name'" :class="getSortIcon()"></i>
+              </th>
+              <th scope="col" @click="sortBy('base_price')" class="sortable-header">
+                Base Price
+                <i v-if="filters.sortBy === 'base_price'" :class="getSortIcon()"></i>
+              </th>
+              <th scope="col" @click="sortBy('estimated_time')" class="sortable-header">
+                Duration
+                <i v-if="filters.sortBy === 'estimated_time'" :class="getSortIcon()"></i>
+              </th>
               <th scope="col">Status</th>
               <th scope="col" class="text-end">Actions</th>
             </tr>
@@ -68,29 +125,51 @@
             </tr>
             <tr v-for="service in filteredServices" :key="service.id">
               <td>{{ service.id }}</td>
-              <td>{{ service.name }}</td>
-              <td>₹{{ service.base_price.toFixed(2) }}</td>
-              <td>{{ formatTime(service.estimated_time) }}</td>
               <td>
-                <span :class="['badge', service.is_active ? 'bg-success' : 'bg-secondary']">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-tools me-2 text-muted"></i>
+                  <div>
+                    <div class="fw-semibold">{{ service.name }}</div>
+                    <div class="small text-muted text-truncate" style="max-width: 250px">
+                      {{ service.description }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td>₹{{ service.base_price.toFixed(2) }}</td>
+              <td>{{ formatDuration(service.estimated_time) }}</td>
+              <td>
+                <span
+                  :class="[
+                    'badge',
+                    service.is_active ? 'bg-success' : 'bg-secondary',
+                    'position-relative',
+                  ]"
+                >
                   {{ service.is_active ? 'Active' : 'Inactive' }}
+                  <span
+                    v-if="service.is_active"
+                    class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle"
+                  >
+                    <span class="visually-hidden">Active indicator</span>
+                  </span>
                 </span>
               </td>
-              <td class="text-end">
-                <div class="btn-group">
+              <td>
+                <div class="d-flex justify-content-end">
                   <button
-                    class="btn btn-sm btn-outline-primary"
+                    class="btn btn-sm btn-outline-primary me-1"
+                    @click="showDetailsModal(service)"
+                    title="View Details"
+                  >
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-secondary me-1"
                     @click="showEditModal(service)"
                     title="Edit Service"
                   >
                     <i class="bi bi-pencil"></i>
-                  </button>
-                  <button
-                    class="btn btn-sm btn-outline-info"
-                    @click="showDetailsModal(service)"
-                    title="View Details"
-                  >
-                    <i class="bi bi-info-circle"></i>
                   </button>
                   <button
                     class="btn btn-sm"
@@ -100,11 +179,11 @@
                   >
                     <i
                       class="bi"
-                      :class="[service.is_active ? 'bi-pause-circle' : 'bi-play-circle']"
+                      :class="[service.is_active ? 'bi-toggle-on' : 'bi-toggle-off']"
                     ></i>
                   </button>
                   <button
-                    class="btn btn-sm btn-outline-danger"
+                    class="btn btn-sm btn-outline-danger ms-1"
                     @click="confirmDelete(service)"
                     title="Delete Service"
                     :disabled="!canDelete(service)"
@@ -117,15 +196,77 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Card view for small screens -->
+      <div class="d-md-none">
+        <div v-if="filteredServices.length === 0" class="text-center py-4 text-muted">
+          <i class="bi bi-search me-2"></i>No services found
+        </div>
+        <div v-else class="list-group list-group-flush">
+          <div v-for="service in filteredServices" :key="service.id" class="list-group-item p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="mb-0">{{ service.name }}</h6>
+              <span :class="['badge', service.is_active ? 'bg-success' : 'bg-secondary']">
+                {{ service.is_active ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <div class="small text-muted mb-2">{{ service.description }}</div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="badge bg-light text-dark me-2">
+                  ₹{{ service.base_price.toFixed(2) }}
+                </div>
+                <div class="badge bg-light text-dark">
+                  {{ formatDuration(service.estimated_time) }}
+                </div>
+              </div>
+              <div class="btn-group">
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  @click="showDetailsModal(service)"
+                  title="View Details"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-secondary"
+                  @click="showEditModal(service)"
+                  title="Edit Service"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button
+                  class="btn btn-sm"
+                  :class="[service.is_active ? 'btn-outline-warning' : 'btn-outline-success']"
+                  @click="toggleServiceStatus(service)"
+                >
+                  <i class="bi" :class="[service.is_active ? 'bi-toggle-on' : 'bi-toggle-off']"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  @click="confirmDelete(service)"
+                  :disabled="!canDelete(service)"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
       <div class="card-footer bg-white py-3">
         <div class="row align-items-center">
-          <div class="col-md-6 text-muted">
+          <div class="col-lg-4 col-md-6 text-muted mb-2 mb-md-0">
             Showing {{ filteredServices.length }} of {{ totalServices }} services
           </div>
-          <div class="col-md-6">
+          <div class="col-lg-8 col-md-6">
             <ul class="pagination mb-0 justify-content-md-end">
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <button @click="changePage(currentPage - 1)" class="page-link">Previous</button>
+                <button @click="changePage(currentPage - 1)" class="page-link">
+                  <i class="bi bi-chevron-left"></i>
+                </button>
               </li>
               <li
                 v-for="pageNum in displayedPages"
@@ -136,7 +277,9 @@
                 <button @click="changePage(pageNum)" class="page-link">{{ pageNum }}</button>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                <button @click="changePage(currentPage + 1)" class="page-link">Next</button>
+                <button @click="changePage(currentPage + 1)" class="page-link">
+                  <i class="bi bi-chevron-right"></i>
+                </button>
               </li>
             </ul>
           </div>
@@ -146,10 +289,13 @@
 
     <!-- Create/Edit Service Modal -->
     <div class="modal fade" id="serviceModal" tabindex="-1" ref="serviceModal">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">{{ isEditMode ? 'Edit Service' : 'Add New Service' }}</h5>
+            <h5 class="modal-title">
+              <i class="bi bi-tools me-2"></i>
+              {{ isEditMode ? 'Edit Service' : 'Add New Service' }}
+            </h5>
             <button
               type="button"
               class="btn-close"
@@ -158,23 +304,47 @@
             ></button>
           </div>
           <div class="modal-body">
-            <form @submit.prevent="saveService">
-              <div class="mb-3">
-                <label for="serviceName" class="form-label">Service Name</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="serviceName"
-                  v-model="serviceForm.name"
-                  :class="{ 'is-invalid': formErrors.name }"
-                  required
-                />
-                <div class="invalid-feedback">
-                  {{ formErrors.name }}
+            <form @submit.prevent="saveService" id="serviceForm">
+              <div class="row mb-3">
+                <div class="col-md-8">
+                  <label for="serviceName" class="form-label"
+                    >Service Name <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="serviceName"
+                    v-model="serviceForm.name"
+                    :class="{ 'is-invalid': formErrors.name }"
+                    required
+                    autofocus
+                  />
+                  <div class="invalid-feedback">
+                    {{ formErrors.name }}
+                  </div>
+                  <div class="form-text">Choose a clear, descriptive name for the service.</div>
+                </div>
+                <div class="col-md-4" v-if="isEditMode">
+                  <label class="form-label d-block">Status</label>
+                  <div class="form-check form-switch form-check-inline">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="statusSwitch"
+                      v-model="serviceForm.is_active"
+                      role="switch"
+                    />
+                    <label class="form-check-label" for="statusSwitch">
+                      {{ serviceForm.is_active ? 'Active' : 'Inactive' }}
+                    </label>
+                  </div>
                 </div>
               </div>
+
               <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
+                <label for="description" class="form-label"
+                  >Description <span class="text-danger">*</span></label
+                >
                 <textarea
                   class="form-control"
                   id="description"
@@ -186,59 +356,69 @@
                 <div class="invalid-feedback">
                   {{ formErrors.description }}
                 </div>
+                <div class="form-text">
+                  Provide a detailed description of what the service includes.
+                </div>
               </div>
+
               <div class="row">
                 <div class="col-md-6 mb-3">
-                  <label for="basePrice" class="form-label">Base Price (₹)</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    id="basePrice"
-                    v-model="serviceForm.base_price"
-                    :class="{ 'is-invalid': formErrors.base_price }"
-                    min="0"
-                    step="0.01"
-                    required
-                  />
-                  <div class="invalid-feedback">
-                    {{ formErrors.base_price }}
+                  <label for="basePrice" class="form-label"
+                    >Base Price (₹) <span class="text-danger">*</span></label
+                  >
+                  <div class="input-group">
+                    <span class="input-group-text">₹</span>
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="basePrice"
+                      v-model="serviceForm.base_price"
+                      :class="{ 'is-invalid': formErrors.base_price }"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                    <div class="invalid-feedback">
+                      {{ formErrors.base_price }}
+                    </div>
                   </div>
+                  <div class="form-text">The starting price for this service.</div>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label for="estTime" class="form-label">Estimated Time (minutes)</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    id="estTime"
-                    v-model="serviceForm.estimated_time"
-                    :class="{ 'is-invalid': formErrors.estimated_time }"
-                    min="1"
-                    required
-                  />
-                  <div class="invalid-feedback">
-                    {{ formErrors.estimated_time }}
+                  <label for="estTime" class="form-label"
+                    >Estimated Time (minutes) <span class="text-danger">*</span></label
+                  >
+                  <div class="input-group">
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="estTime"
+                      v-model="serviceForm.estimated_time"
+                      :class="{ 'is-invalid': formErrors.estimated_time }"
+                      min="1"
+                      required
+                    />
+                    <span class="input-group-text">minutes</span>
+                    <div class="invalid-feedback">
+                      {{ formErrors.estimated_time }}
+                    </div>
                   </div>
+                  <div class="form-text">Average time required to complete this service.</div>
                 </div>
               </div>
-              <div class="form-check form-switch mb-3" v-if="isEditMode">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="statusSwitch"
-                  v-model="serviceForm.is_active"
-                />
-                <label class="form-check-label" for="statusSwitch">Active</label>
-              </div>
-              <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                  Cancel
-                </button>
-                <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
-                  <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
-                  {{ isEditMode ? 'Update Service' : 'Create Service' }}
-                </button>
-              </div>
             </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button
+              type="submit"
+              form="serviceForm"
+              class="btn btn-primary"
+              :disabled="isSubmitting"
+            >
+              <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+              {{ isEditMode ? 'Update Service' : 'Create Service' }}
+            </button>
           </div>
         </div>
       </div>
@@ -246,10 +426,10 @@
 
     <!-- Service Details Modal -->
     <div class="modal fade" id="detailsModal" tabindex="-1" ref="detailsModal">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Service Details</h5>
+            <h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>Service Details</h5>
             <button
               type="button"
               class="btn-close"
@@ -259,36 +439,75 @@
           </div>
           <div class="modal-body" v-if="selectedService">
             <div class="card">
-              <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">{{ selectedService.name }}</h5>
-                <span :class="['badge', selectedService.is_active ? 'bg-success' : 'bg-secondary']">
-                  {{ selectedService.is_active ? 'Active' : 'Inactive' }}
-                </span>
+              <div class="card-header bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h5 class="card-title mb-0">{{ selectedService.name }}</h5>
+                  <span
+                    :class="['badge', selectedService.is_active ? 'bg-success' : 'bg-secondary']"
+                  >
+                    {{ selectedService.is_active ? 'Active' : 'Inactive' }}
+                  </span>
+                </div>
               </div>
               <div class="card-body">
-                <p class="card-text">{{ selectedService.description }}</p>
-                <div class="row">
+                <div class="row mb-4">
                   <div class="col-md-6">
-                    <p class="mb-1"><strong>Base Price:</strong></p>
-                    <p class="text-primary h5">₹{{ selectedService.base_price.toFixed(2) }}</p>
+                    <div class="d-flex align-items-center mb-3">
+                      <div class="icon-box bg-primary-subtle me-3">
+                        <i class="bi bi-currency-rupee text-primary"></i>
+                      </div>
+                      <div>
+                        <h6 class="mb-0 text-muted">Base Price</h6>
+                        <div class="h4 mb-0">₹{{ selectedService.base_price.toFixed(2) }}</div>
+                      </div>
+                    </div>
                   </div>
                   <div class="col-md-6">
-                    <p class="mb-1"><strong>Estimated Time:</strong></p>
-                    <p class="text-primary h5">{{ formatTime(selectedService.estimated_time) }}</p>
+                    <div class="d-flex align-items-center mb-3">
+                      <div class="icon-box bg-success-subtle me-3">
+                        <i class="bi bi-clock text-success"></i>
+                      </div>
+                      <div>
+                        <h6 class="mb-0 text-muted">Estimated Time</h6>
+                        <div class="h4 mb-0">
+                          {{ formatDuration(selectedService.estimated_time) }}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <hr />
-                <div class="row">
+
+                <h6 class="text-muted mb-2">Description</h6>
+                <p class="bg-light p-3 rounded">{{ selectedService.description }}</p>
+
+                <div class="row mt-4">
                   <div class="col-md-6">
-                    <p class="mb-1 text-muted"><small>Created On:</small></p>
-                    <p>{{ formatDate(selectedService.created_at) }}</p>
+                    <div class="small text-muted mb-1">Service ID</div>
+                    <p>{{ selectedService.id }}</p>
                   </div>
                   <div class="col-md-6">
-                    <p class="mb-1 text-muted"><small>Last Updated:</small></p>
+                    <div class="small text-muted mb-1">Status</div>
+                    <p>
+                      <span
+                        :class="[
+                          'badge',
+                          selectedService.is_active ? 'bg-success' : 'bg-secondary',
+                        ]"
+                      >
+                        {{ selectedService.is_active ? 'Active' : 'Inactive' }}
+                      </span>
+                    </p>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="small text-muted mb-1">Created On</div>
+                    <p>{{ formatDateTime(selectedService.created_at) }}</p>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="small text-muted mb-1">Last Updated</div>
                     <p>
                       {{
                         selectedService.updated_at
-                          ? formatDate(selectedService.updated_at)
+                          ? formatDateTime(selectedService.updated_at)
                           : 'Never'
                       }}
                     </p>
@@ -299,8 +518,30 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" @click="showEditModal(selectedService)">
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              @click="showEditModal(selectedService)"
+            >
               <i class="bi bi-pencil me-1"></i> Edit
+            </button>
+            <button
+              type="button"
+              class="btn"
+              :class="[
+                selectedService && selectedService.is_active
+                  ? 'btn-outline-warning'
+                  : 'btn-outline-success',
+              ]"
+              @click="toggleServiceStatus(selectedService)"
+            >
+              <i
+                class="bi"
+                :class="[
+                  selectedService && selectedService.is_active ? 'bi-toggle-on' : 'bi-toggle-off',
+                ]"
+              ></i>
+              {{ selectedService && selectedService.is_active ? 'Deactivate' : 'Activate' }}
             </button>
           </div>
         </div>
@@ -309,10 +550,13 @@
 
     <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1" ref="deleteModal">
-      <div class="modal-dialog modal-sm">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-danger text-white">
-            <h5 class="modal-title">Confirm Delete</h5>
+            <h5 class="modal-title">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+              Confirm Delete
+            </h5>
             <button
               type="button"
               class="btn-close btn-close-white"
@@ -321,11 +565,16 @@
             ></button>
           </div>
           <div class="modal-body">
-            <p>
-              Are you sure you want to delete <strong>{{ selectedService?.name }}</strong
-              >?
-            </p>
-            <p class="text-danger small">This action cannot be undone.</p>
+            <div class="text-center mb-3">
+              <i class="bi bi-trash-fill text-danger" style="font-size: 3rem"></i>
+            </div>
+            <p class="mb-1">Are you sure you want to delete this service?</p>
+            <div class="alert alert-warning">
+              <strong>{{ selectedService?.name }}</strong>
+              <p class="small mb-0">
+                This action cannot be undone. Only inactive services can be deleted.
+              </p>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -336,7 +585,7 @@
               :disabled="isDeleting"
             >
               <span v-if="isDeleting" class="spinner-border spinner-border-sm me-2"></span>
-              {{ isDeleting ? 'Deleting...' : 'Delete' }}
+              {{ isDeleting ? 'Deleting...' : 'Delete Service' }}
             </button>
           </div>
         </div>
@@ -347,9 +596,9 @@
 
 <script>
 import * as bootstrap from 'bootstrap'
-import moment from 'moment'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useStore } from 'vuex'
+import { formatDateTime, formatDuration } from '@/utils/date'
 
 export default {
   name: 'AdminServices',
@@ -369,14 +618,21 @@ export default {
     const isLoading = computed(() => store.getters['services/isLoading'])
     const error = computed(() => store.getters['services/error'])
     const pagination = computed(() => store.getters['services/pagination'])
-
     const currentPage = ref(1)
     const perPage = ref(10)
-    const searchQuery = ref('')
     const isEditMode = ref(false)
     const isSubmitting = ref(false)
     const isDeleting = ref(false)
     const selectedService = ref(null)
+    const filters = reactive({
+      search: '',
+      status: 'all',
+      sortBy: 'id',
+      sortOrder: 'asc',
+    })
+
+    // Search debounce timer
+    let searchTimer = null
 
     // Form state
     const serviceForm = reactive({
@@ -403,9 +659,15 @@ export default {
 
       let result = [...services.value]
 
+      // Filter by status
+      if (filters.status !== 'all') {
+        const isActive = filters.status === 'active'
+        result = result.filter((service) => service.is_active === isActive)
+      }
+
       // Filter by search term
-      if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase()
+      if (filters.search) {
+        const query = filters.search.toLowerCase()
         result = result.filter(
           (service) =>
             service.name.toLowerCase().includes(query) ||
@@ -413,14 +675,34 @@ export default {
         )
       }
 
+      // Sort services
+      result = [...result].sort((a, b) => {
+        let valA = a[filters.sortBy]
+        let valB = b[filters.sortBy]
+
+        // Handle string comparisons
+        if (typeof valA === 'string') {
+          valA = valA.toLowerCase()
+          valB = valB.toLowerCase()
+        }
+
+        if (filters.sortOrder === 'asc') {
+          return valA > valB ? 1 : -1
+        } else {
+          return valA < valB ? 1 : -1
+        }
+      })
+
       return result
     })
 
     const displayedPages = computed(() => {
       const pages = []
       const maxVisiblePages = 5
+      const totalPg = totalPages.value || 1
+
       let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
-      let endPage = Math.min(totalPages.value, startPage + maxVisiblePages - 1)
+      let endPage = Math.min(totalPg, startPage + maxVisiblePages - 1)
 
       if (endPage - startPage + 1 < maxVisiblePages) {
         startPage = Math.max(1, endPage - maxVisiblePages + 1)
@@ -434,26 +716,18 @@ export default {
     })
 
     // Methods
-    const fetchServices = async () => {
-      await store.dispatch('services/fetchAllServices', {
-        page: currentPage.value,
-        perPage: perPage.value,
-      })
-    }
-
-    const formatTime = (minutes) => {
-      const hours = Math.floor(minutes / 60)
-      const mins = minutes % 60
-
-      if (hours > 0) {
-        return `${hours}h${mins > 0 ? ` ${mins}m` : ''}`
+    const fetchServices = async (forceRefresh = false) => {
+      try {
+        await store.dispatch('services/fetchAllServices', {
+          params: {
+            page: currentPage.value,
+            per_page: perPage.value,
+          },
+          forceRefresh: forceRefresh,
+        })
+      } catch (err) {
+        console.error('Error fetching services:', err)
       }
-
-      return `${mins}m`
-    }
-
-    const formatDate = (dateString) => {
-      return moment(dateString).format('MMM DD, YYYY h:mm A')
     }
 
     const resetForm = () => {
@@ -520,11 +794,21 @@ export default {
       } else if (serviceForm.name.length < 4) {
         formErrors.name = 'Service name must be at least 4 characters'
         isValid = false
+      } else if (serviceForm.name.length > 100) {
+        formErrors.name = 'Service name cannot exceed 100 characters'
+        isValid = false
       }
 
       // Description validation
       if (!serviceForm.description.trim()) {
         formErrors.description = 'Description is required'
+        isValid = false
+      } else if (serviceForm.description.length < 10) {
+        formErrors.description =
+          'Please provide a more detailed description (at least 10 characters)'
+        isValid = false
+      } else if (serviceForm.description.length > 1000) {
+        formErrors.description = 'Description cannot exceed 1000 characters'
         isValid = false
       }
 
@@ -532,11 +816,17 @@ export default {
       if (serviceForm.base_price <= 0) {
         formErrors.base_price = 'Base price must be greater than 0'
         isValid = false
+      } else if (serviceForm.base_price > 100000) {
+        formErrors.base_price = 'Base price cannot exceed ₹100,000'
+        isValid = false
       }
 
       // Time validation
       if (serviceForm.estimated_time <= 0) {
         formErrors.estimated_time = 'Estimated time must be greater than 0'
+        isValid = false
+      } else if (serviceForm.estimated_time > 480) {
+        formErrors.estimated_time = 'Estimated time cannot exceed 8 hours (480 minutes)'
         isValid = false
       }
 
@@ -556,9 +846,9 @@ export default {
             data: {
               name: serviceForm.name,
               description: serviceForm.description,
-              basePrice: serviceForm.base_price,
-              estimatedTime: serviceForm.estimated_time,
-              isActive: serviceForm.is_active,
+              base_price: serviceForm.base_price,
+              estimated_time: serviceForm.estimated_time,
+              is_active: serviceForm.is_active,
             },
           })
 
@@ -570,10 +860,12 @@ export default {
         } else {
           // Create new service
           await store.dispatch('services/createService', {
-            name: serviceForm.name,
-            description: serviceForm.description,
-            basePrice: serviceForm.base_price,
-            estimatedTime: serviceForm.estimated_time,
+            data: {
+              name: serviceForm.name,
+              description: serviceForm.description,
+              base_price: serviceForm.base_price,
+              estimated_time: serviceForm.estimated_time,
+            },
           })
 
           window.showToast({
@@ -589,6 +881,12 @@ export default {
         // Handle specific errors
         if (err.response?.data?.error_type === 'DuplicateService') {
           formErrors.name = 'A service with this name already exists'
+        } else {
+          window.showToast({
+            type: 'error',
+            title: 'Error',
+            message: err.response?.data?.message || 'An error occurred while saving the service.',
+          })
         }
       } finally {
         isSubmitting.value = false
@@ -596,15 +894,33 @@ export default {
     }
 
     const toggleServiceStatus = async (service) => {
-      await store.dispatch('services/toggleService', service.id)
+      if (!service) return
 
-      window.showToast({
-        type: 'success',
-        title: service.is_active ? 'Service Deactivated' : 'Service Activated',
-        message: `${service.name} has been ${service.is_active ? 'deactivated' : 'activated'} successfully.`,
-      })
+      try {
+        await store.dispatch('services/toggleService', {
+          id: service.id,
+        })
 
-      fetchServices()
+        // If the details modal is open, update the selected service status
+        if (selectedService.value && selectedService.value.id === service.id) {
+          selectedService.value.is_active = !selectedService.value.is_active
+        }
+
+        window.showToast({
+          type: 'success',
+          title: service.is_active ? 'Service Deactivated' : 'Service Activated',
+          message: `${service.name} has been ${service.is_active ? 'deactivated' : 'activated'} successfully.`,
+        })
+
+        fetchServices()
+      } catch (err) {
+        window.showToast({
+          type: 'error',
+          title: 'Error',
+          message:
+            err.response?.data?.message || 'An error occurred while updating service status.',
+        })
+      }
     }
 
     const deleteService = async () => {
@@ -613,7 +929,9 @@ export default {
       isDeleting.value = true
 
       try {
-        await store.dispatch('services/deleteService', selectedService.value.id)
+        await store.dispatch('services/deleteService', {
+          id: selectedService.value.id,
+        })
 
         window.showToast({
           type: 'success',
@@ -623,9 +941,12 @@ export default {
 
         bsDeleteModal.hide()
         fetchServices()
-        // eslint-disable-next-line no-unused-vars
       } catch (err) {
-        // Error toast is shown via API response handler
+        window.showToast({
+          type: 'error',
+          title: 'Error',
+          message: err.response?.data?.message || 'An error occurred while deleting the service.',
+        })
       } finally {
         isDeleting.value = false
       }
@@ -633,28 +954,60 @@ export default {
 
     const changePage = (page) => {
       if (page < 1 || page > totalPages.value) return
-
       currentPage.value = page
       fetchServices()
     }
 
-    const handleSearch = () => {
-      if (searchQuery.value.length > 2 || searchQuery.value.length === 0) {
-        currentPage.value = 1
-        fetchServices()
-      }
+    const debouncedSearch = () => {
+      clearTimeout(searchTimer)
+      searchTimer = setTimeout(() => {
+        applyFilters()
+      }, 300)
     }
 
     const clearSearch = () => {
-      searchQuery.value = ''
+      filters.search = ''
+      applyFilters()
+    }
+
+    const resetFilters = () => {
+      filters.search = ''
+      filters.status = 'all'
+      filters.sortBy = 'id'
+      filters.sortOrder = 'asc'
+      applyFilters()
+    }
+
+    const applyFilters = () => {
+      currentPage.value = 1
       fetchServices()
     }
 
+    const sortBy = (column) => {
+      if (filters.sortBy === column) {
+        // Toggle sort order if clicking on the same column
+        filters.sortOrder = filters.sortOrder === 'asc' ? 'desc' : 'asc'
+      } else {
+        // Set new sort column and default to ascending
+        filters.sortBy = column
+        filters.sortOrder = 'asc'
+      }
+      applyFilters()
+    }
+
+    const getSortIcon = () => {
+      return filters.sortOrder === 'asc' ? 'bi-caret-up-fill' : 'bi-caret-down-fill'
+    }
+
     const canDelete = (service) => {
-      // Only allow deletion of services that have never been used
-      // In a real app, you might check if the service has any associated requests
+      // Only allow deletion of inactive services
       return !service.is_active
     }
+
+    // Watch for filter changes
+    watch([() => filters.status, () => filters.sortBy, () => filters.sortOrder], () => {
+      applyFilters()
+    })
 
     // Lifecycle hooks
     onMounted(() => {
@@ -686,12 +1039,12 @@ export default {
       currentPage,
       totalPages,
       selectedService,
-      searchQuery,
       serviceForm,
       formErrors,
       isEditMode,
       isSubmitting,
       isDeleting,
+      filters,
 
       // Computed
       filteredServices,
@@ -700,8 +1053,8 @@ export default {
 
       // Methods
       fetchServices,
-      formatTime,
-      formatDate,
+      formatDuration,
+      formatDateTime,
       showCreateModal,
       showEditModal,
       showDetailsModal,
@@ -710,8 +1063,12 @@ export default {
       deleteService,
       toggleServiceStatus,
       changePage,
-      handleSearch,
+      debouncedSearch,
       clearSearch,
+      resetFilters,
+      applyFilters,
+      sortBy,
+      getSortIcon,
       canDelete,
     }
   },
@@ -719,42 +1076,67 @@ export default {
 </script>
 
 <style scoped>
-.badge {
-  font-size: 0.8rem;
+.icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.btn-group .btn {
-  padding: 0.25rem 0.5rem;
+.icon-box i {
+  font-size: 1.5rem;
+}
+
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable-header:hover {
+  background-color: #f8f9fa;
 }
 
 .form-switch {
   padding-left: 2.5em;
 }
 
-.dropdown-menu .dropdown-item {
-  padding: 0.25rem 1rem;
+/* Badge with dot indicator */
+.badge.position-relative {
+  padding-right: 1.5rem;
 }
 
-.description-truncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 400px;
+/* Custom form validation styles */
+.form-control.is-invalid,
+.form-select.is-invalid,
+.form-check-input.is-invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
 }
 
-/* Loading spinner animations */
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
+/* Toast styles */
+.toast {
+  opacity: 1 !important;
+}
+
+/* For small screens */
+@media (max-width: 768px) {
+  .btn-group .btn {
+    padding: 0.25rem 0.5rem;
   }
 
-  100% {
-    transform: rotate(360deg);
+  .pagination {
+    justify-content: center !important;
   }
-}
 
-.table td,
-.table th {
-  padding: 0.75rem;
+  .icon-box {
+    width: 40px;
+    height: 40px;
+  }
+
+  .icon-box i {
+    font-size: 1.25rem;
+  }
 }
 </style>

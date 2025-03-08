@@ -25,20 +25,32 @@
       ".editorconfig",
       ".prettierrc.json",
       "eslint.config.js",
+      "temp.json",
       "jsconfig.json",
+
+      "src/components/profile/ProfileInfo.vue",
+      "src/components/profile/AccountDeleteForm.vue",
+      "src/components/profile/PasswordChangeForm.vue",
+      "src/components/profile/DocumentManagement.vue",
+
       "src/views/customer/Dashboard.vue",
       "src/views/customer/ServiceBrowser.vue",
       "src/views/customer/ServiceRequests.vue",
+      "src/views/customer/Profile.vue",
+
       "src/views/professional/Dashboard.vue",
       "src/views/professional/Reviews.vue",
       "src/views/professional/Schedule.vue",
       "src/views/professional/ServiceRequests.vue",
+      "src/views/professional/Profile.vue",
+
       "src/views/public",
+
       "src/views/admin/Customers.vue",
       "src/views/admin/Professionals.vue",
       "src/views/admin/Dashboard.vue",
       "src/views/admin/Reports.vue",
-      "src/views/admin/Services.vue"
+      "src/views/admin/Profile.vue"
     ]
   }
 }

@@ -21,7 +21,7 @@ const getters = {
 }
 
 const actions = {
-  async fetchProfessionals({ commit }, { params = {}, forceRefresh = false }) {
+  async fetchProfessionals({ commit }, { params = {}, forceRefresh = false } = {}) {
     try {
       commit('SET_LOADING', true)
       const response = await professional.getAll(params, forceRefresh)
@@ -39,7 +39,7 @@ const actions = {
   async fetchProfessionalById({ commit }, { params = {}, forceRefresh = false, id }) {
     try {
       commit('SET_LOADING', true)
-      const response = await professional.getById(params, id, forceRefresh)
+      const response = await professional.getById(id, params, forceRefresh)
       commit('SET_SELECTED_PROFESSIONAL', response)
       return response
     } catch (error) {
@@ -50,7 +50,7 @@ const actions = {
     }
   },
 
-  async verifyProfessional({ commit }, id) {
+  async verifyProfessional({ commit }, { id }) {
     try {
       commit('SET_LOADING', true)
       const response = await professional.verify(id)
@@ -64,10 +64,10 @@ const actions = {
     }
   },
 
-  async blockProfessional({ commit }, { id, reason }) {
+  async blockProfessional({ commit }, { id, data }) {
     try {
       commit('SET_LOADING', true)
-      const response = await professional.block(id, reason)
+      const response = await professional.block(id, data)
       commit('UPDATE_PROFESSIONAL', response)
       return response
     } catch (error) {
@@ -78,20 +78,7 @@ const actions = {
     }
   },
 
-  async fetchDashboard({ commit }) {
-    try {
-      commit('SET_LOADING', true)
-      const response = await professional.getDashboard()
-      return response
-    } catch (error) {
-      commit('SET_ERROR', error.message)
-      throw error
-    } finally {
-      commit('SET_LOADING', false)
-    }
-  },
-
-  async fetchReviews({ commit }, params = {}) {
+  async fetchReviews({ commit }, { params = {} } = {}) {
     try {
       commit('SET_LOADING', true)
       const response = await professional.getReviews(params)
@@ -104,10 +91,10 @@ const actions = {
     }
   },
 
-  async updateDocument({ commit }, document) {
+  async updateDocument({ commit }, { data }) {
     try {
       commit('SET_LOADING', true)
-      const response = await professional.updateDocument(document)
+      const response = await professional.updateDocument(data)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -117,10 +104,23 @@ const actions = {
     }
   },
 
-  async updateService({ commit }, serviceTypeId) {
+  async downloadDocument({ commit }) {
     try {
       commit('SET_LOADING', true)
-      const response = await professional.updateService(serviceTypeId)
+      const response = await professional.downloadDocument()
+      return response
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+
+  async updateService({ commit }, { data }) {
+    try {
+      commit('SET_LOADING', true)
+      const response = await professional.updateService(data)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)

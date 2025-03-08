@@ -44,6 +44,7 @@ frontend/.cache
 frontend/public/js
 frontend/public/css
 frontend/frontend.txt
+frontend/temp.json
 
 # Backend (Flask) specific ignores
 *.pyc

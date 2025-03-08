@@ -6,6 +6,11 @@
         <ProfileInfo />
       </div>
 
+      <!-- Document Management for professionals only -->
+      <div class="col-lg-8">
+        <DocumentManagement />
+      </div>
+
       <!-- Password Management -->
       <div class="col-lg-8">
         <PasswordChangeForm />
@@ -18,22 +23,21 @@
     </div>
   </div>
 </template>
-
 <script>
 import ProfileInfo from '@/components/profile/ProfileInfo.vue'
 import PasswordChangeForm from '@/components/profile/PasswordChangeForm.vue'
 import AccountDeleteForm from '@/components/profile/AccountDeleteForm.vue'
-
+import DocumentManagement from '@/components/profile/DocumentManagement.vue'
 export default {
   name: 'ProfessionalProfile',
   components: {
     ProfileInfo,
     PasswordChangeForm,
     AccountDeleteForm,
+    DocumentManagement,
   },
 }
 </script>
-
 <style scoped>
 .container {
   max-width: 900px;

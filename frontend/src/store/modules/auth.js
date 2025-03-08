@@ -13,6 +13,7 @@ const state = {
     is_active: false,
     created_at: null,
     last_login: null,
+    verification_documents: null,
     // Add default values for all user properties used in your app (will be used while the api response is being fetched)
   },
   token: localStorage.getItem('access_token'),
@@ -91,6 +92,21 @@ const actions = {
       commit('SET_LOADING', false)
     }
   },
+  async getProfile({ commit }) {
+    commit('SET_LOADING', true)
+    commit('SET_ERROR', null)
+
+    try {
+      const response = await auth.getProfile()
+      commit('SET_USER', response.data)
+      return response.data
+    } catch (error) {
+      commit('SET_ERROR', error.response?.data?.message || 'Profile fetch failed')
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
 
   async updateProfile({ commit }, { data }) {
     commit('SET_LOADING', true)
@@ -140,8 +156,9 @@ const actions = {
     }
   },
 
-  logout({ commit }) {
+  logout({ commit, dispatch }) {
     commit('CLEAR_AUTH')
+    dispatch('apiCache/clearAllCache', null, { root: true })
   },
 }
 
