@@ -127,7 +127,7 @@
                   </div>
                 </div>
               </td>
-              <td>₹{{ service?.base_price?.toFixed(2) }}</td>
+              <td>₹{{ service?.base_price != null ? service.base_price.toFixed(2) : '0.00' }}</td>
               <td>{{ formatDuration(service.estimated_time) }}</td>
               <td>
                 <span :class="[
@@ -186,9 +186,10 @@
             <div class="small text-muted mb-2">{{ service.description }}</div>
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <div class="badge bg-light text-dark me-2">
-                  ₹{{ service?.base_price?.toFixed(2) }}
+                <div class="h4 mb-0">₹{{ selectedService?.base_price != null ?
+                  selectedService.base_price.toFixed(2) : '0.00' }}
                 </div>
+
                 <div class="badge bg-light text-dark">
                   {{ formatDuration(service.estimated_time) }}
                 </div>
@@ -271,7 +272,7 @@
                   </div>
                   <div class="form-text">Choose a clear, descriptive name for the service.</div>
                 </div>
-                <div class="col-md-4" v-if="isEditMode">
+                <!-- <div class="col-md-4" v-if="isEditMode">
                   <label class="form-label d-block">Status</label>
                   <div class="form-check form-switch form-check-inline">
                     <input class="form-check-input" type="checkbox" id="statusSwitch"
@@ -280,7 +281,7 @@
                       {{ serviceForm.is_active ? 'Active' : 'Inactive' }}
                     </label>
                   </div>
-                </div>
+                </div> -->
               </div>
 
               <div class="mb-3">
@@ -371,7 +372,8 @@
                       </div>
                       <div>
                         <h6 class="mb-0 text-muted">Base Price</h6>
-                        <div class="h4 mb-0">₹{{ selectedService.base_price.toFixed(2) }}</div>
+                        <div class="h4 mb-0">₹{{ selectedService?.base_price != null ?
+                          selectedService.base_price.toFixed(2) : '0.00' }}</div>
                       </div>
                     </div>
                   </div>
@@ -724,29 +726,54 @@ export default {
 
       return isValid;
     };
-
     const saveService = async () => {
       if (!validateForm()) return;
       isSubmitting.value = true;
       try {
         if (isEditMode.value) {
-          // Update existing service
-          await store.dispatch('services/updateService', {
-            id: selectedService.value.id,
-            data: {
-              name: serviceForm.name,
-              description: serviceForm.description,
-              base_price: serviceForm.base_price,
-              estimated_time: serviceForm.estimated_time,
-              is_active: serviceForm.is_active,
-            },
-          });
-          window.showToast({
-            type: 'success',
-            title: `${serviceForm.name} has been updated successfully.`,
-          });
+          // Compare form values with original values and only include changed fields
+          const changedData = {};
+
+          if (serviceForm.name !== selectedService.value.name) {
+            changedData.name = serviceForm.name;
+          }
+
+          if (serviceForm.description !== selectedService.value.description) {
+            changedData.description = serviceForm.description;
+          }
+
+          if (Number(serviceForm.base_price) !== Number(selectedService.value.base_price)) {
+            changedData.base_price = serviceForm.base_price;
+          }
+
+          if (Number(serviceForm.estimated_time) !== Number(selectedService.value.estimated_time)) {
+            changedData.estimated_time = serviceForm.estimated_time;
+          }
+
+          if (serviceForm.is_active !== selectedService.value.is_active) {
+            changedData.is_active = serviceForm.is_active;
+          }
+
+          // Only proceed with update if there are changes
+          if (Object.keys(changedData).length > 0) {
+            // Update existing service
+            await store.dispatch('services/updateService', {
+              id: selectedService.value.id,
+              data: changedData,
+            });
+
+            window.showToast({
+              type: 'success',
+              title: `${serviceForm.name} has been updated successfully.`,
+            });
+          } else {
+            window.showToast({
+              type: 'info',
+              title: 'No changes were made.',
+            });
+          }
         } else {
-          // Create new service
+          // Create new service - send all values
           await store.dispatch('services/createService', {
             data: {
               name: serviceForm.name,
@@ -755,6 +782,7 @@ export default {
               estimated_time: serviceForm.estimated_time,
             },
           });
+
           window.showToast({
             type: 'success',
             title: `${serviceForm.name} has been added successfully.`,
@@ -769,20 +797,17 @@ export default {
         // Handle specific errors
         if (err.response?.data?.error_type === 'DuplicateService') {
           formErrors.name = 'A service with this name already exists';
-          // Add force refresh here too - previously missing
-          await store.dispatch('services/clearError');
-          await fetchServices(true);
         } else {
           window.showToast({
             type: 'error',
             title: err.response?.data?.detail || 'An error occurred while saving the service.',
           });
-          // Clear error and fetch services before closing modal
-          await store.dispatch('services/clearError');
-          await fetchServices(true);
-          // Close modal for server errors
           bsServiceModal.hide();
         }
+
+        // Clear error and fetch services
+        await store.dispatch('services/clearError');
+        await fetchServices(true);
       } finally {
         isSubmitting.value = false;
       }
@@ -790,40 +815,57 @@ export default {
 
     const toggleServiceStatus = async (service) => {
       if (!service) return;
-      // Track which modal was open when this was called (if any)
+
+      // Track which modal was open
       const wasDetailsModalOpen = bsDetailsModal && bsDetailsModal._isShown;
+
+      // Store original values before any changes
+      const originalIsActive = service.is_active;
+      const serviceName = service.name;
+      const serviceId = service.id;
+
       try {
-        await store.dispatch('services/toggleService', {
-          id: service.id,
+        // Get the response from the API call
+        // eslint-disable-next-line no-unused-vars
+        const response = await store.dispatch('services/toggleService', {
+          id: serviceId,
         });
-        // If the details modal is open, update the selected service status
-        if (selectedService.value && selectedService.value.id === service.id) {
-          selectedService.value.is_active = !selectedService.value.is_active;
-        }
+
+        // Show success toast with correct message based on original state
         window.showToast({
           type: 'success',
-          title: `${service.name} has been ${service.is_active ? 'deactivated' : 'activated'} successfully.`,
+          title: `${serviceName} has been ${originalIsActive ? 'deactivated' : 'activated'} successfully.`,
         });
+
         // Clear any previous error before fetching
         await store.dispatch('services/clearError');
 
+        // Fetch fresh data
         await fetchServices(true);
+
+        // Only after all async operations, update the selected service if needed
+        if (selectedService.value && selectedService.value.id === serviceId) {
+          // Create a new object instead of directly modifying properties
+          selectedService.value = {
+            ...selectedService.value,
+            is_active: !originalIsActive
+          };
+        }
       } catch (err) {
         window.showToast({
           type: 'error',
-          title:
-            err.response?.data?.detail || 'An error occurred while updating service status.',
+          title: err.response?.data?.detail || 'An error occurred while updating service status.',
         });
-        // Clear error before fetching again
+
         await store.dispatch('services/clearError');
-        // await fetchServices(true);
-        // Close details modal if it was open when this was called
+
+        // Close details modal if it was open
         if (wasDetailsModalOpen) {
           bsDetailsModal.hide();
         }
       }
     };
-    
+
     const deleteService = async () => {
       if (!selectedService.value) return;
       isDeleting.value = true;

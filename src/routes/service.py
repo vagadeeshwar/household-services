@@ -4,8 +4,12 @@ from flask import Blueprint, request
 from marshmallow import ValidationError
 
 from src import db
-from src.constants import ActivityLogActions
-from src.models import ActivityLog, ProfessionalProfile, Service, User
+from src.constants import (
+    REQUEST_STATUS_ASSIGNED,
+    REQUEST_STATUS_CREATED,
+    ActivityLogActions,
+)
+from src.models import ActivityLog, ProfessionalProfile, Service, ServiceRequest, User
 from src.schemas.service import (
     service_input_schema,
     service_output_schema,
@@ -195,6 +199,32 @@ def update_service(current_user, service_id):
                     "DuplicateService",
                 )
 
+        # Check for critical field updates
+        critical_fields = {"estimated_time", "base_price"}
+        has_critical_updates = any(field in data for field in critical_fields)
+
+        if has_critical_updates:
+            # Check for active service requests
+            active_requests = (
+                ServiceRequest.query.filter(
+                    ServiceRequest.service_id == service_id,
+                    ServiceRequest.status.in_(
+                        [
+                            REQUEST_STATUS_CREATED,
+                            REQUEST_STATUS_ASSIGNED,
+                        ]
+                    ),
+                ).first()
+                is not None
+            )
+
+            if active_requests:
+                return APIResponse.error(
+                    "Cannot update service time or pricing while there are active service requests",
+                    HTTPStatus.CONFLICT,
+                    "ActiveRequestsExist",
+                )
+
         # Update fields
         for key, value in data.items():
             setattr(service, key, value)
@@ -207,7 +237,6 @@ def update_service(current_user, service_id):
         )
         db.session.add(log)
         db.session.commit()
-
         cache_invalidate()
 
         return APIResponse.success(
