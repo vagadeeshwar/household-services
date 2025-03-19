@@ -20,21 +20,39 @@ class Service {
 
   async create(params = {}) {
     const response = await api.post('services', params)
+
+    cachedApi.invalidateCache('services')
+    cachedApi.invalidateCache('services/all')
     return response.data
   }
 
   async update(id, params = {}) {
     const response = await api.put(`services/${id}`, params)
+
+    cachedApi.invalidateCache('services')
+    cachedApi.invalidateCache('services/all')
+    cachedApi.invalidateCache(`services/${id}`)
+    cachedApi.invalidateCache(`services/all/${id}`)
     return response.data
   }
 
   async toggle(id, params = {}) {
     const response = await api.post(`services/${id}/toggle`, params)
+
+    cachedApi.invalidateCache('services')
+    cachedApi.invalidateCache('services/all')
+    cachedApi.invalidateCache(`services/${id}`)
+    cachedApi.invalidateCache(`services/all/${id}`)
     return response.data
   }
 
   async delete(id, params = {}) {
     const response = await api.delete(`services/${id}`, params)
+    cachedApi.invalidateCache('services')
+    cachedApi.invalidateCache('services/all')
+    cachedApi.invalidateCache(`services/${id}`)
+    cachedApi.invalidateCache(`services/all/${id}`)
+
     return response.data
   }
 }

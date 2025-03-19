@@ -764,8 +764,7 @@ export default {
 
         window.showToast({
           type: 'success',
-          title: 'Success',
-          message: 'Service request cancelled successfully!',
+          title: 'Service request cancelled successfully!',
         })
 
         bsCancelRequestModal.hide()
@@ -775,8 +774,7 @@ export default {
       } catch (error) {
         window.showToast({
           type: 'error',
-          title: 'Error',
-          message: error.response?.data?.message || 'Failed to cancel request. Please try again.',
+          title: error.response?.data?.detail || 'Failed to cancel request. Please try again.',
         })
       } finally {
         processingRequestId.value = null
@@ -825,8 +823,7 @@ export default {
 
         window.showToast({
           type: 'success',
-          title: 'Review Submitted',
-          message: 'Thank you for your feedback!',
+          title: 'Thank you for your feedback!',
         })
 
         bsReviewModal.hide()
@@ -834,8 +831,7 @@ export default {
       } catch (error) {
         window.showToast({
           type: 'error',
-          title: 'Error',
-          message: error.response?.data?.message || 'Failed to submit review. Please try again.',
+          title: error.response?.data?.detail || 'Failed to submit review. Please try again.',
         })
       } finally {
         processingRequestId.value = null

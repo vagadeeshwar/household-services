@@ -31,7 +31,7 @@ from src.schemas.request import reviews_output_schema
 from src.schemas.user import block_user_schema
 from src.utils.api import APIResponse
 from src.utils.auth import role_required, token_required
-from src.utils.cache import cached_with_auth
+from src.utils.cache import cache_, cache_invalidate
 from src.utils.file import (
     UPLOAD_FOLDER,
     delete_verification_document,
@@ -139,7 +139,7 @@ def register_professional():
 @professional_bp.route("/professionals", methods=["GET"])
 @professional_bp.route("/professionals/<int:profile_id>", methods=["GET"])
 @token_required
-@cached_with_auth(timeout=300)
+@cache_(timeout=300)
 def list_professionals(current_user, profile_id=None):
     try:
         if profile_id is not None:
@@ -288,6 +288,8 @@ def verify_professional(current_user, profile_id):
         db.session.add(log)
         db.session.commit()
 
+        cache_invalidate()
+
         NotificationService.send_verification_approved(profile)
 
         return APIResponse.success(
@@ -326,6 +328,8 @@ def block_professional(current_user, profile_id):
         )
         db.session.add(log)
         db.session.commit()
+
+        cache_invalidate()
 
         return APIResponse.success(message="Professional blocked successfully")
     except ValidationError as err:
@@ -392,6 +396,8 @@ def update_verification_document(current_user):
         )
         db.session.add(log)
         db.session.commit()
+
+        cache_invalidate()
 
         return APIResponse.success(
             data=professional_output_schema.dump(current_user),
@@ -470,6 +476,8 @@ def update_service_type(current_user):
         db.session.add(log)
         db.session.commit()
 
+        cache_invalidate()
+
         return APIResponse.success(
             data=professional_output_schema.dump(current_user),
             message="Service type updated successfully. Awaiting verification.",
@@ -486,6 +494,7 @@ def update_service_type(current_user):
 @professional_bp.route("/professionals/dashboard", methods=["GET"])
 @token_required
 @role_required("professional")
+@cache_(timeout=120)
 def get_professional_dashboard(current_user):
     """Get professional's dashboard statistics"""
     try:
@@ -537,6 +546,7 @@ def get_professional_dashboard(current_user):
 @professional_bp.route("/professionals/reviews", methods=["GET"])
 @token_required
 @role_required("professional")
+@cache_(timeout=180)
 def get_professional_reviews(current_user):
     """Get reviews for the logged-in professional"""
     try:

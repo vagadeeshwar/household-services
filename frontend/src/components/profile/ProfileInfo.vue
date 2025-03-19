@@ -332,8 +332,7 @@ export default {
         console.error('Error fetching services:', error)
         window.showToast({
           type: 'warning',
-          title: 'Could not load service information',
-          message: 'Service details may be incomplete',
+          title: 'Service details may be incomplete',
         })
       }
     }

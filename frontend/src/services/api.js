@@ -46,8 +46,7 @@ api.interceptors.response.use(
     if (!error.response) {
       window.showToast({
         type: 'error',
-        title: 'Network Error',
-        message: 'Please check your internet connection',
+        title: 'Please check your internet connection',
       })
       return Promise.reject(error)
     }
@@ -60,8 +59,7 @@ api.interceptors.response.use(
       router.push('/login')
       window.showToast({
         type: 'error',
-        title: 'Session Expired/Unauthorized',
-        message: 'Please login again',
+        title: 'Please login again',
       })
     }
 
@@ -70,8 +68,7 @@ api.interceptors.response.use(
       const firstError = Object.values(data.errors)[0]
       window.showToast({
         type: 'error',
-        title: 'Validation Error',
-        message: Array.isArray(firstError) ? firstError[0] : firstError,
+        title: Array.isArray(firstError) ? firstError[0] : firstError,
       })
     }
 
@@ -79,8 +76,7 @@ api.interceptors.response.use(
     if (status === 403) {
       window.showToast({
         type: 'error',
-        title: 'Access Denied',
-        message: data.message || 'You do not have permission to perform this action',
+        title: data.detail || 'You do not have permission to perform this action',
       })
     }
 
@@ -93,8 +89,7 @@ api.interceptors.response.use(
     if (status >= 500) {
       window.showToast({
         type: 'error',
-        title: 'Server Error',
-        message: data.message || 'An unexpected error occurred. Please try again later.',
+        title: data.detail || 'An unexpected error occurred. Please try again later.',
       })
     }
 

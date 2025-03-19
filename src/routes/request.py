@@ -28,6 +28,7 @@ from src.schemas.request import (
 )
 from src.utils.api import APIResponse
 from src.utils.auth import role_required, token_required
+from src.utils.cache import cache_, cache_invalidate
 from src.utils.notification import EmailTemplate, NotificationService
 from src.utils.request import check_booking_availability
 
@@ -102,6 +103,8 @@ def create_service_request(current_user):
         db.session.add(log)
         db.session.commit()
 
+        cache_invalidate()
+
         return APIResponse.success(
             data=service_request_output_schema.dump(service_request),
             message="Service request created successfully",
@@ -123,6 +126,7 @@ def create_service_request(current_user):
 @request_bp.route("/customer/requests", methods=["GET"])
 @token_required
 @role_required("customer")
+@cache_(timeout=120)
 def list_customer_requests(current_user):
     """List all service requests for the current customer"""
     try:
@@ -218,6 +222,8 @@ def cancel_request(current_user, request_id):
         db.session.delete(service_request)
         db.session.commit()
 
+        cache_invalidate()
+
         return APIResponse.success(
             message="Service request cancelled successfully",
             data={},
@@ -299,6 +305,8 @@ def submit_review(current_user, request_id):
         db.session.add(log)
         db.session.commit()
 
+        cache_invalidate()
+
         return APIResponse.success(
             data=review_output_schema.dump(review),
             message="Review submitted successfully",
@@ -315,6 +323,7 @@ def submit_review(current_user, request_id):
 @request_bp.route("/professional/requests", methods=["GET"])
 @token_required
 @role_required("professional")
+@cache_(timeout=120)
 def list_professional_requests(current_user):
     """List service requests based on type (available/ongoing/completed/all)"""
     try:
@@ -473,6 +482,8 @@ def accept_request(current_user, request_id):
         db.session.add(log)
         db.session.commit()
 
+        cache_invalidate()
+
         NotificationService.send_service_request_notification(
             service_request,
             template=EmailTemplate.SERVICE_REQUEST_ASSIGNED,
@@ -572,6 +583,8 @@ def complete_service(current_user, request_id):
         db.session.add(log)
         db.session.commit()
 
+        cache_invalidate()
+
         return APIResponse.success(
             data=service_request_output_schema.dump(service_request),
             message="Service marked as completed successfully",
@@ -660,6 +673,8 @@ def edit_service_request(current_user, request_id):
         )
         db.session.add(log)
         db.session.commit()
+
+        cache_invalidate()
 
         return APIResponse.success(
             data=service_request_output_schema.dump(service_request),

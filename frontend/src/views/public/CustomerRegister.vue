@@ -344,16 +344,14 @@ export default {
 
         window.showToast({
           type: 'success',
-          title: 'Registration Successful',
-          message: 'Your account has been created successfully!',
+          title: 'Your account has been created successfully!',
         })
 
         router.push({ path: '/login', query: { registered: 'true', email: form.email } })
       } catch (error) {
         window.showToast({
           type: 'error',
-          title: 'Registration Failed',
-          message: error.response?.data?.message || 'Registration failed. Please try again.',
+          title: error.response?.data?.detail || 'Registration failed. Please try again.',
         })
       } finally {
         isLoading.value = false

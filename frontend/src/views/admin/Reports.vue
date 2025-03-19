@@ -1153,8 +1153,7 @@ export default {
           // Show success message
           window.showToast({
             type: 'success',
-            title: 'Export Generated',
-            message: `File ${response.filename} is ready for download`,
+            title: `File ${response.filename} is ready for download`,
           })
 
           // Switch to exports tab and refresh
@@ -1165,8 +1164,7 @@ export default {
         // Handle errors
         window.showToast({
           type: 'error',
-          title: 'Export Failed',
-          message: err.message || 'Failed to generate export',
+          title: err.message || 'Failed to generate export',
         })
 
         bsExportProgressModal.hide()
@@ -1182,14 +1180,12 @@ export default {
 
         window.showToast({
           type: 'success',
-          title: 'Download Started',
-          message: 'Your file should download shortly',
+          title: 'Your file should download shortly',
         })
       } catch (err) {
         window.showToast({
           type: 'error',
-          title: 'Download Failed',
-          message: err.message || 'Failed to download file',
+          title: err.message || 'Failed to download file',
         })
       } finally {
         isActionLoading.value = false
@@ -1203,16 +1199,14 @@ export default {
 
         window.showToast({
           type: 'success',
-          title: 'Export Deleted',
-          message: 'The export file has been deleted',
+          title: 'The export file has been deleted',
         })
 
         fetchExports()
       } catch (err) {
         window.showToast({
           type: 'error',
-          title: 'Delete Failed',
-          message: err.message || 'Failed to delete export',
+          title: err.message || 'Failed to delete export',
         })
       } finally {
         isActionLoading.value = false

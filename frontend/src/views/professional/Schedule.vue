@@ -571,8 +571,7 @@ export default {
 
         window.showToast({
           type: 'success',
-          title: 'Success',
-          message: 'Service has been marked as completed!',
+          title: 'Service has been marked as completed!',
         })
 
         bsCompleteAppointmentModal.hide()
@@ -580,8 +579,7 @@ export default {
       } catch (error) {
         window.showToast({
           type: 'error',
-          title: 'Error',
-          message: error.response?.data?.message || 'Failed to complete service. Please try again.',
+          title: error.response?.data?.detail || 'Failed to complete service. Please try again.',
         })
       } finally {
         isProcessing.value = false

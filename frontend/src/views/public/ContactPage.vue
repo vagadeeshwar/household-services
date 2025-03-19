@@ -183,15 +183,13 @@ export default {
 
         window.showToast({
           type: 'success',
-          title: 'Message Sent',
-          message: 'Thank you! Your message has been sent successfully.',
+          title: 'Thank you! Your message has been sent successfully.',
         })
         resetForm()
       } catch {
         window.showToast({
           type: 'error',
-          title: 'Message Not Sent',
-          message: 'Failed to send message. Please try again.',
+          title: 'Failed to send message. Please try again.',
         })
       } finally {
         submitting.value = false

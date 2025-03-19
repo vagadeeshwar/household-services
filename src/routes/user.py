@@ -33,7 +33,7 @@ from src.schemas.user import (
 )
 from src.utils.api import APIResponse
 from src.utils.auth import role_required, token_required
-from src.utils.cache import cached_with_auth
+from src.utils.cache import cache_, cache_invalidate
 from src.utils.file import delete_verification_document
 
 user_bp = Blueprint("user", __name__)
@@ -41,6 +41,7 @@ user_bp = Blueprint("user", __name__)
 
 @user_bp.route("/profile", methods=["GET"])
 @token_required
+@cache_(300)
 def get_profile(current_user):
     """Get current user's profile"""
     try:
@@ -91,6 +92,8 @@ def change_password(current_user):
         db.session.add(log)
         db.session.commit()
 
+        cache_invalidate()
+
         return APIResponse.success(message="Password changed successfully")
     except Exception as e:
         return APIResponse.error(
@@ -137,6 +140,8 @@ def update_profile(current_user):
         )
         db.session.add(log)
         db.session.commit()
+
+        cache_invalidate()
 
         schema = (
             professional_output_schema
@@ -212,6 +217,8 @@ def delete_account(current_user):
         db.session.delete(current_user)
         db.session.commit()
 
+        cache_invalidate()
+
         return APIResponse.success(
             message="Account successfully deleted", status_code=HTTPStatus.OK
         )
@@ -225,7 +232,7 @@ def delete_account(current_user):
 
 @user_bp.route("/activity-logs", methods=["GET"])
 @token_required
-@cached_with_auth(300)
+@cache_(300)
 def get_activity_logs(current_user):
     """Get role-specific paginated activity logs"""
     try:
@@ -276,7 +283,7 @@ def get_activity_logs(current_user):
 @user_bp.route("/activity-logs/<int:user_id>", methods=["GET"])
 @token_required
 @role_required("admin")
-@cached_with_auth(300)
+@cache_(300)
 def get_activity_logs_by_user(current_user, user_id):
     """Get role-specific paginated activity logs"""
     try:

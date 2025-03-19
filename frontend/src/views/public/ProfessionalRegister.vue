@@ -463,8 +463,7 @@ export default {
         if (file.size > 5 * 1024 * 1024) {
           window.showToast({
             type: 'error',
-            title: 'File Too Large',
-            message: 'Please select a file smaller than 5MB',
+            title: 'Please select a file smaller than 5MB',
           })
           event.target.value = '' // Reset file input
           form.verificationDocument = null
@@ -476,8 +475,7 @@ export default {
         if (!allowedTypes.includes(file.type)) {
           window.showToast({
             type: 'error',
-            title: 'Invalid File Type',
-            message: 'Please select a PDF, JPG, or PNG file',
+            title: 'Please select a PDF, JPG, or PNG file',
           })
           event.target.value = '' // Reset file input
           form.verificationDocument = null
@@ -519,8 +517,7 @@ export default {
 
         window.showToast({
           type: 'success',
-          title: 'Registration Successful',
-          message: 'Your account has been created. Please wait for verification.',
+          title: 'Your account has been created. Please wait for verification.',
         })
 
         router.push({
@@ -534,8 +531,7 @@ export default {
       } catch (error) {
         window.showToast({
           type: 'error',
-          title: 'Registration Failed',
-          message: error.response?.data?.message || 'Registration failed. Please try again.',
+          title: error.response?.data?.detail || 'Registration failed. Please try again.',
         })
       } finally {
         isLoading.value = false
@@ -558,8 +554,7 @@ export default {
         if (!initialLoad.value) {
           window.showToast({
             type: 'error',
-            title: 'Error',
-            message: 'Failed to load service types. Please refresh and try again.',
+            title: 'Failed to load service types. Please refresh and try again.',
           })
         }
       }

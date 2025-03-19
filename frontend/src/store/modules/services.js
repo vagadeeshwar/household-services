@@ -132,6 +132,10 @@ const actions = {
       commit('SET_LOADING', false)
     }
   },
+
+  clearError({ commit }) {
+    commit('CLEAR_ERROR')
+  },
 }
 
 const mutations = {
@@ -168,6 +172,10 @@ const mutations = {
 
   REMOVE_SERVICE(state, id) {
     state.services = state.services.filter((s) => s.id !== id)
+  },
+
+  CLEAR_ERROR(state) {
+    state.error = null
   },
 }
 

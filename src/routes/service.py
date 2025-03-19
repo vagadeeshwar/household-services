@@ -15,7 +15,7 @@ from src.schemas.service import (
 )
 from src.utils.api import APIResponse
 from src.utils.auth import role_required, token_required
-from src.utils.cache import cache_invalidate, cached_with_auth
+from src.utils.cache import cache_, cache_invalidate
 
 service_bp = Blueprint("service", __name__)
 
@@ -23,7 +23,6 @@ service_bp = Blueprint("service", __name__)
 @service_bp.route("/services", methods=["POST"])
 @token_required
 @role_required("admin")
-@cache_invalidate("view/services*")
 def create_service(current_user):
     """Create a new service"""
     try:
@@ -49,6 +48,8 @@ def create_service(current_user):
         )
         db.session.add(service)
         db.session.flush()
+
+        cache_invalidate()
 
         log = ActivityLog(
             user_id=current_user.id,
@@ -76,7 +77,7 @@ def create_service(current_user):
 @service_bp.route("/services/all/<int:service_id>", methods=["GET"])
 @token_required
 @role_required("admin")
-@cached_with_auth(timeout=300)
+@cache_(timeout=300)
 def list_all_services(current_user, service_id=None):
     """List all services or get a specific service"""
     try:
@@ -123,7 +124,7 @@ def list_all_services(current_user, service_id=None):
 
 @service_bp.route("/services", methods=["GET"])
 @service_bp.route("/services/<int:service_id>", methods=["GET"])
-@cached_with_auth(timeout=300)
+@cache_(timeout=300)
 def list_active_services(service_id=None):
     """List all active services or get a specific active service"""
     try:
@@ -178,7 +179,6 @@ def list_active_services(service_id=None):
 
 @service_bp.route("/services/<int:service_id>", methods=["PUT"])
 @token_required
-@cache_invalidate("view/services*")
 @role_required("admin")
 def update_service(current_user, service_id):
     """Update an existing service"""
@@ -207,6 +207,8 @@ def update_service(current_user, service_id):
         )
         db.session.add(log)
         db.session.commit()
+
+        cache_invalidate()
 
         return APIResponse.success(
             data=service_output_schema.dump(service),
@@ -266,6 +268,8 @@ def toggle_service(current_user, service_id):
         db.session.add(log)
         db.session.commit()
 
+        cache_invalidate()
+
         message = (
             "Service deactivated successfully"
             if not service.is_active
@@ -313,6 +317,8 @@ def delete_service(current_user, service_id):
 
         db.session.delete(service)
         db.session.commit()
+
+        cache_invalidate()
 
         return APIResponse.success(
             message="Service permanently deleted successfully",

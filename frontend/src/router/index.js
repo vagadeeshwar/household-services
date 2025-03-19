@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { setupGuards } from './guards'
+import store from '@/store'
 
 // Route Configurations
 import publicRoutes from './routes/public'
@@ -17,7 +18,6 @@ const routes = [
         path: '',
         name: 'Root',
         beforeEnter: (to, from, next) => {
-          const store = window?.__store__ // Access Vuex store
           if (store?.getters['auth/isLoggedIn']) {
             const role = store.getters['auth/userRole']
             switch (role) {

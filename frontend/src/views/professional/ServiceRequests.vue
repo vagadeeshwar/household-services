@@ -578,15 +578,13 @@ export default {
         await store.dispatch('requests/acceptRequest', request.id)
         window.showToast({
           type: 'success',
-          title: 'Success',
-          message: 'Service request accepted successfully!',
+          title: 'Service request accepted successfully!',
         })
         fetchRequests() // Refresh the list
       } catch (error) {
         window.showToast({
           type: 'error',
-          title: 'Error',
-          message: error.response?.data?.message || 'Failed to accept request. Please try again.',
+          title: error.response?.data?.detail || 'Failed to accept request. Please try again.',
         })
       } finally {
         processingRequestId.value = null
@@ -601,16 +599,14 @@ export default {
         await store.dispatch('requests/acceptRequest', selectedRequest.value.id)
         window.showToast({
           type: 'success',
-          title: 'Success',
-          message: 'Service request accepted successfully!',
+          title: 'Service request accepted successfully!',
         })
         bsRequestDetailModal.hide()
         fetchRequests() // Refresh the list
       } catch (error) {
         window.showToast({
           type: 'error',
-          title: 'Error',
-          message: error.response?.data?.message || 'Failed to accept request. Please try again.',
+          title: error.response?.data?.detail || 'Failed to accept request. Please try again.',
         })
       } finally {
         processingRequestId.value = null
@@ -650,8 +646,7 @@ export default {
 
         window.showToast({
           type: 'success',
-          title: 'Success',
-          message: 'Service has been marked as completed!',
+          title: 'Service has been marked as completed!',
         })
 
         bsCompleteRequestModal.hide()
@@ -659,8 +654,7 @@ export default {
       } catch (error) {
         window.showToast({
           type: 'error',
-          title: 'Error',
-          message: error.response?.data?.message || 'Failed to complete service. Please try again.',
+          title: error.response?.data?.detail || 'Failed to complete service. Please try again.',
         })
       } finally {
         processingRequestId.value = null

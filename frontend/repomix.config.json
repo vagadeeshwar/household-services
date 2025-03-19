@@ -32,6 +32,7 @@
       "src/components/profile/AccountDeleteForm.vue",
       "src/components/profile/PasswordChangeForm.vue",
       "src/components/profile/DocumentManagement.vue",
+      "src/components/profile/ActivityLogs.vue",
 
       "src/views/customer/Dashboard.vue",
       "src/views/customer/ServiceBrowser.vue",

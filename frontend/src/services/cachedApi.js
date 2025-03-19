@@ -22,6 +22,7 @@ const cachedApi = {
    */
   async get(url, { params = {}, ttl, forceRefresh = false, cacheType = 'DEFAULT' } = {}) {
     console.debug('Cache request for:', url, params)
+    forceRefresh = forceRefresh === true
 
     return store.dispatch('apiCache/fetchWithCache', {
       apiCall: () => api.get(url, { params }).then((response) => response.data),

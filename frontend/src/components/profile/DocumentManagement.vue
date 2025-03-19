@@ -285,8 +285,7 @@ export default {
         // Show success message
         window.showToast({
           type: 'success',
-          title: 'Document Uploaded',
-          message:
+          title:
             'Your verification document has been uploaded successfully and is pending review.',
         })
 
@@ -301,8 +300,7 @@ export default {
         // Show error message
         window.showToast({
           type: 'error',
-          title: 'Upload Failed',
-          message: error.response?.data?.detail || 'Failed to upload document. Please try again.',
+          title: error.response?.data?.detail || 'Failed to upload document. Please try again.',
         })
 
         // If error indicates active requests, show specific message
@@ -323,8 +321,7 @@ export default {
       if (!hasDocuments.value) {
         window.showToast({
           type: 'warning',
-          title: 'No Document',
-          message: 'You do not have any verification document to download.',
+          title: 'You do not have any verification document to download.',
         })
         return
       }
@@ -374,15 +371,13 @@ export default {
         // Show success message
         window.showToast({
           type: 'success',
-          title: 'Download Started',
-          message: 'Your document download has started.',
+          title: 'Your document download has started.',
         })
       } catch (error) {
         // Show error message
         window.showToast({
           type: 'error',
-          title: 'Download Failed',
-          message: error.response?.data?.detail || 'Failed to download document. Please try again.',
+          title: error.response?.data?.detail || 'Failed to download document. Please try again.',
         })
       } finally {
         isDownloading.value = false

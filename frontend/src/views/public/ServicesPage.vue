@@ -99,11 +99,10 @@ export default {
         }
       } catch (err) {
         console.error('Service fetch error:', err)
-        error.value = err.response?.data?.message || 'Failed to load services. Please try again.'
+        error.value = err.response?.data?.detail || 'Failed to load services. Please try again.'
         window.showToast({
           type: 'error',
-          title: 'Error',
-          message: error.value,
+          title: error.value,
         })
       } finally {
         loading.value = false

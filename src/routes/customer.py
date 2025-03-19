@@ -1,30 +1,26 @@
-from flask import Blueprint, request
-from marshmallow import ValidationError
 from http import HTTPStatus
 
+from flask import Blueprint, request
+from marshmallow import ValidationError
+
 from src import db
-
+from src.constants import USER_ROLE_CUSTOMER, ActivityLogActions
 from src.models import (
-    User,
-    CustomerProfile,
     ActivityLog,
+    CustomerProfile,
+    User,
 )
-
-from src.constants import ActivityLogActions, USER_ROLE_CUSTOMER
-
-
 from src.schemas.customer import (
+    customer_output_schema,
     customer_query_schema,
     customer_register_schema,
-    customer_output_schema,
     customers_output_schema,
 )
 from src.schemas.user import block_user_schema
-
-from src.utils.auth import token_required, role_required
 from src.utils.api import APIResponse
+from src.utils.auth import role_required, token_required
+from src.utils.cache import cache_, cache_invalidate
 from src.utils.user import check_existing_user
-
 
 customer_bp = Blueprint("customer", __name__)
 
@@ -67,6 +63,8 @@ def register_customer():
         db.session.add(log)
         db.session.commit()
 
+        cache_invalidate()
+
         return APIResponse.success(
             data=customer_output_schema.dump(user),
             message="Customer registered successfully",
@@ -84,6 +82,7 @@ def register_customer():
 @customer_bp.route("/customers/<int:profile_id>", methods=["GET"])
 @token_required
 @role_required("admin")
+@cache_(timeout=300)
 def list_customers(current_user, profile_id=None):
     """List all customers or get a specific customer by ID"""
     try:
@@ -108,7 +107,7 @@ def list_customers(current_user, profile_id=None):
             query = query.filter(User.is_active == params["active"])
         if params.get("pin_code"):
             query = query.filter(User.pin_code == params["pin_code"])
-        
+
         try:
             paginated = query.paginate(
                 page=params["page"], per_page=params["per_page"], error_out=False
@@ -164,6 +163,8 @@ def block_customer(current_user, profile_id):
         )
         db.session.add(log)
         db.session.commit()
+
+        cache_invalidate()
 
         return APIResponse.success(message="Customer blocked successfully")
     except ValidationError as err:

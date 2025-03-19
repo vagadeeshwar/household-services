@@ -576,8 +576,7 @@ export default {
       } catch (err) {
         window.showToast({
           type: 'error',
-          title: 'Error',
-          message: 'Failed to load customer details',
+          title: 'Failed to load customer details',
         })
         console.error(err)
       } finally {
@@ -616,8 +615,7 @@ export default {
 
         window.showToast({
           type: 'success',
-          title: 'Success',
-          message: `${selectedCustomer.value.full_name} has been blocked`,
+          title: `${selectedCustomer.value.full_name} has been blocked`,
         })
 
         // Refresh data
@@ -628,8 +626,7 @@ export default {
       } catch (err) {
         window.showToast({
           type: 'error',
-          title: 'Error',
-          message: err.response?.data?.message || 'Failed to block customer',
+          title: err.response?.data?.detail || 'Failed to block customer',
         })
       } finally {
         isActionLoading.value = false
@@ -645,8 +642,7 @@ export default {
 
         window.showToast({
           type: 'success',
-          title: 'Success',
-          message: `${customer.full_name} has been unblocked`,
+          title: `${customer.full_name} has been unblocked`,
         })
 
         // Refresh data
@@ -659,8 +655,7 @@ export default {
       } catch (err) {
         window.showToast({
           type: 'error',
-          title: 'Error',
-          message: err.response?.data?.message || 'Failed to unblock customer',
+          title: err.response?.data?.detail || 'Failed to unblock customer',
         })
       } finally {
         isActionLoading.value = false

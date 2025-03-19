@@ -671,8 +671,7 @@ export default {
 
         window.showToast({
           type: 'success',
-          title: 'Review Submitted',
-          message: 'Thank you for your feedback!',
+          title: 'Thank you for your feedback!',
         })
 
         bsReviewModal.hide()
@@ -682,8 +681,7 @@ export default {
       } catch (err) {
         window.showToast({
           type: 'error',
-          title: 'Error',
-          message: 'Failed to submit review. Please try again.',
+          title: 'Failed to submit review. Please try again.',
         })
       } finally {
         isSubmittingReview.value = false
@@ -774,8 +772,7 @@ export default {
 
         window.showToast({
           type: 'success',
-          title: 'Service Booked',
-          message: 'Your service request has been created successfully!',
+          title: 'Your service request has been created successfully!',
         })
 
         bsBookServiceModal.hide()
@@ -788,8 +785,7 @@ export default {
 
         window.showToast({
           type: 'error',
-          title: 'Booking Error',
-          message: errorMessage,
+          title: errorMessage,
         })
       } finally {
         isSubmittingBooking.value = false

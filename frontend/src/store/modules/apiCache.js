@@ -1,3 +1,4 @@
+import store from '@/store'
 /**
  * Vuex API Cache Module
  *
@@ -56,10 +57,12 @@ function generateCacheKey(url, params = {}) {
 
   const queryString = queryParams.toString() ? `?${queryParams.toString()}` : ''
 
-  // Debug logging (remove in production)
-  console.debug(`Cache key generated for ${url}${queryString}`)
+  const userId = store.getters['auth/currentUser']?.id
 
-  return `${url}${queryString}`
+  // Debug logging (remove in production)
+  console.debug(`Cache key generated for user-${userId}:${url}${queryString}`)
+
+  return `user-${userId}:${url}${queryString}`
 }
 const state = {
   // Store cache entries with URL-based keys
