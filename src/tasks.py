@@ -278,7 +278,6 @@ def send_account_status_notification(
 ):
     """Send account status notification emails."""
     try:
-
         with get_app().app_context():
             # Create the data dictionary with name and any additional data
             data = {"name": name}
