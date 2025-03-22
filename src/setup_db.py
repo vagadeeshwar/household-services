@@ -188,13 +188,24 @@ def create_professionals(services, admin_id):
     db.session.add(user)
     db.session.flush()
 
+    doc_filename = verification_doc_template.format(uuid=uuid.uuid4().hex[:8])
+    doc_path = os.path.join(doc_directory, doc_filename)
+    with open(doc_path, "w") as f:
+        f.write("Verification documents for shubhaganesan\n")
+        f.write("Service Type: AC Repair & Service\n")
+        f.write(f"Experience: {random.randint(2, 15)} years\n")
+        f.write("Documents included:\n")
+        f.write("1. Identity Proof\n")
+        f.write("2. Address Proof\n")
+        f.write("3. Professional Certification\n")
+
     profile = ProfessionalProfile(
         user_id=user.id,
         service_type_id=1,
         experience_years=random.randint(2, 15),
         description="hi",
         is_verified=False,  # Start with unverified status
-        verification_documents="",
+        verification_documents=doc_filename,
         average_rating=None,  # Initially no rating
     )
     db.session.add(profile)

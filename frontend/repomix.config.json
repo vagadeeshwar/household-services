@@ -47,11 +47,12 @@
 
       "src/views/public",
 
-      "src/views/admin/Customers.vue",
+      "src/views/admin/Profile.vue",
+      "src/views/admin/Services.vue",
       "src/views/admin/Professionals.vue",
+
       "src/views/admin/Dashboard.vue",
-      "src/views/admin/Reports.vue",
-      "src/views/admin/Profile.vue"
+      "src/views/admin/Reports.vue"
     ]
   }
 }

@@ -54,7 +54,6 @@ const actions = {
     try {
       commit('SET_LOADING', true)
       const response = await professional.verify(id)
-      commit('UPDATE_PROFESSIONAL', response)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -68,7 +67,19 @@ const actions = {
     try {
       commit('SET_LOADING', true)
       const response = await professional.block(id, data)
-      commit('UPDATE_PROFESSIONAL', response)
+      return response
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+
+  async unblockProfessional({ commit }, { id }) {
+    try {
+      commit('SET_LOADING', true)
+      const response = await professional.unblock(id)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -150,13 +161,6 @@ const mutations = {
 
   SET_PAGINATION(state, pagination) {
     state.pagination = pagination
-  },
-
-  UPDATE_PROFESSIONAL(state, updatedProfessional) {
-    const index = state.professionals.findIndex((p) => p.id === updatedProfessional.id)
-    if (index !== -1) {
-      state.professionals.splice(index, 1, updatedProfessional)
-    }
   },
 }
 

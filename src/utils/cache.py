@@ -6,16 +6,43 @@ from flask_caching import Cache
 
 # Initialize cache
 cache = Cache()
+# Flag to track if Redis is available
+redis_available = False
 
 
 def init_cache(app):
-    """Initialize Redis cache with app configuration"""
+    """Initialize Redis cache if available, otherwise set up a no-op cache"""
+    global redis_available
+
+    # Default Redis configuration
     cache_config = {
         "CACHE_TYPE": "redis",
         "CACHE_REDIS_URL": "redis://localhost:6379/0",
         "CACHE_DEFAULT_TIMEOUT": 300,  # 5 minutes default
     }
-    app.config.update(cache_config)
+
+    # Try to connect to Redis
+    try:
+        import redis
+
+        redis_client = redis.Redis.from_url(
+            cache_config["CACHE_REDIS_URL"], socket_connect_timeout=2
+        )
+        redis_client.ping()  # Will raise exception if Redis is not available
+        app.config.update(cache_config)
+        redis_available = True
+        app.logger.info("Redis is available, caching enabled")
+    except Exception as e:
+        # Redis is not available, set up null cache
+        app.logger.warning(f"Redis server not available: {str(e)}. Caching disabled.")
+        cache_config = {
+            "CACHE_TYPE": "null",  # No-op cache that doesn't cache anything
+            "CACHE_NO_NULL_WARNING": True,  # Suppress null cache warnings
+        }
+        app.config.update(cache_config)
+        redis_available = False
+
+    # Initialize the cache with the appropriate configuration
     cache.init_app(app)
 
 
@@ -33,58 +60,64 @@ def get_cache_key(path, args_str, kwargs_str, user_id=None):
 
 def cache_(timeout=300):
     """
-    Unified cache decorator that handles both authenticated and non-authenticated contexts.
+    Cache decorator that completely bypasses caching when Redis is unavailable.
 
     Args:
-        timeout: Cache expiration time in seconds
+        timeout: Cache expiration time in seconds (only used if Redis is available)
     """
 
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            # Determine if we're in an auth context by checking first arg
-            user_id = None
-            is_auth_context = args and hasattr(args[0], "id")
+            # If Redis is not available, bypass caching entirely
+            if not redis_available:
+                return f(*args, **kwargs)
 
-            if is_auth_context:
-                user_id = args[0].id
+            try:
+                # Determine if we're in an auth context by checking first arg
+                user_id = None
+                is_auth_context = args and hasattr(args[0], "id")
+                if is_auth_context:
+                    user_id = args[0].id
 
-            # Get request-specific components for the cache key
-            path = request.path
-            args_str = request.query_string.decode("utf-8")
-            kwargs_str = str(kwargs)
+                # Get request-specific components for the cache key
+                path = request.path
+                args_str = request.query_string.decode("utf-8")
+                kwargs_str = str(kwargs)
 
-            # Generate cache key
-            cache_key = get_cache_key(path, args_str, kwargs_str, user_id)
+                # Generate cache key
+                cache_key = get_cache_key(path, args_str, kwargs_str, user_id)
 
-            # Try to get from cache
-            cached_result = cache.get(cache_key)
-            if cached_result is not None:
-                return cached_result
+                # Try to get from cache
+                cached_result = cache.get(cache_key)
+                if cached_result is not None:
+                    return cached_result
 
-            # If not in cache, execute the function
-            result = f(*args, **kwargs)
+                # If not in cache, execute the function
+                result = f(*args, **kwargs)
 
-            # Store in cache
-            cache.set(cache_key, result, timeout=timeout)
+                # Store in cache
+                cache.set(cache_key, result, timeout=timeout)
 
-            # If auth context, map this key to the user for later invalidation
-            if is_auth_context:
-                try:
-                    import redis
+                # Map this key to the user for later invalidation
+                if is_auth_context:
+                    try:
+                        import redis
 
-                    user_cache_set_key = f"user_cache_keys:{user_id}"
+                        user_cache_set_key = f"user_cache_keys:{user_id}"
+                        redis_client = redis.Redis.from_url("redis://localhost:6379/0")
+                        pipe = redis_client.pipeline()
+                        pipe.sadd(user_cache_set_key, cache_key)
+                        pipe.expire(user_cache_set_key, timeout)
+                        pipe.execute()
+                    except Exception as e:
+                        current_app.logger.warning(f"Cache mapping failed: {str(e)}")
 
-                    redis_client = redis.Redis.from_url("redis://localhost:6379/0")
-
-                    pipe = redis_client.pipeline()
-                    pipe.sadd(user_cache_set_key, cache_key)
-                    pipe.expire(user_cache_set_key, timeout)
-                    pipe.execute()
-                except Exception as e:
-                    current_app.logger.warning(f"Cache mapping failed: {str(e)}")
-
-            return result
+                return result
+            except Exception as e:
+                current_app.logger.error(f"Caching error: {str(e)}")
+                # If any caching operation fails, fallback to just executing the function
+                return f(*args, **kwargs)
 
         return decorated_function
 
@@ -93,8 +126,11 @@ def cache_(timeout=300):
 
 def cache_invalidate(user_id=None):
     """
-    Invalidate cache - either for a specific user or the entire cache
+    No-op operation if Redis is unavailable, otherwise invalidates cache.
     """
+    if not redis_available:
+        return True  # Do nothing but return success
+
     try:
         # Use Flask-Caching's built-in clear method
         cache.clear()

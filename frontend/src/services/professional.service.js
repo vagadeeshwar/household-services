@@ -15,8 +15,13 @@ class Professional {
     return response.data
   }
 
-  async block(id, params = {}) {
-    const response = await cachedApi.post(`professionals/${id}/block`, params)
+  async block(id, data) {
+    const response = await api.post(`professionals/${id}/block`, data)
+    return response.data
+  }
+
+  async unblock(id) {
+    const response = await api.post(`professionals/${id}/unblock`)
     return response.data
   }
 

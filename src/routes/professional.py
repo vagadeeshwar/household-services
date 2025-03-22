@@ -29,6 +29,7 @@ from src.schemas.professional import (
 )
 from src.schemas.request import reviews_output_schema
 from src.schemas.user import block_user_schema
+from src.tasks import send_account_status_notification
 from src.utils.api import APIResponse
 from src.utils.auth import role_required, token_required
 from src.utils.cache import cache_, cache_invalidate
@@ -37,7 +38,6 @@ from src.utils.file import (
     delete_verification_document,
     save_verification_document,
 )
-from src.utils.notification import NotificationService
 from src.utils.user import check_existing_user
 
 professional_bp = Blueprint("professional", __name__)
@@ -290,7 +290,14 @@ def verify_professional(current_user, profile_id):
 
         cache_invalidate()
 
-        NotificationService.send_verification_approved(profile)
+        # Replace direct notification with Celery task
+        send_account_status_notification.delay(
+            profile.user.email,
+            profile.user.full_name,
+            "emails/verification_approved.html",
+            "Professional Verification Approved",
+            {"service": profile.service_type.name},
+        )
 
         return APIResponse.success(
             data=professional_output_schema.dump(user),
@@ -312,14 +319,28 @@ def block_professional(current_user, profile_id):
     try:
         data = block_user_schema.load(request.get_json())
         profile = ProfessionalProfile.query.get_or_404(profile_id)
-
         if not profile.user.is_active:
             return APIResponse.error(
                 "Professional is already blocked", HTTPStatus.CONFLICT, "AlreadyBlocked"
             )
 
-        profile.user.is_active = False
+        # Check for active service requests
+        has_active_requests = (
+            ServiceRequest.query.filter(
+                ServiceRequest.professional_id == profile.id,
+                ServiceRequest.status == REQUEST_STATUS_ASSIGNED,
+            ).first()
+            is not None
+        )
 
+        if has_active_requests:
+            return APIResponse.error(
+                "Cannot block professional with active service requests",
+                HTTPStatus.CONFLICT,
+                "ActiveRequestsExist",
+            )
+
+        profile.user.is_active = False
         log = ActivityLog(
             user_id=current_user.id,
             entity_id=profile.user.id,
@@ -328,15 +349,61 @@ def block_professional(current_user, profile_id):
         )
         db.session.add(log)
         db.session.commit()
-
         cache_invalidate()
-
         return APIResponse.success(message="Professional blocked successfully")
     except ValidationError as err:
         return APIResponse.error(str(err.messages))
     except Exception as e:
         return APIResponse.error(
             f"Error blocking professional: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
+
+
+@professional_bp.route("/professionals/<int:profile_id>/unblock", methods=["POST"])
+@token_required
+@role_required("admin")
+def unblock_professional(current_user, profile_id):
+    """Unblock a professional's account"""
+    try:
+        profile = ProfessionalProfile.query.get_or_404(profile_id)
+
+        if profile.user.is_active:
+            return APIResponse.error(
+                "Professional is already active", HTTPStatus.CONFLICT, "AlreadyActive"
+            )
+
+        # Only unblock if the professional is verified
+        if not profile.is_verified:
+            return APIResponse.error(
+                "Cannot unblock unverified professional",
+                HTTPStatus.BAD_REQUEST,
+                "UnverifiedProfessional",
+            )
+
+        profile.user.is_active = True
+        log = ActivityLog(
+            user_id=current_user.id,
+            entity_id=profile.user.id,
+            action=ActivityLogActions.PROFESSIONAL_UNBLOCK,
+            description=f"Unblocked professional {profile.user.full_name}",
+        )
+        db.session.add(log)
+        db.session.commit()
+        cache_invalidate()
+
+        send_account_status_notification.delay(
+            profile.user.email,
+            profile.user.full_name,
+            "emails/account_unblocked.html",
+            "Account Unblocked",
+        )
+
+        return APIResponse.success(message="Professional unblocked successfully")
+    except Exception as e:
+        return APIResponse.error(
+            f"Error unblocking professional: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
         )

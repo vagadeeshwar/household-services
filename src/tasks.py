@@ -272,6 +272,33 @@ def generate_service_requests_csv(
             raise
 
 
+@celery.task
+def send_account_status_notification(
+    email, name, template, subject, additional_data=None
+):
+    """Send account status notification emails."""
+    try:
+
+        with get_app().app_context():
+            # Create the data dictionary with name and any additional data
+            data = {"name": name}
+            if additional_data:
+                data.update(additional_data)
+
+            # Send the email
+            result = NotificationService.send_email(
+                to=email, subject=subject, template=template, data=data
+            )
+            print(f"Email sent to {email} using template {template}: {result}")
+            return {"success": result, "email": email}
+    except Exception as e:
+        import traceback
+
+        print(f"Error sending notification: {str(e)}")
+        print(traceback.format_exc())
+        return {"success": False, "error": str(e)}
+
+
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     # Send daily reminders at 6 PM every day
