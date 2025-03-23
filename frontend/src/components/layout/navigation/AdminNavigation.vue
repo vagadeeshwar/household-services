@@ -1,9 +1,14 @@
 <template>
   <div class="admin-nav w-100">
-    <ul class="navbar-nav d-flex flex-row flex-lg-row align-items-center justify-content-start gap-1 gap-lg-3">
+    <ul
+      class="navbar-nav d-flex flex-row flex-lg-row align-items-center justify-content-start gap-1 gap-lg-3"
+    >
       <!-- Dashboard -->
       <li class="nav-item">
-        <router-link class="nav-link px-3 py-2 rounded-3 d-flex align-items-center" to="/admin/dashboard">
+        <router-link
+          class="nav-link px-3 py-2 rounded-3 d-flex align-items-center"
+          to="/admin/dashboard"
+        >
           <i class="bi bi-speedometer2 me-2"></i>
           <span>Dashboard</span>
         </router-link>
@@ -11,7 +16,10 @@
 
       <!-- Services -->
       <li class="nav-item">
-        <router-link class="nav-link px-3 py-2 rounded-3 d-flex align-items-center" to="/admin/services">
+        <router-link
+          class="nav-link px-3 py-2 rounded-3 d-flex align-items-center"
+          to="/admin/services"
+        >
           <i class="bi bi-tools me-2"></i>
           <span>Services</span>
         </router-link>
@@ -19,7 +27,12 @@
 
       <!-- Users Group -->
       <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle px-3 py-2 rounded-3 d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+        <a
+          class="nav-link dropdown-toggle px-3 py-2 rounded-3 d-flex align-items-center"
+          href="#"
+          role="button"
+          data-bs-toggle="dropdown"
+        >
           <i class="bi bi-people me-2"></i>
           <span>Users</span>
         </a>
@@ -41,7 +54,10 @@
 
       <!-- Service Requests -->
       <li class="nav-item">
-        <router-link class="nav-link px-3 py-2 rounded-3 d-flex align-items-center" to="/admin/requests">
+        <router-link
+          class="nav-link px-3 py-2 rounded-3 d-flex align-items-center"
+          to="/admin/requests"
+        >
           <i class="bi bi-briefcase me-2"></i>
           <span>Requests</span>
         </router-link>
@@ -49,7 +65,10 @@
 
       <!-- Reports -->
       <li class="nav-item">
-        <router-link class="nav-link px-3 py-2 rounded-3 d-flex align-items-center" to="/admin/reports">
+        <router-link
+          class="nav-link px-3 py-2 rounded-3 d-flex align-items-center"
+          to="/admin/reports"
+        >
           <i class="bi bi-file-earmark-text me-2"></i>
           <span>Reports</span>
         </router-link>

@@ -36,10 +36,10 @@ const actions = {
     }
   },
 
-  async fetchCustomerById({ commit }, { params = {}, id, forceRefresh = false } = {}) {
+  async fetchCustomerById({ commit }, { id, params = {}, forceRefresh = false } = {}) {
     try {
       commit('SET_LOADING', true)
-      const response = await customer.getById(id, forceRefresh, params)
+      const response = await customer.getById(id, params, forceRefresh)
       commit('SET_SELECTED_CUSTOMER', response)
       return response
     } catch (error) {

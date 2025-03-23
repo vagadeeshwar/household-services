@@ -13,10 +13,16 @@
               <!-- Username Field -->
               <div class="mb-3">
                 <label for="username" class="form-label">Username</label>
-                <input autocomplete="username" type="text" id="username" v-model="form.username"
+                <input
+                  autocomplete="username"
+                  type="text"
+                  id="username"
+                  v-model="form.username"
                   :class="['form-control', { 'is-invalid': v$.form.username.$error }]"
-                  :disabled="isLoading" @input="v$.form.username.$touch()"
-                  @blur="v$.form.username.$touch()" />
+                  :disabled="isLoading"
+                  @input="v$.form.username.$touch()"
+                  @blur="v$.form.username.$touch()"
+                />
                 <div class="invalid-feedback" v-if="v$.form.username.$error">
                   {{ v$.form.username.$errors[0]?.$message }}
                 </div>
@@ -26,11 +32,16 @@
               <div class="mb-4">
                 <label for="password" class="form-label">Password</label>
                 <div class="input-group">
-                  <input autocomplete="current-password" :type="showPassword ? 'text' : 'password'"
-                    id="password" v-model="form.password"
+                  <input
+                    autocomplete="current-password"
+                    :type="showPassword ? 'text' : 'password'"
+                    id="password"
+                    v-model="form.password"
                     :class="['form-control', { 'is-invalid': v$.form.password.$error }]"
-                    :disabled="isLoading" @input="v$.form.password.$touch()"
-                    @blur="v$.form.password.$touch()" />
+                    :disabled="isLoading"
+                    @input="v$.form.password.$touch()"
+                    @blur="v$.form.password.$touch()"
+                  />
                   <button class="btn btn-outline-secondary" type="button" @click="togglePassword">
                     <i :class="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
                   </button>
@@ -71,26 +82,26 @@
 </template>
 
 <script>
-import { ref, reactive } from 'vue';
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
-import { useVuelidate } from '@vuelidate/core';
-import { required, helpers } from '@vuelidate/validators';
+import { ref, reactive } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
+import { useVuelidate } from '@vuelidate/core'
+import { required, helpers } from '@vuelidate/validators'
 
 export default {
   name: 'LoginForm',
 
   setup() {
-    const store = useStore();
-    const router = useRouter();
+    const store = useStore()
+    const router = useRouter()
 
     const form = reactive({
       username: '',
       password: '',
-    });
+    })
 
-    const isLoading = ref(false);
-    const showPassword = ref(false);
+    const isLoading = ref(false)
+    const showPassword = ref(false)
 
     // Validation rules
     const rules = {
@@ -102,102 +113,102 @@ export default {
           required: helpers.withMessage('Password is required', required),
         },
       },
-    };
+    }
 
-    const v$ = useVuelidate(rules, { form });
+    const v$ = useVuelidate(rules, { form })
 
     const handleSubmit = async () => {
       try {
-        const isValid = await v$.value.$validate();
-        if (!isValid) return;
+        const isValid = await v$.value.$validate()
+        if (!isValid) return
 
-        isLoading.value = true;
+        isLoading.value = true
 
         await store.dispatch('auth/login', {
           data: {
             username: form.username.trim(),
             password: form.password,
           },
-        });
+        })
 
-        const user = store.getters['auth/currentUser'];
+        const user = store.getters['auth/currentUser']
 
         window.showToast({
           type: 'success',
           title: `Welcome back, ${user.full_name}!`,
-        });
+        })
 
         // Navigate based on user role
         const roleRoutes = {
           admin: '/admin/dashboard',
           professional: '/professional/dashboard',
           customer: '/customer/dashboard',
-        };
-
-        const defaultRoute = roleRoutes[user.role];
-        if (!defaultRoute) {
-          throw new Error('Invalid user role');
         }
 
-        await router.replace(defaultRoute);
+        const defaultRoute = roleRoutes[user.role]
+        if (!defaultRoute) {
+          throw new Error('Invalid user role')
+        }
+
+        await router.replace(defaultRoute)
       } catch (error) {
-        handleLoginError(error);
+        handleLoginError(error)
       } finally {
-        isLoading.value = false;
+        isLoading.value = false
       }
-    };
+    }
 
     const handleLoginError = (error) => {
-      let errorTitle = 'Login failed. Please check your credentials.';
+      let errorTitle = 'Login failed. Please check your credentials.'
 
       // Handle errors based on error_type from the API response
       if (error.response?.data) {
-        const { error_type, detail } = error.response.data;
+        const { error_type, detail } = error.response.data
 
         // Use the backend error message if available
         if (detail) {
-          errorTitle = detail;
+          errorTitle = detail
         }
 
         // Enhanced error handling based on error_type
         if (error_type) {
           switch (error_type) {
             case 'InvalidCredentials':
-              errorTitle = 'Username or password is incorrect. Please try again.';
-              break;
+              errorTitle = 'Username or password is incorrect. Please try again.'
+              break
             case 'InactiveAccount':
               errorTitle =
-                'Your account has been deactivated. Please contact support for assistance.';
-              break;
+                'Your account has been deactivated. Please contact support for assistance.'
+              break
             case 'UnverifiedProfessional':
               errorTitle =
-                'Your professional account is pending verification. Please wait for admin approval or contact support.';
-              break;
+                'Your professional account is pending verification. Please wait for admin approval or contact support.'
+              break
             case 'DatabaseError':
-              errorTitle = 'A system error occurred. Please try again later or contact support.';
-              break;
+              errorTitle = 'A system error occurred. Please try again later or contact support.'
+              break
             default:
               // Keep the error message from the detail if no specific handling
-              break;
+              break
           }
         }
       } else if (error.message === 'Invalid user role') {
-        errorTitle = 'Account Error';
-        errorTitle = 'Invalid account type. Please contact support.';
+        errorTitle = 'Account Error'
+        errorTitle = 'Invalid account type. Please contact support.'
       } else if (error.message) {
         // If it's a JavaScript error with message
-        errorTitle = error.message;
+        errorTitle = error.message
       }
 
       window.showToast({
         type: 'error',
         title: errorTitle,
-      });
-    };
+      })
+    }
 
     const togglePassword = () => {
-      showPassword.value = !showPassword.value;
-    };
+      showPassword.value = !showPassword.value
+    }
 
     return {
       form,
@@ -206,9 +217,9 @@ export default {
       showPassword,
       handleSubmit,
       togglePassword,
-    };
+    }
   },
-};
+}
 </script>
 
 <style scoped>
@@ -235,7 +246,6 @@ export default {
 }
 
 @keyframes shake {
-
   0%,
   100% {
     transform: translateX(0);

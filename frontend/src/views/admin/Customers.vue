@@ -322,7 +322,6 @@
                         <td>#{{ request.id }}</td>
                         <td>
                           <div class="d-flex align-items-center">
-
                             <div>
                               <div class="fw-medium">{{ request.service_name }}</div>
                               <small class="text-muted">₹{{ request.service_price }}</small>
@@ -351,7 +350,6 @@
                             {{ getStatusLabel(request.status) }}
                           </span>
                         </td>
-
                       </tr>
                     </tbody>
                   </table>
@@ -430,7 +428,7 @@ import { useStore } from 'vuex'
 import * as bootstrap from 'bootstrap'
 import { formatDate, formatDateTime, formatTime } from '@/utils/date'
 import { useLoading } from '@/composables/useLoading'
-import {requestStatusBadges,statusLabels} from '@/assets/requestStatuses'
+import { requestStatusBadges, statusLabels } from '@/assets/requestStatuses'
 
 export default defineComponent({
   name: 'AdminCustomers',
@@ -500,9 +498,7 @@ export default defineComponent({
 
     const getStatusBadgeClass = (status) => requestStatusBadges[status]
 
-
     const getStatusLabel = (status) => statusLabels[status]
-
 
     const viewAllCustomerRequests = () => {
       window.showToast({
@@ -512,18 +508,17 @@ export default defineComponent({
     }
 
     const viewCustomerDetails = (customer) => {
-  selectedCustomer.value = customer
-  bsDetailModal.show()
-  // Only fetch the customer's requests
-  fetchCustomerRequests(customer.customer_id)
-    .catch((error) => {
-      console.error('Error fetching customer requests:', error)
-      window.showToast({
-        type: 'danger',
-        title: error.response?.data?.detail || 'Failed to load customer requests',
+      selectedCustomer.value = customer
+      bsDetailModal.show()
+      // Only fetch the customer's requests
+      fetchCustomerRequests(customer.customer_id).catch((error) => {
+        console.error('Error fetching customer requests:', error)
+        window.showToast({
+          type: 'danger',
+          title: error.response?.data?.detail || 'Failed to load customer requests',
+        })
       })
-    })
-}
+    }
 
     const filteredCustomers = computed(() => {
       if (!searchTerm.value.trim()) {

@@ -739,32 +739,61 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
 
                 request_date = base_date + timedelta(days=random.randint(0, 85))
 
-                # Generate time between 9 AM and max possible start time
-                max_start_hour = min(17, 17 - service.estimated_time // 60)
-                preferred_time = datetime.combine(
-                    request_date.date(),
-                    datetime.strptime(
-                        f"{random.randint(9, max_start_hour)}:00", "%H:%M"
-                    ).time(),
-                )
+                # Preferred time must be AFTER request date
+                hours_after_request = random.randint(1, 8)  # 1-8 hours after request
+                preferred_time = request_date + timedelta(hours=hours_after_request)
 
-                current_time = datetime.now(timezone.utc)
-                estimated_completion = preferred_time + timedelta(
+                # Ensure preferred time is within business hours (9 AM - 6 PM)
+                business_start = datetime.combine(
+                    preferred_time.date(), time(9, 0)
+                ).replace(tzinfo=timezone.utc)
+                if preferred_time.time() < time(9, 0):
+                    preferred_time = business_start
+
+                service_end_time = preferred_time + timedelta(
                     minutes=service.estimated_time
                 )
 
-                if estimated_completion.tzinfo is None:
-                    estimated_completion = estimated_completion.replace(
+                # Create a datetime object for 6 PM on the same day
+                business_end_time = datetime.combine(
+                    preferred_time.date(), time(18, 0)
+                ).replace(tzinfo=timezone.utc)
+
+                # If service would end after business hours
+                if service_end_time > business_end_time:
+                    # Move to next business day
+                    next_day = preferred_time.date() + timedelta(days=1)
+                    preferred_time = datetime.combine(next_day, time(9, 0)).replace(
                         tzinfo=timezone.utc
                     )
 
-                # Determine status based on time
-                if estimated_completion < current_time:
+                current_time = datetime.now(timezone.utc)
+
+                # Determine status
+                if preferred_time < current_time:
                     status = REQUEST_STATUS_COMPLETED
-                elif preferred_time > current_time and random.random() < 0.7:
+                elif request_date < current_time and random.random() < 0.7:
                     status = REQUEST_STATUS_ASSIGNED
                 else:
                     status = REQUEST_STATUS_CREATED
+
+                # Ensure assignment happens AFTER request creation
+                date_of_assignment = (
+                    request_date + timedelta(hours=random.randint(1, 4))
+                    if status != REQUEST_STATUS_CREATED
+                    else None
+                )
+
+                # Ensure completion happens AFTER assignment
+                date_of_completion = None
+                if status == REQUEST_STATUS_COMPLETED and date_of_assignment:
+                    service_duration = timedelta(minutes=service.estimated_time)
+                    # Completion time is assignment time + service duration + random buffer
+                    date_of_completion = (
+                        date_of_assignment
+                        + service_duration
+                        + timedelta(minutes=random.randint(0, 30))
+                    )
 
                 # Create service request
                 service_request = ServiceRequest(
@@ -777,13 +806,8 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
                     preferred_time=preferred_time,
                     description=f"Need {service.name} - {fake.sentence()}",
                     status=status,
-                    date_of_assignment=request_date
-                    + timedelta(hours=random.randint(1, 4))
-                    if status != REQUEST_STATUS_CREATED
-                    else None,
-                    date_of_completion=estimated_completion
-                    if status == REQUEST_STATUS_COMPLETED
-                    else None,
+                    date_of_assignment=date_of_assignment,
+                    date_of_completion=date_of_completion,
                     remarks="Service completed successfully."
                     if status == REQUEST_STATUS_COMPLETED
                     else None,
@@ -827,8 +851,7 @@ def create_requests_and_reviews(services, professionals, customers, admin_id):
                                 report_reason=review_template[3]
                                 if len(review_template) > 3
                                 else None,
-                                created_at=estimated_completion
-                                + timedelta(days=random.randint(1, 3)),
+                                created_at=date_of_completion,
                             )
                             db.session.add(review)
                             db.session.flush()

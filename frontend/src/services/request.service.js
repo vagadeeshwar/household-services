@@ -10,7 +10,7 @@ class Request {
   async getProfessionalRequests(params = {}, forceRefresh = false) {
     return cachedApi.getPaginated('professionals/requests', params, { forceRefresh })
   }
-  
+
   async getProfessionalRequestsById(id, params = {}, forceRefresh = false) {
     return cachedApi.getPaginated(`professionals/${id}/requests`, params, { forceRefresh })
   }

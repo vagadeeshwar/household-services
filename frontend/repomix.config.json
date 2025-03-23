@@ -51,10 +51,9 @@
       "src/views/admin/Services.vue",
       "src/views/admin/Professionals.vue",
       "src/views/admin/Customers.vue",
-
-      "src/views/admin/Dashboard.vue",
       "src/views/admin/Requests.vue",
-      "src/views/admin/Reports.vue"
+
+      "src/views/admin/Dashboard.vue"
     ]
   }
 }
