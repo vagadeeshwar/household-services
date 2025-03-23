@@ -2,44 +2,44 @@ import api from '@/services/api'
 import cachedApi from '@/services/cachedApi'
 
 class Request {
-  async create(params = {}) {
-    const response = await api.post('requests', params)
+  async create(data) {
+    const response = await api.post('requests', data)
     return response.data
-  }
-
-  async getAll(params = {}, forceRefresh = false) {
-    return await cachedApi.getPaginated('requests', params, { forceRefresh })
-  }
-
-  async getById(id, params, forceRefresh = false) {
-    return await cachedApi.getById(`requests/${id}`, params, { forceRefresh })
   }
 
   async getProfessionalRequests(params = {}, forceRefresh = false) {
-    return cachedApi.getPaginated('professional/requests', params, { forceRefresh })
+    return cachedApi.getPaginated('professionals/requests', params, { forceRefresh })
+  }
+  
+  async getProfessionalRequestsById(id, params = {}, forceRefresh = false) {
+    return cachedApi.getPaginated(`professionals/${id}/requests`, params, { forceRefresh })
   }
 
   async getCustomerRequests(params = {}, forceRefresh = false) {
-    return cachedApi.getPaginated('customer/requests', params, { forceRefresh })
+    return cachedApi.getPaginated('customers/requests', params, { forceRefresh })
   }
 
-  async accept(id, params = {}) {
-    const response = await api.post(`requests/${id}/accept`, params)
+  async getCustomerRequestsById(id, params = {}, forceRefresh = false) {
+    return cachedApi.getPaginated(`customers/${id}/requests`, params, { forceRefresh })
+  }
+
+  async accept(id) {
+    const response = await api.post(`requests/${id}/accept`)
     return response.data
   }
 
-  async complete(id, params = {}) {
-    const response = await api.post(`requests/${id}/complete`, params)
+  async complete(id, data) {
+    const response = await api.post(`requests/${id}/complete`, data)
     return response.data
   }
 
-  async cancel(id, params = {}) {
-    const response = await api.post(`requests/${id}/cancel`, params)
+  async cancel(id) {
+    const response = await api.post(`requests/${id}/cancel`)
     return response.data
   }
 
-  async submitReview(id, params = {}) {
-    const response = await api.post(`requests/${id}/review`, params)
+  async submitReview(id, data) {
+    const response = await api.post(`requests/${id}/review`, data)
     return response.data
   }
 

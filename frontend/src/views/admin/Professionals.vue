@@ -315,6 +315,70 @@
               </div>
             </div>
           </div>
+          <hr class="my-4">
+          <!-- Recent Service Requests -->
+          <div class="row">
+            <div class="col-12 px-4"> <!-- Added px-4 for horizontal padding -->
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Recent Service Requests</h6>
+                <button class="btn btn-sm btn-outline-primary" @click="viewAllProfessionalRequests"
+                  v-if="professionalRequests.length > 0">
+                  <i class="bi bi-eye me-1"></i> View All
+                </button>
+              </div>
+              <div v-if="isLoadingRequests" class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted mt-2 mb-0">Loading service requests...</p>
+              </div>
+              <div v-else-if="professionalRequests.length === 0" class="alert alert-info py-3">
+                <i class="bi bi-info-circle me-2"></i>
+                This professional has no service requests yet.
+              </div>
+              <div v-else class="table-responsive mt-2 mb-3"> <!-- Added mb-3 for bottom margin -->
+                <table class="table table-sm table-hover border">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="px-3 py-2">ID</th>
+                      <th class="px-3 py-2">Service</th>
+                      <th class="px-3 py-2">Date</th>
+                      <th class="px-3 py-2">Customer</th>
+                      <th class="px-3 py-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="request in professionalRequests" :key="request.id"
+                      class="align-middle">
+                      <td class="px-3 py-2">#{{ request.id }}</td>
+                      <td class="px-3 py-2">
+                        <div class="d-flex align-items-center">
+                          <div>
+                            <div class="fw-medium">{{ request.service_name }}</div>
+                            <small class="text-muted">₹{{ request.service_price }}</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-3 py-2">
+                        <div>{{ formatDate(request.date_of_request) }}</div>
+                        <small class="text-muted">{{ formatTime(request.preferred_time) }}</small>
+                      </td>
+                      <td class="px-3 py-2">
+                        <div v-if="request.customer">{{ request.customer.full_name }}</div>
+                        <span v-else class="text-muted">Unknown Customer</span>
+                      </td>
+                      <td class="px-3 py-2">
+                        <span class="badge" :class="getStatusBadgeClass(request.status)">
+                          {{ getStatusLabel(request.status) }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           </div>
@@ -362,7 +426,8 @@ import { defineComponent, ref, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
 // import { useRouter } from 'vue-router';
 import * as bootstrap from 'bootstrap';
-import { formatDate, formatDateTime } from '@/utils/date';
+import { requestStatusBadges, statusLabels } from '@/assets/requestStatuses';
+import { formatDate, formatDateTime, formatTime } from '@/utils/date';
 import { useLoading } from '@/composables/useLoading';
 
 export default defineComponent({
@@ -381,6 +446,10 @@ export default defineComponent({
     // State
     const professionals = computed(() => store.getters['professionals/allProfessionals']);
     const pagination = computed(() => store.getters['professionals/pagination']);
+
+    const professionalRequests = computed(() => store.getters['requests/allRequests']);
+    const isLoadingRequests = computed(() => store.getters['requests/isLoading']);
+
     const services = ref([]);
     const selectedProfessional = ref(null);
     const searchTerm = ref('');
@@ -417,6 +486,8 @@ export default defineComponent({
 
       return range;
     });
+
+
 
     const filteredProfessionals = computed(() => {
       if (!searchTerm.value.trim()) {
@@ -459,6 +530,36 @@ export default defineComponent({
       );
     };
 
+    const fetchProfessionalRequests = async (professionalId) => {
+      try {
+        await store.dispatch('requests/fetchProfessionalRequestsById', {
+          id: professionalId,
+          params: {
+            page: 1,
+            per_page: 5, // Limit to 5 recent requests
+            summary: false,
+          },
+          forceRefresh: false,
+        });
+      } catch (error) {
+        console.error('Error fetching professional requests:', error);
+        window.showToast({
+          type: 'danger',
+          title: error.response?.data?.detail || 'Failed to load professional requests',
+        });
+      }
+    };
+
+    const viewAllProfessionalRequests = () => {
+      window.showToast({
+        type: 'info',
+        title: `Viewing all requests for a professional will be available in a future update.`,
+      });
+    };
+
+    const getStatusBadgeClass = (status) => requestStatusBadges[status];
+    const getStatusLabel = (status) => statusLabels[status];
+
     const fetchServices = async () => {
       try {
         const response = await store.dispatch('services/fetchAllServices', { params: { per_page: 100 } });
@@ -481,6 +582,9 @@ export default defineComponent({
     const viewProfessional = (professional) => {
       selectedProfessional.value = professional;
       bsDetailModal.show();
+
+      fetchProfessionalRequests(professional.professional_id);
+
     };
 
     const downloadDocument = async (professionalId) => {
@@ -745,7 +849,14 @@ export default defineComponent({
       changePage,
       formatDate,
       formatDateTime,
-      filteredProfessionals
+      filteredProfessionals,
+      professionalRequests,
+      isLoadingRequests,
+      fetchProfessionalRequests,
+      viewAllProfessionalRequests,
+      getStatusBadgeClass,
+      getStatusLabel,
+      formatTime,
     };
   }
 });

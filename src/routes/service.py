@@ -87,7 +87,11 @@ def list_all_services(current_user, service_id=None):
     try:
         if service_id is not None:
             # Single service retrieval
-            service = Service.query.get_or_404(service_id)
+            service = Service.query.get(service_id)
+            if not service:
+                return APIResponse.error(
+                    "Service not found", HTTPStatus.NOT_FOUND, "NotFound"
+                )
 
             return APIResponse.success(
                 data=service_output_schema.dump(service),
@@ -134,7 +138,11 @@ def list_active_services(service_id=None):
     try:
         if service_id is not None:
             # Single service retrieval
-            service = Service.query.get_or_404(service_id)
+            service = Service.query.get(service_id)
+            if not service:
+                return APIResponse.error(
+                    "Service not found", HTTPStatus.NOT_FOUND, "NotFound"
+                )
 
             # If not admin, only return active services
             if not service.is_active:
@@ -187,7 +195,12 @@ def list_active_services(service_id=None):
 def update_service(current_user, service_id):
     """Update an existing service"""
     try:
-        service = Service.query.get_or_404(service_id)
+        service = Service.query.get(service_id)
+
+        if not service:
+            return APIResponse.error(
+                "Service not found", HTTPStatus.NOT_FOUND, "NotFound"
+            )
         data = service_update_schema.load(request.get_json(), partial=True)
 
         # Check name uniqueness if name is being updated
@@ -259,7 +272,12 @@ def update_service(current_user, service_id):
 def toggle_service(current_user, service_id):
     """Toggle service active status"""
     try:
-        service = Service.query.get_or_404(service_id)
+        service = Service.query.get(service_id)
+
+        if not service:
+            return APIResponse.error(
+                "Service not found", HTTPStatus.NOT_FOUND, "NotFound"
+            )
 
         # If deactivating, check for active professionals
         if service.is_active:
@@ -321,7 +339,12 @@ def toggle_service(current_user, service_id):
 def delete_service(current_user, service_id):
     """Permanently delete a service that has never been used"""
     try:
-        service = Service.query.get_or_404(service_id)
+        service = Service.query.get(service_id)
+
+        if not service:
+            return APIResponse.error(
+                "Service not found", HTTPStatus.NOT_FOUND, "NotFound"
+            )
 
         # Check if service has ever been assigned to any professional
         has_professionals = (

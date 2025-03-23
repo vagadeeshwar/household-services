@@ -14,6 +14,11 @@ class Customer {
     const response = await api.post(`customers/${id}/block`, data)
     return response.data
   }
+
+  async unblock(id) {
+    const response = await api.post(`customers/${id}/unblock`)
+    return response.data
+  }
 }
 
 export const customer = new Customer()

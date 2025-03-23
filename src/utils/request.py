@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from http import HTTPStatus
 
 from sqlalchemy import func
 
@@ -7,6 +8,7 @@ from src.constants import (
     REQUEST_STATUS_COMPLETED,
 )
 from src.models import ProfessionalProfile, Service, ServiceRequest
+from src.utils.api import APIResponse
 from src.utils.cache import cache
 
 
@@ -197,9 +199,20 @@ def get_professional_schedule(
         return cached_schedule
 
     # Get professional's service duration
-    professional = ProfessionalProfile.query.get_or_404(professional_id)
+    professional = ProfessionalProfile.query.get(professional_id)
+
+    if not professional:
+        return APIResponse.error(
+            "Professional not found", HTTPStatus.NOT_FOUND, "NotFound"
+        )
+
     if service_id:
-        service = Service.query.get_or_404(service_id)
+        service = Service.query.get(service_id)
+
+        if not service:
+            return APIResponse.error(
+                "Service not found", HTTPStatus.NOT_FOUND, "NotFound"
+            )
         slot_duration = service.estimated_time
     else:
         slot_duration = professional.service_type.estimated_time

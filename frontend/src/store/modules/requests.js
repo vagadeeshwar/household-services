@@ -24,7 +24,7 @@ const getters = {
 }
 
 const actions = {
-  async createRequest({ commit }, data) {
+  async createRequest({ commit }, { data }) {
     try {
       commit('SET_LOADING', true)
       const response = await request.create(data)
@@ -38,10 +38,10 @@ const actions = {
     }
   },
 
-  async fetchRequests({ commit }, params = {}) {
+  async fetchProfessionalRequests({ commit }, { params = {}, forceRefresh = false } = {}) {
     try {
       commit('SET_LOADING', true)
-      const response = await request.getAll(params)
+      const response = await request.getProfessionalRequests(params, forceRefresh)
       commit('SET_REQUESTS', response.data)
       commit('SET_PAGINATION', response.pagination)
       return response
@@ -53,10 +53,10 @@ const actions = {
     }
   },
 
-  async fetchProfessionalRequests({ commit }, params = {}) {
+  async fetchProfessionalRequestsById({ commit }, { id, params = {}, forceRefresh = false }) {
     try {
       commit('SET_LOADING', true)
-      const response = await request.getProfessionalRequests(params)
+      const response = await request.getProfessionalRequestsById(id, params, forceRefresh)
       commit('SET_REQUESTS', response.data)
       commit('SET_PAGINATION', response.pagination)
       return response
@@ -68,10 +68,10 @@ const actions = {
     }
   },
 
-  async fetchCustomerRequests({ commit }, params = {}) {
+  async fetchCustomerRequests({ commit }, { params = {}, forceRefresh = false } = {}) {
     try {
       commit('SET_LOADING', true)
-      const response = await request.getCustomerRequests(params)
+      const response = await request.getCustomerRequests(params, forceRefresh)
       commit('SET_REQUESTS', response.data)
       commit('SET_PAGINATION', response.pagination)
       return response
@@ -83,11 +83,25 @@ const actions = {
     }
   },
 
-  async acceptRequest({ commit }, id) {
+  async fetchCustomerRequestsById({ commit }, { id, params = {}, forceRefresh = false }) {
+    try {
+      commit('SET_LOADING', true)
+      const response = await request.getCustomerRequestsById(id, params, forceRefresh)
+      commit('SET_REQUESTS', response.data)
+      commit('SET_PAGINATION', response.pagination)
+      return response
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+
+  async acceptRequest({ commit }, { id }) {
     try {
       commit('SET_LOADING', true)
       const response = await request.accept(id)
-      commit('UPDATE_REQUEST', response)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -97,11 +111,10 @@ const actions = {
     }
   },
 
-  async completeRequest({ commit }, { id, remarks }) {
+  async completeRequest({ commit }, { id, data }) {
     try {
       commit('SET_LOADING', true)
-      const response = await request.complete(id, remarks)
-      commit('UPDATE_REQUEST', response)
+      const response = await request.complete(id, data)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -111,11 +124,10 @@ const actions = {
     }
   },
 
-  async cancelRequest({ commit }, id) {
+  async cancelRequest({ commit }, { id }) {
     try {
       commit('SET_LOADING', true)
       const response = await request.cancel(id)
-      commit('UPDATE_REQUEST', response)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -129,7 +141,19 @@ const actions = {
     try {
       commit('SET_LOADING', true)
       const response = await request.submitReview(id, data)
-      commit('UPDATE_REQUEST', response)
+      return response
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+
+  async updateRequest({ commit }, { id, params }) {
+    try {
+      commit('SET_LOADING', true)
+      const response = await request.update(id, params)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -163,13 +187,6 @@ const mutations = {
 
   ADD_REQUEST(state, request) {
     state.requests.unshift(request)
-  },
-
-  UPDATE_REQUEST(state, updatedRequest) {
-    const index = state.requests.findIndex((r) => r.id === updatedRequest.id)
-    if (index !== -1) {
-      state.requests.splice(index, 1, updatedRequest)
-    }
   },
 }
 

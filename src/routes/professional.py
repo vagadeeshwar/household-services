@@ -266,7 +266,12 @@ def list_professionals(current_user, profile_id=None):
 def verify_professional(current_user, profile_id):
     """Verify a professional's profile"""
     try:
-        profile = ProfessionalProfile.query.get_or_404(profile_id)
+        profile = ProfessionalProfile.query.get(profile_id)
+        if not profile:
+            return APIResponse.error(
+                "Professional not found", HTTPStatus.NOT_FOUND, "NotFound"
+            )
+
         user = User.query.get(profile.user_id)
 
         if profile.is_verified:
@@ -318,7 +323,11 @@ def block_professional(current_user, profile_id):
     """Block a professional's account"""
     try:
         data = block_user_schema.load(request.get_json())
-        profile = ProfessionalProfile.query.get_or_404(profile_id)
+        profile = ProfessionalProfile.query.get(profile_id)
+        if not profile:
+            return APIResponse.error(
+                "Professional not found", HTTPStatus.NOT_FOUND, "NotFound"
+            )
         if not profile.user.is_active:
             return APIResponse.error(
                 "Professional is already blocked", HTTPStatus.CONFLICT, "AlreadyBlocked"
@@ -367,7 +376,11 @@ def block_professional(current_user, profile_id):
 def unblock_professional(current_user, profile_id):
     """Unblock a professional's account"""
     try:
-        profile = ProfessionalProfile.query.get_or_404(profile_id)
+        profile = ProfessionalProfile.query.get(profile_id)
+        if not profile:
+            return APIResponse.error(
+                "Professional not found", HTTPStatus.NOT_FOUND, "NotFound"
+            )
 
         if profile.user.is_active:
             return APIResponse.error(
@@ -511,7 +524,12 @@ def update_service_type(current_user):
             )
 
         # Verify service exists and is active
-        service = Service.query.get_or_404(data["service_type_id"])
+        service = Service.query.get(data["service_type_id"])
+        if not service:
+            return APIResponse.error(
+                "Service type not found", HTTPStatus.NOT_FOUND, "ServiceNotFound"
+            )
+
         if not service.is_active:
             return APIResponse.error(
                 "Selected service is not active",
@@ -673,7 +691,12 @@ def download_verification_document(current_user, profile_id):
     """
     try:
         # Get the professional profile
-        profile = ProfessionalProfile.query.get_or_404(profile_id)
+        profile = ProfessionalProfile.query.get(profile_id)
+
+        if not profile:
+            return APIResponse.error(
+                "Professional not found", HTTPStatus.NOT_FOUND, "NotFound"
+            )
 
         if not profile.verification_documents:
             return APIResponse.error(

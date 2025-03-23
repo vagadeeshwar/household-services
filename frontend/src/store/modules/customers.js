@@ -54,7 +54,19 @@ const actions = {
     try {
       commit('SET_LOADING', true)
       const response = await customer.block(id, data)
-      commit('UPDATE_CUSTOMER', response)
+      return response
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+
+  async unblockCustomer({ commit }, { id }) {
+    try {
+      commit('SET_LOADING', true)
+      const response = await customer.unblock(id)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -84,13 +96,6 @@ const mutations = {
 
   SET_PAGINATION(state, pagination) {
     state.pagination = pagination
-  },
-
-  UPDATE_CUSTOMER(state, updatedCustomer) {
-    const index = state.customers.findIndex((c) => c.id === updatedCustomer.id)
-    if (index !== -1) {
-      state.customers.splice(index, 1, updatedCustomer)
-    }
   },
 }
 

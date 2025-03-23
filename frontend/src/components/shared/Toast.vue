@@ -71,7 +71,6 @@ export default {
         timestamp: new Date(),
         title: toast.title || 'Notification',
         type: toast.type,
-        message: toast.message,
       }
       toasts.value.push(newToast)
       // Auto remove after duration

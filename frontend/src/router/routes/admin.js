@@ -31,6 +31,12 @@ export default [
     meta: { title: 'Reports' },
   },
   {
+    path: 'requests',
+    name: 'AdminRequests',
+    component: () => import('@/views/admin/Requests.vue'),
+    meta: { title: 'Requests' },
+  },
+  {
     path: 'profile',
     name: 'AdminProfile',
     component: () => import('@/views/admin/Profile.vue'),

@@ -4,12 +4,13 @@ from flask import Blueprint, request
 from marshmallow import ValidationError
 
 from src import db
-from src.constants import USER_ROLE_CUSTOMER, ActivityLogActions
-from src.models import (
-    ActivityLog,
-    CustomerProfile,
-    User,
+from src.constants import (
+    REQUEST_STATUS_ASSIGNED,
+    REQUEST_STATUS_CREATED,
+    USER_ROLE_CUSTOMER,
+    ActivityLogActions,
 )
+from src.models import ActivityLog, CustomerProfile, ServiceRequest, User
 from src.schemas.customer import (
     customer_output_schema,
     customer_query_schema,
@@ -17,6 +18,7 @@ from src.schemas.customer import (
     customers_output_schema,
 )
 from src.schemas.user import block_user_schema
+from src.tasks import send_account_status_notification
 from src.utils.api import APIResponse
 from src.utils.auth import role_required, token_required
 from src.utils.cache import cache_, cache_invalidate
@@ -146,15 +148,36 @@ def block_customer(current_user, profile_id):
     """Block a customer's account"""
     try:
         data = block_user_schema.load(request.get_json())
-        profile = CustomerProfile.query.get_or_404(profile_id)
+        profile = CustomerProfile.query.get(profile_id)
+        if not profile:
+            return APIResponse.error(
+                "Customer not found", HTTPStatus.NOT_FOUND, "CustomerNotFound"
+            )
 
         if not profile.user.is_active:
             return APIResponse.error(
                 "Customer is already blocked", HTTPStatus.CONFLICT, "AlreadyBlocked"
             )
 
-        profile.user.is_active = False
+        # Check for active service requests
+        has_active_requests = (
+            ServiceRequest.query.filter(
+                ServiceRequest.customer_id == profile.id,
+                ServiceRequest.status.in_(
+                    [REQUEST_STATUS_CREATED, REQUEST_STATUS_ASSIGNED]
+                ),
+            ).first()
+            is not None
+        )
 
+        if has_active_requests:
+            return APIResponse.error(
+                "Cannot block customer with active service requests",
+                HTTPStatus.CONFLICT,
+                "ActiveRequestsExist",
+            )
+
+        profile.user.is_active = False
         log = ActivityLog(
             user_id=current_user.id,
             action=ActivityLogActions.CUSTOMER_BLOCK,
@@ -163,7 +186,6 @@ def block_customer(current_user, profile_id):
         )
         db.session.add(log)
         db.session.commit()
-
         cache_invalidate()
 
         return APIResponse.success(message="Customer blocked successfully")
@@ -172,6 +194,51 @@ def block_customer(current_user, profile_id):
     except Exception as e:
         return APIResponse.error(
             f"Error blocking customer: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
+
+
+@customer_bp.route("/customers/<int:profile_id>/unblock", methods=["POST"])
+@token_required
+@role_required("admin")
+def unblock_customer(current_user, profile_id):
+    """Unblock a customer's account"""
+    try:
+        profile = CustomerProfile.query.get(profile_id)
+        if not profile:
+            return APIResponse.error(
+                "Customer not found", HTTPStatus.NOT_FOUND, "CustomerNotFound"
+            )
+
+        if profile.user.is_active:
+            return APIResponse.error(
+                "Customer is already active", HTTPStatus.CONFLICT, "AlreadyActive"
+            )
+
+        profile.user.is_active = True
+        log = ActivityLog(
+            user_id=current_user.id,
+            entity_id=profile.user.id,
+            action=ActivityLogActions.CUSTOMER_UNBLOCK,
+            description=f"Unblocked customer {profile.user.full_name}",
+        )
+        db.session.add(log)
+        db.session.commit()
+        cache_invalidate()
+
+        # Send notification email via task
+        send_account_status_notification.delay(
+            profile.user.email,
+            profile.user.full_name,
+            "emails/account_unblocked.html",
+            "Account Unblocked",
+        )
+
+        return APIResponse.success(message="Customer unblocked successfully")
+    except Exception as e:
+        return APIResponse.error(
+            f"Error unblocking customer: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
         )
