@@ -5,8 +5,13 @@
         <h1 class="h3 mb-0">Manage Professionals</h1>
         <p class="text-muted">Verify, block, and manage service professionals</p>
       </div>
+      <!-- Add Export Report Button -->
+      <div class="col-auto">
+        <button class="btn btn-outline-primary" @click="openExportModal">
+          <i class="bi bi-file-earmark-arrow-down me-1"></i> Generate Service Report
+        </button>
+      </div>
     </div>
-
     <!-- Filters -->
     <div class="card mb-4">
       <div class="card-body">
@@ -63,7 +68,6 @@
         </div>
       </div>
     </div>
-
     <!-- Professionals Table -->
     <div class="card">
       <div class="card-body p-0">
@@ -73,13 +77,11 @@
           </div>
           <p class="mt-2 text-muted">Loading professionals...</p>
         </div>
-
         <div v-else-if="professionals.length === 0" class="text-center p-5">
           <i class="bi bi-people text-muted" style="font-size: 3rem"></i>
           <p class="mt-3 mb-0">No professionals found matching the criteria.</p>
           <button class="btn btn-link mt-2" @click="resetFilters">Reset filters</button>
         </div>
-
         <div v-else class="table-responsive">
           <table class="table table-hover table-striped mb-0">
             <thead class="table-light">
@@ -171,7 +173,6 @@
           </table>
         </div>
       </div>
-
       <!-- Pagination -->
       <div class="card-footer bg-white d-flex justify-content-between align-items-center">
         <div>
@@ -215,7 +216,6 @@
         </nav>
       </div>
     </div>
-
     <!-- Professional Detail Modal -->
     <div
       class="modal fade"
@@ -316,18 +316,14 @@
                 </div>
               </div>
             </div>
-
             <hr />
-
             <div class="row">
               <div class="col-12">
                 <h6 class="mb-3">Professional Description</h6>
                 <p>{{ selectedProfessional.description || 'No description provided.' }}</p>
               </div>
             </div>
-
             <hr />
-
             <div class="row">
               <div class="col-12">
                 <h6 class="mb-3">Verification Document</h6>
@@ -346,9 +342,7 @@
                 <p v-else class="text-muted">No verification document uploaded.</p>
               </div>
             </div>
-
             <hr />
-
             <div class="row">
               <div class="col-12">
                 <h6 class="mb-3">Additional Information</h6>
@@ -440,14 +434,12 @@
               </div>
             </div>
           </div>
-
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
     </div>
-
     <!-- Confirmation Modals -->
     <div
       class="modal fade"
@@ -496,38 +488,165 @@
         </div>
       </div>
     </div>
+
+    <!-- Export Report Modal -->
+    <div
+      class="modal fade"
+      id="exportReportModal"
+      tabindex="-1"
+      aria-labelledby="exportReportModalLabel"
+      aria-hidden="true"
+      ref="exportModal"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exportReportModalLabel">
+              <i class="bi bi-file-earmark-arrow-down me-2"></i>
+              Generate Service Requests Report
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+              :disabled="isExporting"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle-fill me-2"></i>
+              Generate a CSV report of service requests. You can filter by professional and date
+              range.
+            </div>
+
+            <div class="mb-3">
+              <label for="reportProfessional" class="form-label">Professional</label>
+              <select
+                class="form-select"
+                id="reportProfessional"
+                v-model="exportOptions.professional_id"
+              >
+                <option value="">All Professionals</option>
+                <option
+                  v-for="professional in verifiedProfessionals"
+                  :key="professional.professional_id"
+                  :value="professional.professional_id"
+                >
+                  {{ professional.full_name }}
+                </option>
+              </select>
+              <div class="form-text">
+                Select a professional or leave empty to include all verified professionals.
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="startDate" class="form-label">Start Date</label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="startDate"
+                    v-model="exportOptions.start_date"
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="endDate" class="form-label">End Date</label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="endDate"
+                    v-model="exportOptions.end_date"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Export Status -->
+            <div v-if="exportStatus" class="mt-4">
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0">Export Status</h6>
+                  <span class="badge" :class="getExportStatusBadgeClass(exportStatus.state)">
+                    {{ exportStatus.state }}
+                  </span>
+                </div>
+                <div class="progress" style="height: 20px">
+                  <div
+                    class="progress-bar progress-bar-striped progress-bar-animated"
+                    :class="{ 'bg-success': exportStatus.state === 'SUCCESS' }"
+                    :style="{ width: getExportProgressPercentage() + '%' }"
+                    role="progressbar"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                  >
+                    {{ getExportProgressText() }}
+                  </div>
+                </div>
+                <p class="mt-2 text-muted">{{ exportStatus.status || 'Preparing export...' }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+              :disabled="isExporting"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              @click="generateReport"
+              :disabled="isExporting || !isValidExportOptions"
+            >
+              <i
+                class="bi"
+                :class="isExporting ? 'bi-hourglass-split' : 'bi-file-earmark-arrow-down'"
+              ></i>
+              {{ isExporting ? 'Generating...' : 'Generate Report' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
-
 <script>
-import { defineComponent, ref, computed, onMounted } from 'vue'
+import { defineComponent, ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
-// import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
+
 import * as bootstrap from 'bootstrap'
 import { requestStatusBadges, statusLabels } from '@/assets/requestStatuses'
 import { formatDate, formatDateTime, formatTime } from '@/utils/date'
 import { useLoading } from '@/composables/useLoading'
-
 export default defineComponent({
   name: 'AdminProfessionals',
   setup() {
     const store = useStore()
-    // const router = useRouter();
     const { isLoading, showLoading, hideLoading, withLoading } = useLoading()
-
     // References to modals
     const detailModal = ref(null)
     const confirmModal = ref(null)
+    const exportModal = ref(null)
     let bsDetailModal = null
     let bsConfirmModal = null
+    let bsExportModal = null
+
+    const router = useRouter()
 
     // State
     const professionals = computed(() => store.getters['professionals/allProfessionals'])
     const pagination = computed(() => store.getters['professionals/pagination'])
-
     const professionalRequests = computed(() => store.getters['requests/allRequests'])
     const isLoadingRequests = computed(() => store.getters['requests/isLoading'])
-
     const services = ref([])
     const selectedProfessional = ref(null)
     const searchTerm = ref('')
@@ -547,44 +666,254 @@ export default defineComponent({
     })
     const blockReason = ref('')
 
+    // Export functionality state
+    const exportOptions = ref({
+      professional_id: '',
+      start_date: '',
+      end_date: '',
+    })
+    const isExporting = ref(false)
+    const exportStatus = ref(null)
+    const exportTaskId = ref(null)
+    let statusPollInterval = null
+
+    // Verify date range is valid
+    const isValidDateRange = computed(() => {
+      if (!exportOptions.value.start_date || !exportOptions.value.end_date) {
+        return true // Both dates are empty, which is allowed
+      }
+
+      const startDate = new Date(exportOptions.value.start_date)
+      const endDate = new Date(exportOptions.value.end_date)
+
+      // Ensure start date is not after end date
+      return startDate <= endDate
+    })
+
+    const isValidExportOptions = computed(() => {
+      return isValidDateRange.value
+    })
+
+    // Filter for only verified professionals
+    const verifiedProfessionals = computed(() => {
+      return professionals.value.filter((p) => p.is_verified)
+    })
+
+    // Export functionality methods
+    const openExportModal = () => {
+      // Reset export state
+      exportOptions.value = {
+        professional_id: '',
+        start_date: '',
+        end_date: '',
+      }
+      exportStatus.value = null
+      exportTaskId.value = null
+      clearExportStatusInterval()
+
+      bsExportModal.show()
+    }
+
+    const getExportStatusBadgeClass = (state) => {
+      const statusClasses = {
+        PENDING: 'bg-warning',
+        STARTED: 'bg-info',
+        PROGRESS: 'bg-primary',
+        SUCCESS: 'bg-success',
+        FAILURE: 'bg-danger',
+      }
+      return statusClasses[state] || 'bg-secondary'
+    }
+
+    const getExportProgressPercentage = () => {
+      if (!exportStatus.value) return 0
+
+      const stateProgress = {
+        PENDING: 10,
+        STARTED: 30,
+        PROGRESS: 60,
+        SUCCESS: 100,
+        FAILURE: 100,
+      }
+
+      return stateProgress[exportStatus.value.state] || 0
+    }
+
+    const getExportProgressText = () => {
+      if (!exportStatus.value) return ''
+
+      const stateText = {
+        PENDING: 'Pending...',
+        STARTED: 'Started...',
+        PROGRESS: 'In Progress...',
+        SUCCESS: 'Complete!',
+        FAILURE: 'Failed',
+      }
+
+      return stateText[exportStatus.value.state] || ''
+    }
+
+    const startExportStatusPolling = (taskId) => {
+      // Clear any existing interval
+      clearExportStatusInterval()
+
+      // Check status immediately
+      checkExportStatus(taskId)
+
+      // Then set up polling interval (every 2 seconds)
+      statusPollInterval = setInterval(() => {
+        checkExportStatus(taskId)
+      }, 2000)
+    }
+
+    const clearExportStatusInterval = () => {
+      if (statusPollInterval) {
+        clearInterval(statusPollInterval)
+        statusPollInterval = null
+      }
+    }
+
+    const checkExportStatus = async (taskId) => {
+      try {
+        const response = await store.dispatch('exports/checkExportStatus', { id: taskId })
+        exportStatus.value = response.data
+
+        // If the export is complete (success or failure), stop polling
+        if (['SUCCESS', 'FAILURE'].includes(response.data.state)) {
+          clearExportStatusInterval()
+
+          if (response.data.state === 'SUCCESS' && response.data.result?.filename) {
+            // Automatically download the file
+            await downloadExport(response.data.result.filename)
+
+            // Show success notification
+            window.showToast({
+              type: 'success',
+              title: 'Export Completed',
+              message: `Successfully exported ${response.data.result.total_records} service requests`,
+            })
+
+            // Close the modal after successful download
+            setTimeout(() => {
+              bsExportModal.hide()
+            }, 1500)
+          } else if (response.data.state === 'FAILURE') {
+            // Show error notification
+            window.showToast({
+              type: 'danger',
+              title: 'Export Failed',
+              message: response.data.error || 'Failed to generate the export',
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Error checking export status:', error)
+        window.showToast({
+          type: 'danger',
+          title: 'Status Check Failed',
+          message: 'Failed to check export status',
+        })
+        clearExportStatusInterval()
+      }
+    }
+
+    const downloadExport = async (filename) => {
+      try {
+        await store.dispatch('exports/downloadReport', { data: filename })
+      } catch (error) {
+        console.error('Error downloading export:', error)
+        window.showToast({
+          type: 'danger',
+          title: 'Download Failed',
+          message: 'Failed to download the export file',
+        })
+      }
+    }
+
+    const generateReport = async () => {
+      if (!isValidExportOptions.value) {
+        window.showToast({
+          type: 'warning',
+          title: 'Invalid Options',
+          message: 'Please check your export options',
+        })
+        return
+      }
+
+      try {
+        isExporting.value = true
+
+        // Prepare data for the export
+        const exportData = {
+          ...(exportOptions.value.professional_id && {
+            professional_id: parseInt(exportOptions.value.professional_id),
+          }),
+          ...(exportOptions.value.start_date && { start_date: exportOptions.value.start_date }),
+          ...(exportOptions.value.end_date && { end_date: exportOptions.value.end_date }),
+        }
+
+        // Start the export job
+        const response = await store.dispatch('exports/generateServiceReport', { data: exportData })
+
+        if (response && response.data && response.data.task_id) {
+          exportTaskId.value = response.data.task_id
+          exportStatus.value = {
+            state: 'PENDING',
+            status: 'Export job submitted, waiting for processing...',
+          }
+
+          // Start polling for status updates
+          startExportStatusPolling(response.data.task_id)
+
+          window.showToast({
+            type: 'info',
+            title: 'Export Started',
+            message: 'The export job has been submitted and is being processed',
+          })
+        } else {
+          throw new Error('Invalid response from export service')
+        }
+      } catch (error) {
+        console.error('Error generating report:', error)
+        window.showToast({
+          type: 'danger',
+          title: 'Export Failed',
+          message: error.response?.data?.detail || 'Failed to start the export job',
+        })
+        isExporting.value = false
+      }
+    }
+
     // Computed
     const paginationRange = computed(() => {
       const current = pagination.value.current_page
       const total = pagination.value.pages
       const range = []
-
       // Show 5 pages at most
       const maxPages = 5
       const start = Math.max(1, current - Math.floor(maxPages / 2))
       const end = Math.min(total, start + maxPages - 1)
-
       for (let i = start; i <= end; i++) {
         range.push(i)
       }
-
       return range
     })
-
     const filteredProfessionals = computed(() => {
       if (!searchTerm.value.trim()) {
         return professionals.value
       }
-
       const term = searchTerm.value.toLowerCase().trim()
       return professionals.value.filter((professional) => {
         const fullName = professional.full_name?.toLowerCase() || ''
         const email = professional.email?.toLowerCase() || ''
         const username = professional.username?.toLowerCase() || ''
-
         return fullName.includes(term) || email.includes(term) || username.includes(term)
       })
     })
-
     // Methods
     const fetchProfessionals = async (forceRefresh = false) => {
       // Start with empty params object
       const params = {}
-
       // Only add non-empty filters
       Object.entries(filters.value).forEach(([key, value]) => {
         // Include parameters that have values (not empty strings, null, or undefined)
@@ -592,18 +921,15 @@ export default defineComponent({
           params[key] = value
         }
       })
-
       // Only include search term if it's not empty
       if (searchTerm.value.trim()) {
         params.search = searchTerm.value.trim()
       }
-
       await withLoading(
         store.dispatch('professionals/fetchProfessionals', { params, forceRefresh }),
         'Loading professionals...',
       )
     }
-
     const fetchProfessionalRequests = async (professionalId) => {
       try {
         await store.dispatch('requests/fetchProfessionalRequestsById', {
@@ -623,17 +949,21 @@ export default defineComponent({
         })
       }
     }
-
     const viewAllProfessionalRequests = () => {
-      window.showToast({
-        type: 'info',
-        title: `Viewing all requests for a professional will be available in a future update.`,
-      })
+      if (selectedProfessional.value) {
+        router.push({
+          name: 'AdminRequests',
+          query: {
+            professional_id: selectedProfessional.value.professional_id,
+            professional_name: selectedProfessional.value.full_name,
+          },
+        })
+        // Close the modal
+        bsDetailModal.hide()
+      }
     }
-
     const getStatusBadgeClass = (status) => requestStatusBadges[status]
     const getStatusLabel = (status) => statusLabels[status]
-
     const fetchServices = async () => {
       try {
         const response = await store.dispatch('services/fetchAllServices', {
@@ -648,20 +978,16 @@ export default defineComponent({
         })
       }
     }
-
     const getServiceName = (serviceId) => {
       if (!serviceId) return 'Unknown Service'
       const service = services.value.find((s) => s.id === serviceId)
       return service ? service.name : 'Unknown Service'
     }
-
     const viewProfessional = (professional) => {
       selectedProfessional.value = professional
       bsDetailModal.show()
-
       fetchProfessionalRequests(professional.professional_id)
     }
-
     const downloadDocument = async (professionalId) => {
       try {
         showLoading('Downloading document...')
@@ -673,11 +999,9 @@ export default defineComponent({
             },
           },
         )
-
         if (!response.ok) {
           throw new Error('Failed to download document')
         }
-
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -687,7 +1011,6 @@ export default defineComponent({
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
-
         window.showToast({
           type: 'success',
           title: 'Document downloaded successfully',
@@ -702,7 +1025,6 @@ export default defineComponent({
         hideLoading()
       }
     }
-
     const confirmVerify = (professional) => {
       confirmAction.value = {
         title: 'Verify Professional',
@@ -714,22 +1036,18 @@ export default defineComponent({
       }
       bsConfirmModal.show()
     }
-
     const verifyProfessional = async (professional) => {
       try {
         showLoading('Verifying professional...')
         await store.dispatch('professionals/verifyProfessional', {
           id: professional.professional_id,
         })
-
         window.showToast({
           type: 'success',
           title: `${professional.full_name} has been verified successfully`,
         })
-
         // Refresh the professionals list
         await fetchProfessionals(true)
-
         // Hide modals
         bsConfirmModal.hide()
         if (bsDetailModal && bsDetailModal._isShown) {
@@ -745,7 +1063,6 @@ export default defineComponent({
         hideLoading()
       }
     }
-
     const toggleBlockStatus = (professional) => {
       if (professional.is_active) {
         confirmAction.value = {
@@ -769,11 +1086,9 @@ export default defineComponent({
       blockReason.value = ''
       bsConfirmModal.show()
     }
-
     const blockUnblockProfessional = (professional) => {
       toggleBlockStatus(professional)
     }
-
     const blockProfessional = async (professional, reason) => {
       if (!reason.trim()) {
         window.showToast({
@@ -782,22 +1097,18 @@ export default defineComponent({
         })
         return
       }
-
       try {
         showLoading('Blocking professional...')
         await store.dispatch('professionals/blockProfessional', {
           id: professional.professional_id,
           data: { reason: reason.trim() },
         })
-
         window.showToast({
           type: 'success',
           title: `${professional.full_name} has been blocked`,
         })
-
         // Refresh the professionals list
         await fetchProfessionals(true)
-
         // Hide modals
         bsConfirmModal.hide()
         if (bsDetailModal && bsDetailModal._isShown) {
@@ -813,22 +1124,18 @@ export default defineComponent({
         hideLoading()
       }
     }
-
     const unblockProfessional = async (professional) => {
       try {
         showLoading('Unblocking professional...')
         await store.dispatch('professionals/unblockProfessional', {
           id: professional.professional_id,
         })
-
         window.showToast({
           type: 'success',
           title: `${professional.full_name} has been unblocked`,
         })
-
         // Refresh the professionals list
         await fetchProfessionals(true)
-
         // Hide modals
         bsConfirmModal.hide()
         if (bsDetailModal && bsDetailModal._isShown) {
@@ -845,22 +1152,18 @@ export default defineComponent({
         hideLoading()
       }
     }
-
     const executeConfirmedAction = () => {
       if (confirmAction.value.callback) {
         confirmAction.value.callback()
       }
     }
-
     const applyFilters = () => {
       filters.value.page = 1
       fetchProfessionals()
     }
-
     const handleSearchInput = () => {
       filters.value.page = 1
     }
-
     const resetFilters = () => {
       filters.value = {
         verified: '',
@@ -871,12 +1174,28 @@ export default defineComponent({
       searchTerm.value = ''
       fetchProfessionals(true)
     }
-
     const changePage = (page) => {
       if (page < 1 || page > pagination.value.pages) return
       filters.value.page = page
       fetchProfessionals()
     }
+
+    // Watch for export status changes
+    watch(
+      () => exportStatus.value?.state,
+      (newState) => {
+        if (newState === 'SUCCESS') {
+          isExporting.value = false
+        } else if (newState === 'FAILURE') {
+          isExporting.value = false
+        }
+      },
+    )
+
+    // Cleanup on component unmount
+    onUnmounted(() => {
+      clearExportStatusInterval()
+    })
 
     // Lifecycle Hooks
     onMounted(async () => {
@@ -884,9 +1203,11 @@ export default defineComponent({
       if (detailModal.value) {
         bsDetailModal = new bootstrap.Modal(detailModal.value)
       }
-
       if (confirmModal.value) {
         bsConfirmModal = new bootstrap.Modal(confirmModal.value)
+      }
+      if (exportModal.value) {
+        bsExportModal = new bootstrap.Modal(exportModal.value)
       }
 
       // Fetch initial data
@@ -905,11 +1226,16 @@ export default defineComponent({
       confirmAction,
       blockReason,
       isLoading,
-
+      // Export state
+      exportOptions,
+      isExporting,
+      exportStatus,
+      verifiedProfessionals,
+      isValidExportOptions,
       // Refs
       detailModal,
       confirmModal,
-
+      exportModal,
       // Methods
       fetchProfessionals,
       viewProfessional,
@@ -934,11 +1260,16 @@ export default defineComponent({
       getStatusBadgeClass,
       getStatusLabel,
       formatTime,
+      // Export methods
+      openExportModal,
+      generateReport,
+      getExportStatusBadgeClass,
+      getExportProgressPercentage,
+      getExportProgressText,
     }
   },
 })
 </script>
-
 <style scoped>
 .avatar {
   width: 40px;
@@ -948,23 +1279,19 @@ export default defineComponent({
   justify-content: center;
   font-size: 1.25rem;
 }
-
 .table th,
 .table td {
   vertical-align: middle;
 }
-
 .form-label {
   font-weight: 500;
 }
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .btn-group {
     display: flex;
     flex-direction: column;
   }
-
   .btn-group .btn {
     border-radius: 0.25rem !important;
     margin-bottom: 0.25rem;

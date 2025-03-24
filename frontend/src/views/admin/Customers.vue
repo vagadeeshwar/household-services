@@ -429,6 +429,7 @@ import * as bootstrap from 'bootstrap'
 import { formatDate, formatDateTime, formatTime } from '@/utils/date'
 import { useLoading } from '@/composables/useLoading'
 import { requestStatusBadges, statusLabels } from '@/assets/requestStatuses'
+import { useRouter } from 'vue-router'
 
 export default defineComponent({
   name: 'AdminCustomers',
@@ -441,6 +442,8 @@ export default defineComponent({
     const confirmModal = ref(null)
     let bsDetailModal = null
     let bsConfirmModal = null
+
+    const router = useRouter()
 
     // State
     const customers = computed(() => store.getters['customers/allCustomers'])
@@ -501,10 +504,17 @@ export default defineComponent({
     const getStatusLabel = (status) => statusLabels[status]
 
     const viewAllCustomerRequests = () => {
-      window.showToast({
-        type: 'info',
-        title: `Viewing all requests for a customer will be available in a future update.`,
-      })
+      if (selectedCustomer.value) {
+        router.push({
+          name: 'AdminRequests',
+          query: {
+            customer_id: selectedCustomer.value.customer_id,
+            customer_name: selectedCustomer.value.full_name,
+          },
+        })
+        // Close the modal
+        bsDetailModal.hide()
+      }
     }
 
     const viewCustomerDetails = (customer) => {

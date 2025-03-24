@@ -518,6 +518,8 @@ import { requestStatusBadges, statusLabels } from '@/assets/requestStatuses'
 import { formatDate, formatDateTime, formatTime } from '@/utils/date'
 import { useLoading } from '@/composables/useLoading'
 
+import { useRoute } from 'vue-router'
+
 export default defineComponent({
   name: 'AdminRequests',
 
@@ -528,6 +530,8 @@ export default defineComponent({
     // References to modals
     const detailModal = ref(null)
     let bsDetailModal = null
+
+    const route = useRoute()
 
     // State
     const requests = computed(() => store.getters['requests/allRequests'])
@@ -853,6 +857,43 @@ export default defineComponent({
       const service = services.value.find((s) => s.id === serviceId)
       return service ? service.name : 'Unknown service'
     }
+    const checkQueryParams = () => {
+      // Only proceed if we have a professional ID in query params AND professionals are loaded
+      if (route.query.professional_id && professionals.value && professionals.value.length > 0) {
+        const profId = parseInt(route.query.professional_id)
+        // Find the professional in the list
+        const prof = professionals.value.find((p) => p.professional_id === profId)
+        if (prof) {
+          // Just set the selected user to this professional
+          selectedUser.value = {
+            type: 'professional',
+            id: prof.professional_id,
+            name: prof.full_name || route.query.professional_name,
+          }
+          // The existing handleUserChange will fetch requests for this professional
+          fetchRequests(true)
+        } else {
+          console.log(`Professional with ID ${profId} not found in loaded professionals`)
+        }
+      }
+      else if (route.query.customer_id && customers.value && customers.value.length > 0) {
+        const fetchCustomerById = parseInt(route.query.customer_id)
+        // Find the customer in the list
+        const customer = customers.value.find((p) => p.customer_id === fetchCustomerById)
+        if (customer) {
+          // Just set the selected user to this customer
+          selectedUser.value = {
+            type: 'customer',
+            id: customer.customer_id,
+            name: customer.full_name || route.query.customer_name,
+          }
+          // The existing handleUserChange will fetch requests for this customer
+          fetchRequests(true)
+        } else {
+          console.log(`Customer with ID ${fetchCustomerById} not found in loaded customers`)
+        }
+      }
+    }
 
     // Watch for date filter changes
     watch(
@@ -875,9 +916,37 @@ export default defineComponent({
         bsDetailModal = new bootstrap.Modal(detailModal.value)
       }
 
-      // Fetch initial data
-      await Promise.all([fetchCustomers(), fetchProfessionals(), fetchServices()])
+      try {
+        // Fetch initial data
+        await Promise.all([fetchCustomers(), fetchProfessionals(), fetchServices()])
+        // Only check query params after data is loaded successfully
+        checkQueryParams()
+      } catch (error) {
+        console.error('Error loading initial data:', error)
+        window.showToast({
+          type: 'danger',
+          title: 'Please try refreshing the page',
+        })
+      }
     })
+
+    // Add a watch on professionals to handle late loading
+    watch(
+      () => professionals.value,
+      (newVal) => {
+        if (newVal && newVal.length > 0 && route.query.professional_id) {
+          checkQueryParams()
+        }
+      },
+    )
+    watch(
+      () => customers.value,
+      (newVal) => {
+        if (newVal && newVal.length > 0 && route.query.customer_id) {
+          checkQueryParams()
+        }
+      },
+    )
 
     return {
       // State
