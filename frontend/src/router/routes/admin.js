@@ -25,12 +25,6 @@ export default [
     meta: { title: 'Manage Customers' },
   },
   {
-    path: 'reports',
-    name: 'AdminReports',
-    component: () => import('@/views/admin/Reports.vue'),
-    meta: { title: 'Reports' },
-  },
-  {
     path: 'requests',
     name: 'AdminRequests',
     component: () => import('@/views/admin/Requests.vue'),

@@ -62,17 +62,6 @@
           <span>Requests</span>
         </router-link>
       </li>
-
-      <!-- Reports -->
-      <li class="nav-item">
-        <router-link
-          class="nav-link px-3 py-2 rounded-3 d-flex align-items-center"
-          to="/admin/reports"
-        >
-          <i class="bi bi-file-earmark-text me-2"></i>
-          <span>Reports</span>
-        </router-link>
-      </li>
     </ul>
   </div>
 </template>
