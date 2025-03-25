@@ -64,7 +64,7 @@ def generate_monthly_reports():
             # Get all active users
             users = User.query.filter_by(is_active=True).all()
             month = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%B %Y")
-            start_date = datetime.now(timezone.utc).replace(day=1) - timedelta(days=1)
+            start_date = datetime.now(timezone.utc).replace(day=1)
 
             for user in users:
                 report_data = {

@@ -290,7 +290,7 @@ def get_activity_logs_by_user(current_user, user_id):
         params = activity_log_query_schema.load(request.args)
         query = ActivityLog.query
 
-        query = query.filter(ActivityLog.user_id == current_user.id)
+        query = query.filter(ActivityLog.user_id == user_id)
 
         # Apply common filters
         if params.get("action") and params["action"] != "all":

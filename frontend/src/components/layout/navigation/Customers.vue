@@ -10,7 +10,7 @@
           to="/customer/services"
         >
           <i class="bi bi-tools me-2"></i>
-          <span>Browse Services</span>
+          <span>Book Services</span>
         </router-link>
       </li>
       <!-- Service Requests -->

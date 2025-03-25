@@ -555,8 +555,7 @@ export default {
 
         window.showToast({
           type: 'success',
-          title: 'Service Request Created',
-          message: 'Your service request has been created successfully',
+          title: 'Your service request has been created successfully',
         })
 
         bsBookingModal.hide()
@@ -565,19 +564,11 @@ export default {
         router.push('/customer/requests?status=created')
       } catch (err) {
         // Handle specific errors
-        if (err.response?.data?.detail) {
-          window.showToast({
-            type: 'error',
-            title: 'Booking Error',
-            message: err.response.data.detail,
-          })
-        } else {
-          window.showToast({
-            type: 'error',
-            title: 'Booking Error',
-            message: 'An error occurred while creating your service request',
-          })
-        }
+        window.showToast({
+          type: 'error',
+          title:
+            err.response.data.detail || 'An error occurred while creating your service request',
+        })
       } finally {
         isSubmitting.value = false
       }

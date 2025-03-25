@@ -238,9 +238,6 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" @click="createServiceRequest">
-              <i class="bi bi-calendar-plus me-1"></i> Request Service
-            </button>
           </div>
         </div>
       </div>

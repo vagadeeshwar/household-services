@@ -35,7 +35,6 @@
       "src/components/profile/ActivityLogs.vue",
 
       "src/views/customer/Dashboard.vue",
-      "src/views/customer/Services.vue",
       "src/views/customer/Requests.vue",
       "src/views/customer/Profile.vue",
       "src/views/customer/Professionals.vue",
@@ -51,8 +50,9 @@
       "src/views/admin/Profile.vue",
       "src/views/admin/Services.vue",
       "src/views/admin/Customers.vue",
-      "src/views/admin/Requests.vue",
       "src/views/admin/Dashboard.vue",
+      "src/views/admin/Requests.vue",
+      "src/views/admin/Professionals.vue"
     ]
   }
 }

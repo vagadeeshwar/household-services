@@ -577,13 +577,43 @@ def list_customer_requests(current_user):
             )
         # Get query parameters
         status = request.args.get("status")
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 10, type=int)
         summary = request.args.get("summary", "false").lower() == "true"
+
         # Build query
         query = ServiceRequest.query.filter_by(customer_id=customer_profile.id)
+
         if status:
             query = query.filter_by(status=status)
+
+        # Apply date filters
+        if start_date:
+            try:
+                start_date = datetime.strptime(start_date, "%Y-%m-%d")
+                query = query.filter(ServiceRequest.date_of_request >= start_date)
+            except ValueError:
+                return APIResponse.error(
+                    "Invalid start_date format. Use YYYY-MM-DD",
+                    HTTPStatus.BAD_REQUEST,
+                    "InvalidDateFormat",
+                )
+
+        if end_date:
+            try:
+                end_date = datetime.strptime(end_date, "%Y-%m-%d")
+                # Include the entire end date
+                end_date = end_date.replace(hour=23, minute=59, second=59)
+                query = query.filter(ServiceRequest.date_of_request <= end_date)
+            except ValueError:
+                return APIResponse.error(
+                    "Invalid end_date format. Use YYYY-MM-DD",
+                    HTTPStatus.BAD_REQUEST,
+                    "InvalidDateFormat",
+                )
+
         # Apply pagination
         try:
             paginated = query.order_by(ServiceRequest.date_of_request.desc()).paginate(
@@ -680,9 +710,12 @@ def list_professional_requests(current_user):
             )
         # Get query parameters
         request_type = request.args.get("type", "all").lower()
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 10, type=int)
         summary = request.args.get("summary", "false").lower() == "true"
+
         # Build base query
         if request_type == "available":
             # Available requests - matching service type and unassigned
@@ -714,6 +747,32 @@ def list_professional_requests(current_user):
                 HTTPStatus.BAD_REQUEST,
                 "InvalidRequestType",
             )
+
+        # Apply date filters
+        if start_date:
+            try:
+                start_date = datetime.strptime(start_date, "%Y-%m-%d")
+                query = query.filter(ServiceRequest.date_of_request >= start_date)
+            except ValueError:
+                return APIResponse.error(
+                    "Invalid start_date format. Use YYYY-MM-DD",
+                    HTTPStatus.BAD_REQUEST,
+                    "InvalidDateFormat",
+                )
+
+        if end_date:
+            try:
+                end_date = datetime.strptime(end_date, "%Y-%m-%d")
+                # Include the entire end date
+                end_date = end_date.replace(hour=23, minute=59, second=59)
+                query = query.filter(ServiceRequest.date_of_request <= end_date)
+            except ValueError:
+                return APIResponse.error(
+                    "Invalid end_date format. Use YYYY-MM-DD",
+                    HTTPStatus.BAD_REQUEST,
+                    "InvalidDateFormat",
+                )
+
         # Apply pagination
         try:
             paginated = query.paginate(page=page, per_page=per_page, error_out=False)

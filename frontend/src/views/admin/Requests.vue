@@ -857,6 +857,7 @@ export default defineComponent({
       const service = services.value.find((s) => s.id === serviceId)
       return service ? service.name : 'Unknown service'
     }
+
     const checkQueryParams = () => {
       // Only proceed if we have a professional ID in query params AND professionals are loaded
       if (route.query.professional_id && professionals.value && professionals.value.length > 0) {
@@ -875,8 +876,7 @@ export default defineComponent({
         } else {
           console.log(`Professional with ID ${profId} not found in loaded professionals`)
         }
-      }
-      else if (route.query.customer_id && customers.value && customers.value.length > 0) {
+      } else if (route.query.customer_id && customers.value && customers.value.length > 0) {
         const fetchCustomerById = parseInt(route.query.customer_id)
         // Find the customer in the list
         const customer = customers.value.find((p) => p.customer_id === fetchCustomerById)

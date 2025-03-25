@@ -20,6 +20,10 @@
       <div class="col-lg-8">
         <AccountDeleteForm />
       </div>
+
+      <div class="col-lg-8">
+        <ActivityLogs />
+      </div>
     </div>
   </div>
 </template>
@@ -28,6 +32,7 @@ import ProfileInfo from '@/components/profile/ProfileInfo.vue'
 import PasswordChangeForm from '@/components/profile/PasswordChangeForm.vue'
 import AccountDeleteForm from '@/components/profile/AccountDeleteForm.vue'
 import DocumentManagement from '@/components/profile/DocumentManagement.vue'
+import ActivityLogs from '@/components/profile/ActivityLogs.vue'
 export default {
   name: 'ProfessionalProfile',
   components: {
@@ -35,6 +40,7 @@ export default {
     PasswordChangeForm,
     AccountDeleteForm,
     DocumentManagement,
+    ActivityLogs,
   },
 }
 </script>
