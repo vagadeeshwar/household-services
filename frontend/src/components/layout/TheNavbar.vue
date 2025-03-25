@@ -78,12 +78,12 @@ import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 
 // Navigation Components
-const AdminNavigation = defineAsyncComponent(() => import('./navigation/AdminNavigation.vue'))
+const AdminNavigation = defineAsyncComponent(() => import('./navigation/Admin.vue'))
 const ProfessionalNavigation = defineAsyncComponent(
-  () => import('./navigation/ProfessionalNavigation.vue'),
+  () => import('./navigation/Professionals.vue'),
 )
-const CustomerNavigation = defineAsyncComponent(() => import('./navigation/CustomerNavigation.vue'))
-const GuestNavigation = defineAsyncComponent(() => import('./navigation/GuestNavigation.vue'))
+const CustomerNavigation = defineAsyncComponent(() => import('./navigation/Customers.vue'))
+const GuestNavigation = defineAsyncComponent(() => import('./navigation/Guest.vue'))
 
 export default {
   name: 'TheNavbar',

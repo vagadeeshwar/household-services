@@ -913,6 +913,7 @@ export default defineComponent({
     // Methods
     const fetchProfessionals = async (forceRefresh = false) => {
       // Start with empty params object
+      searchTerm.value = ''
       const params = {}
       // Only add non-empty filters
       Object.entries(filters.value).forEach(([key, value]) => {
@@ -921,10 +922,7 @@ export default defineComponent({
           params[key] = value
         }
       })
-      // Only include search term if it's not empty
-      if (searchTerm.value.trim()) {
-        params.search = searchTerm.value.trim()
-      }
+
       await withLoading(
         store.dispatch('professionals/fetchProfessionals', { params, forceRefresh }),
         'Loading professionals...',
