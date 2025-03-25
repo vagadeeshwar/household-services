@@ -123,6 +123,18 @@ const actions = {
       commit('SET_LOADING', false)
     }
   },
+  async reportReview({ commit }, { id, data }) {
+    try {
+      commit('SET_LOADING', true)
+      const response = await request.report(id, data)
+      return response
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
 
   async cancelRequest({ commit }, { id }) {
     try {

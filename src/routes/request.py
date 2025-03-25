@@ -24,6 +24,7 @@ from src.schemas.request import (
     calendar_view_schema,
     customer_requests_output_schema,
     professional_requests_output_schema,
+    report_review_schema,
     review_input_schema,
     review_output_schema,
     service_request_input_schema,
@@ -373,11 +374,18 @@ def complete_service(current_user, request_id):
                 HTTPStatus.BAD_REQUEST,
                 "InvalidStatus",
             )
-        # Check if enough time has passed based on estimated completion time
-        estimated_completion_time = service_request.preferred_time + timedelta(
+
+        preferred_time = service_request.preferred_time
+        if preferred_time.tzinfo is None:
+            # Add UTC timezone information
+            preferred_time = preferred_time.replace(tzinfo=timezone.utc)
+
+        # Calculate estimated completion time using the timezone-aware preferred_time
+        estimated_completion_time = preferred_time + timedelta(
             minutes=service_request.service.estimated_time
         )
         current_time = datetime.now(timezone.utc)
+
         if current_time < estimated_completion_time:
             remaining_minutes = int(
                 (estimated_completion_time - current_time).total_seconds() / 60
@@ -1171,6 +1179,81 @@ def get_schedule(current_user, professional_id):
     except Exception as e:
         return APIResponse.error(
             f"Error retrieving professional schedule: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
+        )
+
+
+@request_bp.route("/reviews/<int:review_id>/report", methods=["POST"])
+@token_required
+@role_required("professional")
+def report_review(current_user, review_id):
+    """Report a review for a professional's completed service request"""
+    try:
+        data = report_review_schema.load(request.get_json())
+    except ValidationError as err:
+        return APIResponse.error(str(err.messages))
+
+    try:
+        # Get the review
+        review = Review.query.get(review_id)
+        if not review:
+            return APIResponse.error(
+                f"Review with ID {review_id} not found",
+                HTTPStatus.NOT_FOUND,
+                "ReviewNotFound",
+            )
+
+        # Check if review is already reported
+        if review.is_reported:
+            return APIResponse.error(
+                "Review is already reported", HTTPStatus.CONFLICT, "AlreadyReported"
+            )
+
+        # Verify ownership - check if the review belongs to a service request assigned to this professional
+        if (
+            not review.service_request
+            or not review.service_request.professional_id
+            or review.service_request.professional_id
+            != current_user.professional_profile.id
+        ):
+            return APIResponse.error(
+                "Cannot report reviews for other professionals' service requests",
+                HTTPStatus.FORBIDDEN,
+                "UnauthorizedAccess",
+            )
+
+        # Verify service was completed and has been reviewed
+        if review.service_request.status != REQUEST_STATUS_COMPLETED:
+            return APIResponse.error(
+                "Service request must be completed to report a review",
+                HTTPStatus.BAD_REQUEST,
+                "InvalidStatus",
+            )
+
+        # Mark review as reported
+        review.is_reported = True
+        review.report_reason = data["report_reason"]
+
+        # Create activity log
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=ActivityLogActions.REVIEW_REPORT,
+            entity_id=review.id,
+            description=f"Reported review for service request {review.service_request_id}",
+        )
+        db.session.add(log)
+        db.session.commit()
+        cache_invalidate()
+
+        return APIResponse.success(
+            message="Review reported successfully",
+            data=review_output_schema.dump(review),
+        )
+    except Exception as e:
+        db.session.rollback()
+        return APIResponse.error(
+            f"Error reporting review: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
         )

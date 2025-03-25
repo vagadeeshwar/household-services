@@ -44,7 +44,9 @@
               </div>
               <div class="mt-3 d-flex justify-content-between">
                 <span class="badge bg-success">{{ stats.activeServicesCount || 0 }} Active</span>
-                <router-link to="/admin/services" class="small text-decoration-none">View All</router-link>
+                <router-link to="/admin/services" class="small text-decoration-none"
+                  >View All</router-link
+                >
               </div>
             </div>
           </div>
@@ -65,10 +67,16 @@
               </div>
               <div class="mt-3 d-flex justify-content-between">
                 <div>
-                  <span class="badge bg-warning me-1">{{ stats.pendingVerificationsCount || 0 }} Pending</span>
-                  <span class="badge bg-success">{{ stats.verifiedProfessionalsCount || 0 }} Verified</span>
+                  <span class="badge bg-warning me-1"
+                    >{{ stats.pendingVerificationsCount || 0 }} Pending</span
+                  >
+                  <span class="badge bg-success"
+                    >{{ stats.verifiedProfessionalsCount || 0 }} Verified</span
+                  >
                 </div>
-                <router-link to="/admin/professionals" class="small text-decoration-none">View All</router-link>
+                <router-link to="/admin/professionals" class="small text-decoration-none"
+                  >View All</router-link
+                >
               </div>
             </div>
           </div>
@@ -89,7 +97,9 @@
               </div>
               <div class="mt-3 d-flex justify-content-between">
                 <span class="badge bg-primary">{{ stats.activeCustomersCount || 0 }} Active</span>
-                <router-link to="/admin/customers" class="small text-decoration-none">View All</router-link>
+                <router-link to="/admin/customers" class="small text-decoration-none"
+                  >View All</router-link
+                >
               </div>
             </div>
           </div>
@@ -110,11 +120,19 @@
               </div>
               <div class="mt-3 d-flex justify-content-between">
                 <div>
-                  <span class="badge bg-info me-1">{{ stats.pendingRequestsCount || 0 }} Pending</span>
-                  <span class="badge bg-primary me-1">{{ stats.activeRequestsCount || 0 }} Active</span>
-                  <span class="badge bg-success">{{ stats.completedRequestsCount || 0 }} Completed</span>
+                  <span class="badge bg-info me-1"
+                    >{{ stats.pendingRequestsCount || 0 }} Pending</span
+                  >
+                  <span class="badge bg-primary me-1"
+                    >{{ stats.activeRequestsCount || 0 }} Active</span
+                  >
+                  <span class="badge bg-success"
+                    >{{ stats.completedRequestsCount || 0 }} Completed</span
+                  >
                 </div>
-                <router-link to="/admin/requests" class="small text-decoration-none">View All</router-link>
+                <router-link to="/admin/requests" class="small text-decoration-none"
+                  >View All</router-link
+                >
               </div>
             </div>
           </div>
@@ -130,15 +148,30 @@
               <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Service Request Trends</h5>
                 <div class="btn-group btn-group-sm">
-                  <button class="btn btn-outline-secondary" @click="setChartPeriod('weekly')" :class="{ active: chartPeriod === 'weekly' }">Weekly</button>
-                  <button class="btn btn-outline-secondary" @click="setChartPeriod('monthly')" :class="{ active: chartPeriod === 'monthly' }">Monthly</button>
+                  <button
+                    class="btn btn-outline-secondary"
+                    @click="setChartPeriod('weekly')"
+                    :class="{ active: chartPeriod === 'weekly' }"
+                  >
+                    Weekly
+                  </button>
+                  <button
+                    class="btn btn-outline-secondary"
+                    @click="setChartPeriod('monthly')"
+                    :class="{ active: chartPeriod === 'monthly' }"
+                  >
+                    Monthly
+                  </button>
                 </div>
               </div>
             </div>
             <div class="card-body">
-              <div class="chart-container" style="position: relative; height: 300px;">
+              <div class="chart-container" style="position: relative; height: 300px">
                 <!-- Chart would go here - mockup chart display -->
-                <div v-if="isLoadingChart" class="d-flex justify-content-center align-items-center h-100">
+                <div
+                  v-if="isLoadingChart"
+                  class="d-flex justify-content-center align-items-center h-100"
+                >
                   <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading chart...</span>
                   </div>
@@ -157,7 +190,7 @@
                       v-for="(label, index) in displayedLabels"
                       :key="index"
                       class="text-muted small text-center"
-                      :style="{ width: (100 / displayedLabels.length) + '%' }"
+                      :style="{ width: 100 / displayedLabels.length + '%' }"
                     >
                       {{ label }}
                     </div>
@@ -165,7 +198,7 @@
                 </div>
                 <div v-else class="h-100 d-flex justify-content-center align-items-center">
                   <div class="text-center text-muted">
-                    <i class="bi bi-bar-chart-line mb-3" style="font-size: 2rem;"></i>
+                    <i class="bi bi-bar-chart-line mb-3" style="font-size: 2rem"></i>
                     <p class="mb-0">No data available for this period</p>
                   </div>
                 </div>
@@ -191,11 +224,15 @@
                 <p class="mt-2 mb-0 text-muted">Loading pending verifications...</p>
               </div>
               <div v-else-if="pendingProfessionals.length === 0" class="p-4 text-center">
-                <i class="bi bi-check-circle text-success mb-3" style="font-size: 2rem;"></i>
+                <i class="bi bi-check-circle text-success mb-3" style="font-size: 2rem"></i>
                 <p class="mb-0">No pending verifications</p>
               </div>
               <ul v-else class="list-group list-group-flush">
-                <li v-for="professional in pendingProfessionals.slice(0, 5)" :key="professional.id" class="list-group-item">
+                <li
+                  v-for="professional in pendingProfessionals.slice(0, 5)"
+                  :key="professional.id"
+                  class="list-group-item"
+                >
                   <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
                       <div class="avatar me-3 bg-light rounded-circle">
@@ -203,16 +240,24 @@
                       </div>
                       <div>
                         <h6 class="mb-0">{{ professional.full_name }}</h6>
-                        <div class="text-muted small">{{ getServiceName(professional.service_type_id) }}</div>
+                        <div class="text-muted small">
+                          {{ getServiceName(professional.service_type_id) }}
+                        </div>
                       </div>
                     </div>
-                    <button class="btn btn-sm btn-outline-success" @click="verifyProfessional(professional)">
+                    <button
+                      class="btn btn-sm btn-outline-success"
+                      @click="verifyProfessional(professional)"
+                    >
                       <i class="bi bi-check-circle"></i>
                     </button>
                   </div>
                 </li>
                 <li v-if="pendingProfessionals.length > 5" class="list-group-item text-center">
-                  <router-link to="/admin/professionals?verified=false" class="text-decoration-none">
+                  <router-link
+                    to="/admin/professionals?verified=false"
+                    class="text-decoration-none"
+                  >
                     View all {{ pendingProfessionals.length }} pending verifications
                   </router-link>
                 </li>
@@ -243,7 +288,7 @@
                 <p class="mt-2 mb-0 text-muted">Loading recent activity...</p>
               </div>
               <div v-else-if="activityLogs.length === 0" class="p-4 text-center">
-                <i class="bi bi-calendar-x text-muted mb-3" style="font-size: 2rem;"></i>
+                <i class="bi bi-calendar-x text-muted mb-3" style="font-size: 2rem"></i>
                 <p class="mb-0">No recent activity found</p>
               </div>
               <div v-else class="table-responsive">
@@ -294,16 +339,20 @@
                 <p class="mt-2 mb-0 text-muted">Loading service distribution...</p>
               </div>
               <div v-else-if="servicesList.length === 0" class="text-center">
-                <i class="bi bi-tools text-muted mb-3" style="font-size: 2rem;"></i>
+                <i class="bi bi-tools text-muted mb-3" style="font-size: 2rem"></i>
                 <p class="mb-0">No services available</p>
               </div>
               <div v-else>
-                <div class="mb-3" v-for="(service, index) in servicesList.slice(0, 5)" :key="service.id">
+                <div
+                  class="mb-3"
+                  v-for="(service, index) in servicesList.slice(0, 5)"
+                  :key="service.id"
+                >
                   <div class="d-flex justify-content-between mb-1">
                     <span class="fw-medium">{{ service.name }}</span>
                     <span class="badge bg-primary">{{ service.requestCount || 0 }} requests</span>
                   </div>
-                  <div class="progress" style="height: 10px;">
+                  <div class="progress" style="height: 10px">
                     <div
                       class="progress-bar"
                       :class="progressColors[index % progressColors.length]"
@@ -324,7 +373,13 @@
     </template>
 
     <!-- Export Report Modal -->
-    <div class="modal fade" id="exportReportModal" tabindex="-1" aria-hidden="true" ref="exportModal">
+    <div
+      class="modal fade"
+      id="exportReportModal"
+      tabindex="-1"
+      aria-hidden="true"
+      ref="exportModal"
+    >
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -342,11 +397,16 @@
           <div class="modal-body">
             <div class="alert alert-info">
               <i class="bi bi-info-circle-fill me-2"></i>
-              Generate a CSV report of service requests. You can filter by professional and date range.
+              Generate a CSV report of service requests. You can filter by professional and date
+              range.
             </div>
             <div class="mb-3">
               <label for="reportProfessional" class="form-label">Professional</label>
-              <select class="form-select" id="reportProfessional" v-model="exportOptions.professional_id">
+              <select
+                class="form-select"
+                id="reportProfessional"
+                v-model="exportOptions.professional_id"
+              >
                 <option value="">All Professionals</option>
                 <option
                   v-for="professional in verifiedProfessionals"
@@ -422,7 +482,10 @@
               @click="generateReport"
               :disabled="isExporting || !isValidExportOptions"
             >
-              <i class="bi" :class="isExporting ? 'bi-hourglass-split' : 'bi-file-earmark-arrow-down'"></i>
+              <i
+                class="bi"
+                :class="isExporting ? 'bi-hourglass-split' : 'bi-file-earmark-arrow-down'"
+              ></i>
               {{ isExporting ? 'Generating...' : 'Generate Report' }}
             </button>
           </div>
@@ -458,7 +521,7 @@ export default defineComponent({
       requestsCount: 0,
       pendingRequestsCount: 0,
       activeRequestsCount: 0,
-      completedRequestsCount: 0
+      completedRequestsCount: 0,
     })
 
     // Component state
@@ -523,14 +586,14 @@ export default defineComponent({
           fetchServices(),
           fetchPendingProfessionals(),
           fetchActivityLogs(),
-          fetchVerifiedProfessionals()
+          fetchVerifiedProfessionals(),
         ])
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
         window.showToast({
           type: 'danger',
           title: 'Error loading dashboard',
-          message: 'Please try refreshing the page'
+          message: 'Please try refreshing the page',
         })
       }
     }
@@ -540,43 +603,44 @@ export default defineComponent({
         // Fetch services stats
         const servicesResponse = await store.dispatch('services/fetchAllServices', {
           params: { per_page: 100 },
-          forceRefresh: true
+          forceRefresh: true,
         })
         servicesList.value = servicesResponse.data || []
         stats.servicesCount = servicesResponse.pagination?.total || servicesList.value.length
-        stats.activeServicesCount = servicesList.value.filter(s => s.is_active).length
+        stats.activeServicesCount = servicesList.value.filter((s) => s.is_active).length
 
         // Professionals stats
         const professionalsResponse = await store.dispatch('professionals/fetchProfessionals', {
           params: { per_page: 100 },
-          forceRefresh: true
+          forceRefresh: true,
         })
         const professionals = professionalsResponse.data || []
         stats.professionalsCount = professionalsResponse.pagination?.total || professionals.length
-        stats.verifiedProfessionalsCount = professionals.filter(p => p.is_verified).length
-        stats.pendingVerificationsCount = professionals.filter(p => !p.is_verified).length
+        stats.verifiedProfessionalsCount = professionals.filter((p) => p.is_verified).length
+        stats.pendingVerificationsCount = professionals.filter((p) => !p.is_verified).length
 
         // Customers stats
         const customersResponse = await store.dispatch('customers/fetchCustomers', {
           params: { per_page: 100 },
-          forceRefresh: true
+          forceRefresh: true,
         })
         const customers = customersResponse.data || []
         stats.customersCount = customersResponse.pagination?.total || customers.length
-        stats.activeCustomersCount = customers.filter(c => c.is_active).length
+        stats.activeCustomersCount = customers.filter((c) => c.is_active).length
 
         // Service requests stats - fetch from request service
         // Get customer requests summary stats
         const customerRequestsResponse = await store.dispatch('requests/fetchCustomerRequests', {
           params: { summary: true, per_page: 1 },
-          forceRefresh: true
+          forceRefresh: true,
         })
 
         if (customerRequestsResponse && customerRequestsResponse.data) {
           stats.requestsCount = customerRequestsResponse.data.total_requests || 0
           stats.completedRequestsCount = customerRequestsResponse.data.completed_requests || 0
           stats.activeRequestsCount = customerRequestsResponse.data.active_requests || 0
-          stats.pendingRequestsCount = stats.requestsCount - (stats.completedRequestsCount + stats.activeRequestsCount)
+          stats.pendingRequestsCount =
+            stats.requestsCount - (stats.completedRequestsCount + stats.activeRequestsCount)
         }
       } catch (error) {
         console.error('Error fetching stats:', error)
@@ -589,7 +653,7 @@ export default defineComponent({
         isLoadingServices.value = true
         const response = await store.dispatch('services/fetchAllServices', {
           params: { per_page: 100 },
-          forceRefresh: true
+          forceRefresh: true,
         })
         servicesList.value = response.data || []
 
@@ -602,8 +666,8 @@ export default defineComponent({
               params: {
                 service_id: service.id,
                 summary: true,
-                per_page: 1
-              }
+                per_page: 1,
+              },
             })
 
             if (requestsResponse && requestsResponse.data) {
@@ -634,7 +698,7 @@ export default defineComponent({
         isLoadingProfessionals.value = true
         const response = await store.dispatch('professionals/fetchProfessionals', {
           params: { verified: false, per_page: 10 },
-          forceRefresh: true
+          forceRefresh: true,
         })
         pendingProfessionals.value = response.data || []
       } catch (error) {
@@ -648,7 +712,7 @@ export default defineComponent({
       try {
         const response = await store.dispatch('professionals/fetchProfessionals', {
           params: { verified: true, per_page: 100 },
-          forceRefresh: false
+          forceRefresh: false,
         })
         verifiedProfessionals.value = response.data || []
       } catch (error) {
@@ -668,9 +732,9 @@ export default defineComponent({
           params: {
             page: activityPage.value,
             per_page: 10,
-            action: 'all'
+            action: 'all',
           },
-          forceRefresh: refresh
+          forceRefresh: refresh,
         })
 
         const logs = response.data || []
@@ -708,7 +772,7 @@ export default defineComponent({
 
         let params = {
           summary: true,
-          per_page: 100
+          per_page: 100,
         }
 
         // Add period-specific parameters
@@ -738,7 +802,7 @@ export default defineComponent({
 
           if (response && response.data) {
             // Process the requests and group by day
-            response.data.forEach(request => {
+            response.data.forEach((request) => {
               const requestDate = new Date(request.date_of_request)
               const dayDiff = Math.floor((requestDate - lastWeek) / (24 * 60 * 60 * 1000))
 
@@ -773,10 +837,12 @@ export default defineComponent({
 
           if (response && response.data) {
             // Process the requests and group by month
-            response.data.forEach(request => {
+            response.data.forEach((request) => {
               const requestDate = new Date(request.date_of_request)
-              const monthDiff = (requestDate.getFullYear() - lastSixMonths.getFullYear()) * 12
-                + requestDate.getMonth() - lastSixMonths.getMonth()
+              const monthDiff =
+                (requestDate.getFullYear() - lastSixMonths.getFullYear()) * 12 +
+                requestDate.getMonth() -
+                lastSixMonths.getMonth()
 
               if (monthDiff >= 0 && monthDiff < 7) {
                 chartData.value[monthDiff]++
@@ -797,13 +863,13 @@ export default defineComponent({
     const verifyProfessional = async (professional) => {
       try {
         await store.dispatch('professionals/verifyProfessional', {
-          id: professional.professional_id
+          id: professional.professional_id,
         })
 
         window.showToast({
           type: 'success',
           title: 'Professional Verified',
-          message: `${professional.full_name} has been verified successfully`
+          message: `${professional.full_name} has been verified successfully`,
         })
 
         // Refresh the pending professionals list
@@ -812,13 +878,12 @@ export default defineComponent({
         // Update stats
         stats.pendingVerificationsCount--
         stats.verifiedProfessionalsCount++
-
       } catch (error) {
         console.error('Error verifying professional:', error)
         window.showToast({
           type: 'danger',
           title: 'Verification Failed',
-          message: error.response?.data?.detail || 'Failed to verify professional'
+          message: error.response?.data?.detail || 'Failed to verify professional',
         })
       }
     }
@@ -827,12 +892,12 @@ export default defineComponent({
       if (!serviceId || !servicesList.value || servicesList.value.length === 0) {
         return 'Unknown Service'
       }
-      const service = servicesList.value.find(s => s.id === serviceId)
+      const service = servicesList.value.find((s) => s.id === serviceId)
       return service ? service.name : 'Unknown Service'
     }
 
     const getServicePercentage = (service) => {
-      const max = Math.max(...servicesList.value.map(s => s.requestCount || 0))
+      const max = Math.max(...servicesList.value.map((s) => s.requestCount || 0))
       if (max === 0) return 0
       return (service.requestCount / max) * 100
     }
@@ -840,8 +905,9 @@ export default defineComponent({
     const formatActionType = (action) => {
       if (!action) return 'Unknown'
       // Convert snake_case to Title Case
-      return action.split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      return action
+        .split('_')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ')
     }
 
@@ -982,7 +1048,9 @@ export default defineComponent({
         isExporting.value = true
 
         const exportData = {
-          ...(exportOptions.value.professional_id && { professional_id: parseInt(exportOptions.value.professional_id) }),
+          ...(exportOptions.value.professional_id && {
+            professional_id: parseInt(exportOptions.value.professional_id),
+          }),
           ...(exportOptions.value.start_date && { start_date: exportOptions.value.start_date }),
           ...(exportOptions.value.end_date && { end_date: exportOptions.value.end_date }),
         }
@@ -1093,7 +1161,7 @@ export default defineComponent({
       getExportProgressText,
       getBarHeight,
     }
-  }
+  },
 })
 </script>
 

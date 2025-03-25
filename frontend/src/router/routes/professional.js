@@ -9,7 +9,7 @@ export default [
   {
     path: 'requests',
     name: 'ProfessionalRequests',
-    component: () => import('@/views/professional/ServiceRequests.vue'),
+    component: () => import('@/views/professional/Requests.vue'),
     meta: { title: 'Service Requests' },
   },
   {
@@ -17,12 +17,6 @@ export default [
     name: 'ProfessionalSchedule',
     component: () => import('@/views/professional/Schedule.vue'),
     meta: { title: 'My Schedule' },
-  },
-  {
-    path: 'reviews',
-    name: 'ProfessionalReviews',
-    component: () => import('@/views/professional/Reviews.vue'),
-    meta: { title: 'My Reviews' },
   },
   {
     path: 'profile',

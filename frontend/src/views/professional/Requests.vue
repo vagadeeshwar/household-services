@@ -3,33 +3,67 @@
     <!-- Page Header -->
     <div class="row mb-4">
       <div class="col">
-        <h1 class="h3 mb-0">My Service Requests</h1>
-        <p class="text-muted">Track and manage your service requests</p>
+        <h1 class="h3 mb-0">Service Requests</h1>
+        <p class="text-muted">View, accept and manage service requests assigned to you</p>
       </div>
     </div>
 
-    <!-- Filters -->
+    <!-- Request Type Tabs -->
     <div class="card mb-4">
       <div class="card-body">
-        <div class="row g-3">
-          <!-- Status Filter -->
-          <div class="col-md-3">
-            <label for="statusFilter" class="form-label">Status</label>
-            <select
-              id="statusFilter"
-              class="form-select"
-              v-model="filters.status"
-              @change="applyFilters"
+        <ul class="nav nav-pills mb-3">
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              :class="{ active: filters.type === 'available' }"
+              href="#"
+              @click.prevent="changeRequestType('available')"
             >
-              <option value="">All Requests</option>
-              <option value="created">Pending</option>
-              <option value="assigned">In Progress</option>
-              <option value="completed">Completed</option>
-            </select>
-          </div>
+              <i class="bi bi-inbox me-1"></i> Available
+              <span class="badge bg-primary ms-1" v-if="requestCounts.available">
+                {{ requestCounts.available }}
+              </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              :class="{ active: filters.type === 'ongoing' }"
+              href="#"
+              @click.prevent="changeRequestType('ongoing')"
+            >
+              <i class="bi bi-hourglass-split me-1"></i> Ongoing
+              <span class="badge bg-primary ms-1" v-if="requestCounts.ongoing">
+                {{ requestCounts.ongoing }}
+              </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              :class="{ active: filters.type === 'completed' }"
+              href="#"
+              @click.prevent="changeRequestType('completed')"
+            >
+              <i class="bi bi-check2-all me-1"></i> Completed
+            </a>
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              :class="{ active: filters.type === 'all' }"
+              href="#"
+              @click.prevent="changeRequestType('all')"
+            >
+              <i class="bi bi-list me-1"></i> All Requests
+            </a>
+          </li>
+        </ul>
 
+        <!-- Additional Filters -->
+        <div class="row g-3 mt-2">
           <!-- Date Range Filters -->
-          <div class="col-md-3">
+          <div class="col-md-4">
             <label for="startDate" class="form-label">From Date</label>
             <input
               type="date"
@@ -39,8 +73,7 @@
               @change="validateDateRange"
             />
           </div>
-
-          <div class="col-md-3">
+          <div class="col-md-4">
             <label for="endDate" class="form-label">To Date</label>
             <input
               type="date"
@@ -53,7 +86,7 @@
           </div>
 
           <!-- Reset Button -->
-          <div class="col-md-3">
+          <div class="col-md-4">
             <label class="form-label d-block">&nbsp;</label>
             <button class="btn btn-outline-secondary w-100" @click="resetFilters">
               <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filters
@@ -70,13 +103,25 @@
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
           </div>
-          <p class="mt-2 text-muted">Loading your service requests...</p>
+          <p class="mt-2 text-muted">Loading service requests...</p>
         </div>
 
         <div v-else-if="requests.length === 0" class="text-center p-5">
-          <i class="bi bi-clipboard-x text-muted" style="font-size: 3rem"></i>
-          <p class="mt-3 mb-0">No service requests found.</p>
-          <button class="btn btn-link mt-2" @click="resetFilters">Reset filters</button>
+          <div v-if="filters.type === 'available'">
+            <i class="bi bi-inbox text-muted" style="font-size: 3rem"></i>
+            <p class="mt-3 mb-0">No service requests available to accept at the moment.</p>
+            <p class="text-muted">Check back later or try changing your filters.</p>
+          </div>
+          <div v-else-if="filters.type === 'ongoing'">
+            <i class="bi bi-hourglass text-muted" style="font-size: 3rem"></i>
+            <p class="mt-3 mb-0">You have no ongoing service requests.</p>
+            <p class="text-muted">Check available requests to start working on new assignments.</p>
+          </div>
+          <div v-else>
+            <i class="bi bi-clipboard-x text-muted" style="font-size: 3rem"></i>
+            <p class="mt-3 mb-0">No service requests found.</p>
+            <button class="btn btn-link mt-2" @click="resetFilters">Reset filters</button>
+          </div>
         </div>
 
         <div v-else class="table-responsive">
@@ -85,7 +130,7 @@
               <tr>
                 <th scope="col">#</th>
                 <th scope="col">Service</th>
-                <th scope="col">Professional</th>
+                <th scope="col">Customer</th>
                 <th scope="col">Scheduled Date</th>
                 <th scope="col">Status</th>
                 <th scope="col">Actions</th>
@@ -106,17 +151,11 @@
                   </div>
                 </td>
                 <td>
-                  <div v-if="request.professional">
-                    <div class="fw-medium">{{ request.professional.full_name }}</div>
-                    <div
-                      class="d-flex align-items-center"
-                      v-if="request.professional.average_rating"
-                    >
-                      <i class="bi bi-star-fill text-warning me-1"></i>
-                      <small>{{ request.professional.average_rating }}</small>
-                    </div>
+                  <div v-if="request.customer">
+                    <div class="fw-medium">{{ request.customer.full_name }}</div>
+                    <small class="text-muted">{{ request.customer.phone }}</small>
                   </div>
-                  <span v-else class="badge bg-secondary">Not Assigned</span>
+                  <span v-else class="text-muted">Unknown Customer</span>
                 </td>
                 <td>
                   <div>{{ formatDate(request.preferred_time) }}</div>
@@ -137,44 +176,28 @@
                       <i class="bi bi-eye"></i>
                     </button>
 
-                    <!-- Cancel Request (only for "created" status) -->
+                    <!-- Accept Request (only for "created" status) -->
                     <button
-                      v-if="request.status === 'created'"
-                      class="btn btn-sm btn-outline-danger"
-                      @click="confirmCancelRequest(request)"
-                      title="Cancel request"
-                    >
-                      <i class="bi bi-x-circle"></i>
-                    </button>
-
-                    <!-- Complete Request (only for "assigned" status) -->
-                    <button
-                      v-if="request.status === 'assigned'"
+                      v-if="request.status === 'created' && filters.type === 'available'"
                       class="btn btn-sm btn-outline-success"
-                      @click="confirmCompleteRequest(request)"
-                      title="Mark as completed"
+                      @click="confirmAcceptRequest(request)"
+                      title="Accept request"
                     >
                       <i class="bi bi-check-circle"></i>
                     </button>
 
-                    <!-- Review Button (only for "completed" status and no review) -->
+                    <!-- Complete Request (only for "assigned" status) -->
                     <button
-                      v-if="request.status === 'completed' && !request.has_review"
-                      class="btn btn-sm btn-outline-warning"
-                      @click="openReviewModal(request)"
-                      title="Submit review"
+                      v-if="
+                        request.status === 'assigned' &&
+                        filters.type !== 'available' &&
+                        filters.type !== 'completed'
+                      "
+                      class="btn btn-sm btn-outline-success"
+                      @click="confirmCompleteRequest(request)"
+                      title="Mark as completed"
                     >
-                      <i class="bi bi-star"></i>
-                    </button>
-
-                    <!-- View Review Button (if review exists) -->
-                    <button
-                      v-if="request.has_review"
-                      class="btn btn-sm btn-outline-info"
-                      @click="viewRequestDetails(request)"
-                      title="View review"
-                    >
-                      <i class="bi bi-star-half"></i>
+                      <i class="bi bi-check2-all"></i>
                     </button>
                   </div>
                 </td>
@@ -209,7 +232,9 @@
               class="page-item"
               :class="{ active: page === pagination.current_page }"
             >
-              <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+              <a class="page-link" href="#" @click.prevent="changePage(page)">
+                {{ page }}
+              </a>
             </li>
             <li class="page-item" :class="{ disabled: !pagination.has_next }">
               <a
@@ -281,17 +306,15 @@
                           </div>
                         </div>
                       </li>
-
                       <li class="timeline-item mb-3" v-if="selectedRequest.date_of_assignment">
                         <div class="timeline-marker bg-primary"></div>
                         <div class="timeline-content">
-                          <h6 class="mb-0 fw-bold">Professional Assigned</h6>
+                          <h6 class="mb-0 fw-bold">You Accepted Request</h6>
                           <div class="text-muted">
                             {{ formatDateTime(selectedRequest.date_of_assignment) }}
                           </div>
                         </div>
                       </li>
-
                       <li class="timeline-item" v-if="selectedRequest.date_of_completion">
                         <div class="timeline-marker bg-success"></div>
                         <div class="timeline-content">
@@ -319,12 +342,10 @@
                         {{ formatDateTime(selectedRequest.preferred_time) }}
                       </div>
                     </div>
-
                     <div class="mb-3" v-if="selectedRequest.description">
                       <label class="form-label text-muted small">Description</label>
                       <div>{{ selectedRequest.description }}</div>
                     </div>
-
                     <div v-if="selectedRequest.remarks">
                       <label class="form-label text-muted small">Completion Remarks</label>
                       <div>{{ selectedRequest.remarks }}</div>
@@ -333,39 +354,38 @@
                 </div>
               </div>
 
-              <!-- Professional Information -->
-              <div class="col-md-12" v-if="selectedRequest.professional">
+              <!-- Customer Information -->
+              <div class="col-md-12">
                 <div class="card border">
                   <div class="card-header bg-light">
-                    <h6 class="mb-0">Professional Information</h6>
+                    <h6 class="mb-0">Customer Information</h6>
                   </div>
                   <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
                       <div class="avatar me-3 bg-light rounded-circle">
-                        <i class="bi bi-person-badge"></i>
+                        <i class="bi bi-person"></i>
                       </div>
                       <div>
-                        <div class="fw-bold">{{ selectedRequest.professional.full_name }}</div>
-                        <div
-                          class="d-flex align-items-center"
-                          v-if="selectedRequest.professional.average_rating"
-                        >
-                          <i class="bi bi-star-fill text-warning me-1"></i>
-                          <small>{{ selectedRequest.professional.average_rating }}</small>
-                        </div>
+                        <div class="fw-bold">{{ getCustomerName(selectedRequest) }}</div>
                       </div>
                     </div>
-
-                    <div class="mb-2 row">
+                    <div class="mb-2 row" v-if="selectedRequest.customer">
                       <div class="col-md-4 text-muted">Phone:</div>
-                      <div class="col-md-8">{{ selectedRequest.professional.phone }}</div>
+                      <div class="col-md-8">{{ selectedRequest.customer.phone }}</div>
                     </div>
-
-                    <div class="mb-2 row" v-if="selectedRequest.professional.experience_years">
-                      <div class="col-md-4 text-muted">Experience:</div>
-                      <div class="col-md-8">
-                        {{ selectedRequest.professional.experience_years }} years
-                      </div>
+                    <div
+                      class="mb-2 row"
+                      v-if="selectedRequest.customer && selectedRequest.customer.address"
+                    >
+                      <div class="col-md-4 text-muted">Address:</div>
+                      <div class="col-md-8">{{ selectedRequest.customer.address }}</div>
+                    </div>
+                    <div
+                      class="row"
+                      v-if="selectedRequest.customer && selectedRequest.customer.pin_code"
+                    >
+                      <div class="col-md-4 text-muted">PIN Code:</div>
+                      <div class="col-md-8">{{ selectedRequest.customer.pin_code }}</div>
                     </div>
                   </div>
                 </div>
@@ -375,7 +395,7 @@
               <div class="col-md-12" v-if="selectedRequest.has_review && selectedRequest.review">
                 <div class="card border">
                   <div class="card-header bg-light">
-                    <h6 class="mb-0">Your Review</h6>
+                    <h6 class="mb-0">Customer Review</h6>
                   </div>
                   <div class="card-body">
                     <div class="mb-2">
@@ -391,11 +411,26 @@
                       </span>
                       <span class="ms-2 fw-bold">{{ selectedRequest.review.rating }} / 5</span>
                     </div>
-
                     <div>{{ selectedRequest.review.comment || 'No comment provided' }}</div>
-
                     <div class="text-muted mt-2 small">
                       Submitted on {{ formatDateTime(selectedRequest.review.created_at) }}
+                    </div>
+
+                    <!-- Report Review Option -->
+                    <div class="mt-3" v-if="!selectedRequest.review.is_reported">
+                      <button
+                        class="btn btn-sm btn-outline-danger"
+                        @click="openReportReviewModal(selectedRequest.review)"
+                      >
+                        <i class="bi bi-flag me-1"></i> Report Review
+                      </button>
+                    </div>
+                    <div class="alert alert-warning mt-3" v-else>
+                      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                      <strong>You have reported this review</strong>
+                      <div v-if="selectedRequest.review.report_reason">
+                        Reason: {{ selectedRequest.review.report_reason }}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -404,53 +439,42 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-
             <!-- Action buttons based on status -->
             <button
               v-if="selectedRequest.status === 'created'"
               type="button"
-              class="btn btn-danger"
-              @click="confirmCancelRequest(selectedRequest)"
+              class="btn btn-success"
+              @click="confirmAcceptRequest(selectedRequest)"
             >
-              <i class="bi bi-x-circle me-1"></i> Cancel Request
+              <i class="bi bi-check-circle me-1"></i> Accept Request
             </button>
-
             <button
               v-if="selectedRequest.status === 'assigned'"
               type="button"
               class="btn btn-success"
               @click="confirmCompleteRequest(selectedRequest)"
             >
-              <i class="bi bi-check-circle me-1"></i> Mark as Completed
-            </button>
-
-            <button
-              v-if="selectedRequest.status === 'completed' && !selectedRequest.has_review"
-              type="button"
-              class="btn btn-warning"
-              @click="openReviewModal(selectedRequest)"
-            >
-              <i class="bi bi-star me-1"></i> Submit Review
+              <i class="bi bi-check2-all me-1"></i> Mark as Completed
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Review Modal -->
+    <!-- Accept Request Confirmation Modal -->
     <div
       class="modal fade"
-      id="reviewModal"
+      id="acceptRequestModal"
       tabindex="-1"
-      aria-labelledby="reviewModalLabel"
+      aria-labelledby="acceptRequestModalLabel"
       aria-hidden="true"
-      ref="reviewModal"
+      ref="acceptModal"
     >
       <div class="modal-dialog">
         <div class="modal-content" v-if="selectedRequest">
           <div class="modal-header">
-            <h5 class="modal-title" id="reviewModalLabel">
-              <i class="bi bi-star me-2"></i>Review Service
+            <h5 class="modal-title" id="acceptRequestModalLabel">
+              <i class="bi bi-check-circle-fill text-success me-2"></i>Accept Service Request
             </h5>
             <button
               type="button"
@@ -460,49 +484,40 @@
             ></button>
           </div>
           <div class="modal-body">
-            <div class="mb-3">
-              <p>
-                You're reviewing service provided by
-                <strong>{{ selectedRequest.professional?.full_name }}</strong>
-              </p>
+            <p>Are you sure you want to accept this service request?</p>
+
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle-fill me-2"></i>
+              By accepting this request, you commit to providing service at the scheduled time.
+              Please check your availability before confirming.
             </div>
 
-            <div class="mb-4">
-              <label class="form-label">Rating</label>
-              <div class="rating-container">
-                <span v-for="i in 5" :key="i" class="rating-star" @click="review.rating = i">
-                  <i
-                    class="bi"
-                    :class="i <= review.rating ? 'bi-star-fill text-warning' : 'bi-star'"
-                  ></i>
-                </span>
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="mb-2"><strong>Service:</strong> {{ selectedRequest.service_name }}</div>
+                <div class="mb-2">
+                  <strong>Customer:</strong> {{ getCustomerName(selectedRequest) }}
+                </div>
+                <div class="mb-2">
+                  <strong>Scheduled Time:</strong>
+                  {{ formatDateTime(selectedRequest.preferred_time) }}
+                </div>
+                <div v-if="selectedRequest.description">
+                  <strong>Description:</strong> {{ selectedRequest.description }}
+                </div>
               </div>
-            </div>
-
-            <div class="mb-3">
-              <label for="reviewComment" class="form-label">Comments</label>
-              <textarea
-                id="reviewComment"
-                class="form-control"
-                v-model="review.comment"
-                rows="4"
-                placeholder="Share your experience with this service..."
-              ></textarea>
             </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button
               type="button"
-              class="btn btn-primary"
-              @click="submitReview"
-              :disabled="!review.rating || !review.comment || isSubmittingReview"
+              class="btn btn-success"
+              @click="acceptRequest"
+              :disabled="isProcessing"
             >
-              <i
-                class="bi"
-                :class="isSubmittingReview ? 'bi-hourglass-split' : 'bi-check-circle'"
-              ></i>
-              {{ isSubmittingReview ? 'Submitting...' : 'Submit Review' }}
+              <i class="bi" :class="isProcessing ? 'bi-hourglass-split' : 'bi-check-circle'"></i>
+              {{ isProcessing ? 'Processing...' : 'Confirm Acceptance' }}
             </button>
           </div>
         </div>
@@ -522,7 +537,7 @@
         <div class="modal-content" v-if="selectedRequest">
           <div class="modal-header">
             <h5 class="modal-title" id="completeRequestModalLabel">
-              <i class="bi bi-check-circle-fill text-success me-2"></i>Complete Service Request
+              <i class="bi bi-check2-all text-success me-2"></i>Complete Service Request
             </h5>
             <button
               type="button"
@@ -536,18 +551,21 @@
 
             <div class="alert alert-info">
               <i class="bi bi-info-circle-fill me-2"></i>
-              Once a request is marked as completed, you'll be able to submit a review for the
-              service.
+              Please provide completion remarks detailing the work performed. The customer will be
+              notified once the request is marked as completed.
             </div>
 
             <div class="mb-3">
-              <label for="completionRemarks" class="form-label">Remarks</label>
+              <label for="completionRemarks" class="form-label"
+                >Completion Remarks <span class="text-danger">*</span></label
+              >
               <textarea
                 id="completionRemarks"
                 class="form-control"
                 v-model="completionRemarks"
                 rows="3"
-                placeholder="Add any comments about the service completion..."
+                placeholder="Describe the work completed, parts replaced, or any other relevant information..."
+                required
               ></textarea>
             </div>
           </div>
@@ -557,30 +575,29 @@
               type="button"
               class="btn btn-success"
               @click="completeRequest"
-              :disabled="!completionRemarks || isProcessing"
+              :disabled="isProcessing || !completionRemarks.trim()"
             >
-              <i class="bi" :class="isProcessing ? 'bi-hourglass-split' : 'bi-check-circle'"></i>
+              <i class="bi" :class="isProcessing ? 'bi-hourglass-split' : 'bi-check2-all'"></i>
               {{ isProcessing ? 'Processing...' : 'Confirm Completion' }}
             </button>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Cancel Request Confirmation Modal -->
+    <!-- Report Review Modal -->
     <div
       class="modal fade"
-      id="cancelRequestModal"
+      id="reportReviewModal"
       tabindex="-1"
-      aria-labelledby="cancelRequestModalLabel"
+      aria-labelledby="reportReviewModalLabel"
       aria-hidden="true"
-      ref="cancelModal"
+      ref="reportModal"
     >
       <div class="modal-dialog">
-        <div class="modal-content" v-if="selectedRequest">
+        <div class="modal-content" v-if="selectedReview">
           <div class="modal-header">
-            <h5 class="modal-title" id="cancelRequestModalLabel">
-              <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Cancel Service Request
+            <h5 class="modal-title" id="reportReviewModalLabel">
+              <i class="bi bi-flag-fill text-danger me-2"></i>Report Review
             </h5>
             <button
               type="button"
@@ -590,26 +607,41 @@
             ></button>
           </div>
           <div class="modal-body">
-            <p>Are you sure you want to cancel this service request?</p>
+            <p>Please enter a reason for reporting this review:</p>
+
+            <div class="mb-3">
+              <label for="reportReason" class="form-label"
+                >Reason <span class="text-danger">*</span></label
+              >
+              <textarea
+                id="reportReason"
+                class="form-control"
+                v-model="reportReason"
+                rows="3"
+                placeholder="Please provide details about why you're reporting this review (minimum 10 characters)..."
+                required
+              ></textarea>
+              <div class="form-text text-danger" v-if="reportReason && reportReason.length < 10">
+                Please provide at least 10 characters
+              </div>
+            </div>
 
             <div class="alert alert-warning">
-              <i class="bi bi-exclamation-circle-fill me-2"></i>
-              This action cannot be undone. You'll need to create a new request if you need this
-              service in the future.
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+              Reported reviews will be evaluated by our admin team. False reports may affect your
+              account status.
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              No, Keep Request
-            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button
               type="button"
               class="btn btn-danger"
-              @click="cancelRequest"
-              :disabled="isProcessing"
+              @click="submitReviewReport"
+              :disabled="isProcessing || !isValidReport"
             >
-              <i class="bi" :class="isProcessing ? 'bi-hourglass-split' : 'bi-x-circle'"></i>
-              {{ isProcessing ? 'Processing...' : 'Yes, Cancel Request' }}
+              <i class="bi" :class="isProcessing ? 'bi-hourglass-split' : 'bi-flag'"></i>
+              {{ isProcessing ? 'Processing...' : 'Submit Report' }}
             </button>
           </div>
         </div>
@@ -619,16 +651,15 @@
 </template>
 
 <script>
-import { defineComponent, ref, computed, onMounted } from 'vue'
+import { defineComponent, ref, computed, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
 import * as bootstrap from 'bootstrap'
 import { requestStatusBadges, statusLabels } from '@/assets/requestStatuses'
 import { formatDate, formatDateTime, formatTime } from '@/utils/date'
 import { useLoading } from '@/composables/useLoading'
-import { useRoute } from 'vue-router'
 
 export default defineComponent({
-  name: 'CustomerRequests',
+  name: 'ProfessionalRequests',
 
   setup() {
     const store = useStore()
@@ -636,35 +667,32 @@ export default defineComponent({
 
     // References to modals
     const detailModal = ref(null)
-    const reviewModal = ref(null)
+    const acceptModal = ref(null)
     const completeModal = ref(null)
-    const cancelModal = ref(null)
-
+    const reportModal = ref(null)
     let bsDetailModal = null
-    let bsReviewModal = null
+    let bsAcceptModal = null
     let bsCompleteModal = null
-    let bsCancelModal = null
-
-    const route = useRoute()
+    let bsReportModal = null
 
     // State
     const requests = computed(() => store.getters['requests/allRequests'])
     const pagination = computed(() => store.getters['requests/pagination'])
     const selectedRequest = ref(null)
+    const selectedReview = ref(null)
     const isProcessing = ref(false)
-    const isSubmittingReview = ref(false)
-
-    // Form data
-    const review = ref({
-      rating: 0,
-      comment: '',
-    })
-
     const completionRemarks = ref('')
+    const reportReason = ref('')
+    const reportDetails = ref('')
+    const requestCounts = ref({
+      available: 0,
+      ongoing: 0,
+      completed: 0,
+    })
 
     // Filters
     const filters = ref({
-      status: '',
+      type: 'available',
       start_date: '',
       end_date: '',
       page: 1,
@@ -689,30 +717,59 @@ export default defineComponent({
       return range
     })
 
+    const isValidReport = computed(() => {
+      // Check if report reason has at least 10 characters
+      return reportReason.value && reportReason.value.trim().length >= 10
+    })
+
     // Methods
     const fetchRequests = async (forceRefresh = false) => {
       // Start with empty params object
-      const params = {}
+      const params = { ...filters.value }
 
       // Only add non-empty filters
-      Object.entries(filters.value).forEach(([key, value]) => {
-        // Include parameters that have values (not empty strings, null, or undefined)
-        if (value !== '' && value !== null && value !== undefined) {
-          params[key] = value
+      Object.keys(params).forEach((key) => {
+        if (params[key] === '' || params[key] === null || params[key] === undefined) {
+          delete params[key]
         }
       })
 
       try {
-        await withLoading(
-          store.dispatch('requests/fetchCustomerRequests', { params, forceRefresh }),
-          'Loading your service requests...',
+        const response = await withLoading(
+          store.dispatch('requests/fetchProfessionalRequests', {
+            params,
+            forceRefresh,
+          }),
+          'Loading service requests...',
         )
+
+        // Update request counts if summary data is available
+        if (response && response.data && response.data.total_requests) {
+          updateRequestCounts(response.data)
+        }
       } catch (error) {
         console.error('Error fetching requests:', error)
         window.showToast({
           type: 'danger',
           title: error.response?.data?.detail || 'Failed to load requests',
         })
+      }
+    }
+
+    const updateRequestCounts = (data) => {
+      // Update the counts if the data contains the necessary information
+      if (data.active_requests !== undefined) {
+        requestCounts.value.ongoing = data.active_requests
+      }
+
+      if (data.available_requests !== undefined) {
+        requestCounts.value.available = data.available_requests
+      } else if (data.pending_requests !== undefined) {
+        requestCounts.value.available = data.pending_requests
+      }
+
+      if (data.completed_requests !== undefined) {
+        requestCounts.value.completed = data.completed_requests
       }
     }
 
@@ -724,55 +781,54 @@ export default defineComponent({
       bsDetailModal.show()
     }
 
-    const openReviewModal = (request) => {
-      selectedRequest.value = request
-      // Reset review form
-      review.value = {
-        rating: 0,
-        comment: '',
+    const getCustomerName = (request) => {
+      // Try to get the customer name from various possible properties
+      if (request.customer && request.customer.full_name) {
+        return request.customer.full_name
       }
-      bsReviewModal.show()
+
+      if (request.customer_name) {
+        return request.customer_name
+      }
+
+      return 'Unknown Customer'
     }
 
-    const submitReview = async () => {
-      if (!review.value.rating) {
-        window.showToast({
-          type: 'warning',
-          title: 'Please select a rating',
-        })
-        return
-      }
+    const confirmAcceptRequest = (request) => {
+      selectedRequest.value = request
+      bsAcceptModal.show()
+    }
 
+    const acceptRequest = async () => {
       try {
-        isSubmittingReview.value = true
+        isProcessing.value = true
 
-        await store.dispatch('requests/submitReview', {
+        await store.dispatch('requests/acceptRequest', {
           id: selectedRequest.value.id,
-          data: {
-            rating: review.value.rating,
-            comment: review.value.comment.trim() || null,
-          },
         })
 
-        // Close the modal
-        bsReviewModal.hide()
+        // Close modals
+        bsAcceptModal.hide()
+        if (bsDetailModal && bsDetailModal._isShown) {
+          bsDetailModal.hide()
+        }
 
         // Success message
         window.showToast({
           type: 'success',
-          title: 'Review submitted successfully',
+          title: 'The customer has been notified that you have accepted their request.',
         })
 
         // Refresh requests
         await fetchRequests(true)
       } catch (error) {
-        console.error('Error submitting review:', error)
+        console.error('Error accepting request:', error)
         window.showToast({
           type: 'danger',
-          title: error.response?.data?.detail || 'Failed to submit review',
+          title: error.response?.data?.detail || 'Failed to accept request',
         })
       } finally {
-        isSubmittingReview.value = false
+        isProcessing.value = false
       }
     }
 
@@ -783,13 +839,21 @@ export default defineComponent({
     }
 
     const completeRequest = async () => {
+      if (!completionRemarks.value.trim()) {
+        window.showToast({
+          type: 'warning',
+          title: 'Please provide details about the work you completed.',
+        })
+        return
+      }
+
       try {
         isProcessing.value = true
 
         await store.dispatch('requests/completeRequest', {
           id: selectedRequest.value.id,
           data: {
-            remarks: completionRemarks.value.trim() || 'Service completed successfully',
+            remarks: completionRemarks.value.trim(),
           },
         })
 
@@ -802,7 +866,7 @@ export default defineComponent({
         // Success message
         window.showToast({
           type: 'success',
-          title: 'Request marked as completed',
+          title: 'The customer has been notified that you have completed their request.',
         })
 
         // Refresh requests
@@ -818,55 +882,71 @@ export default defineComponent({
       }
     }
 
-    const confirmCancelRequest = (request) => {
-      selectedRequest.value = request
-      bsCancelModal.show()
+    const openReportReviewModal = (review) => {
+      selectedReview.value = review
+      reportReason.value = '' // Reset the report reason
+      bsReportModal.show()
     }
+    const submitReviewReport = async () => {
+      if (!isValidReport.value) {
+        window.showToast({
+          type: 'warning',
+          title: 'Please provide a reason with at least 10 characters.',
+        })
+        return
+      }
 
-    const cancelRequest = async () => {
       try {
         isProcessing.value = true
 
-        await store.dispatch('requests/cancelRequest', {
-          id: selectedRequest.value.id,
+        // Call the API through Vuex action
+        await store.dispatch('requests/reportReview', {
+          id: selectedReview.value.id,
+          data: {
+            report_reason: reportReason.value.trim(),
+          },
         })
 
-        // Close modals
-        bsCancelModal.hide()
-        if (bsDetailModal && bsDetailModal._isShown) {
-          bsDetailModal.hide()
-        }
+        // Close modal
+        bsReportModal.hide()
+        bsDetailModal.hide()
 
         // Success message
         window.showToast({
           type: 'success',
-          title: 'Request cancelled successfully',
+          title: 'Our team will review your report and take appropriate action.',
         })
 
-        // Refresh requests
+        // The store should have already updated the review status
+        // Refresh requests to get the updated data
         await fetchRequests(true)
+
+        isProcessing.value = false
       } catch (error) {
-        console.error('Error cancelling request:', error)
+        console.error('Error reporting review:', error)
         window.showToast({
           type: 'danger',
-          title: error.response?.data?.detail || 'Failed to cancel request',
+          title: error.response?.data?.detail || 'Failed to report review',
         })
-      } finally {
         isProcessing.value = false
       }
+    }
+
+    const changeRequestType = (type) => {
+      filters.value.type = type
+      filters.value.page = 1
+      fetchRequests()
     }
 
     const validateDateRange = () => {
       if (filters.value.start_date && filters.value.end_date) {
         const startDate = new Date(filters.value.start_date)
         const endDate = new Date(filters.value.end_date)
-
         if (startDate > endDate) {
           // If start date is after end date, update end date to match start date
           filters.value.end_date = filters.value.start_date
         }
       }
-
       applyFilters()
     }
 
@@ -876,31 +956,21 @@ export default defineComponent({
     }
 
     const resetFilters = () => {
+      const currentType = filters.value.type
       filters.value = {
-        status: '',
+        type: currentType, // Keep the current tab selection
         start_date: '',
         end_date: '',
         page: 1,
         per_page: 10,
       }
-
       fetchRequests(true)
     }
 
     const changePage = (page) => {
       if (page < 1 || page > pagination.value.pages) return
-
       filters.value.page = page
       fetchRequests()
-    }
-
-    const checkQueryParams = () => {
-      // Only proceed if we have a professional ID in query params AND professionals are loaded
-      if (route.query.status) {
-        filters.value.status = route.query.status
-      }
-
-      fetchRequests(true)
     }
 
     // Lifecycle hooks
@@ -909,24 +979,33 @@ export default defineComponent({
       if (detailModal.value) {
         bsDetailModal = new bootstrap.Modal(detailModal.value)
       }
-
-      if (reviewModal.value) {
-        bsReviewModal = new bootstrap.Modal(reviewModal.value)
+      if (acceptModal.value) {
+        bsAcceptModal = new bootstrap.Modal(acceptModal.value)
       }
-
       if (completeModal.value) {
         bsCompleteModal = new bootstrap.Modal(completeModal.value)
       }
-
-      if (cancelModal.value) {
-        bsCancelModal = new bootstrap.Modal(cancelModal.value)
+      if (reportModal.value) {
+        bsReportModal = new bootstrap.Modal(reportModal.value)
       }
 
       // Fetch initial data
       await fetchRequests()
-
-      checkQueryParams()
     })
+
+    // Watch for date filter changes
+    watch(
+      () => filters.value.start_date,
+      (newVal) => {
+        if (
+          newVal &&
+          filters.value.end_date &&
+          new Date(newVal) > new Date(filters.value.end_date)
+        ) {
+          filters.value.end_date = newVal
+        }
+      },
+    )
 
     return {
       // State
@@ -934,28 +1013,33 @@ export default defineComponent({
       pagination,
       paginationRange,
       selectedRequest,
-      review,
+      selectedReview,
       completionRemarks,
+      reportReason,
+      reportDetails,
       filters,
       isLoading,
       isProcessing,
-      isSubmittingReview,
+      isValidReport,
+      requestCounts,
 
       // Refs
       detailModal,
-      reviewModal,
+      acceptModal,
       completeModal,
-      cancelModal,
+      reportModal,
 
       // Methods
       fetchRequests,
       viewRequestDetails,
-      openReviewModal,
-      submitReview,
+      getCustomerName,
+      confirmAcceptRequest,
+      acceptRequest,
       confirmCompleteRequest,
       completeRequest,
-      confirmCancelRequest,
-      cancelRequest,
+      openReportReviewModal,
+      submitReviewReport,
+      changeRequestType,
       validateDateRange,
       applyFilters,
       resetFilters,
@@ -965,7 +1049,6 @@ export default defineComponent({
       formatDate,
       formatDateTime,
       formatTime,
-      checkQueryParams,
     }
   },
 })
@@ -1027,20 +1110,21 @@ export default defineComponent({
   margin-top: 18px;
 }
 
-/* Star rating styles */
-.rating-container {
-  display: flex;
-  gap: 0.5rem;
+/* Nav Pills Styling */
+.nav-pills .nav-link {
+  color: #495057;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  margin-right: 0.5rem;
 }
 
-.rating-star {
-  cursor: pointer;
-  font-size: 1.5rem;
-  transition: transform 0.1s;
+.nav-pills .nav-link:hover {
+  background-color: #e9ecef;
 }
 
-.rating-star:hover {
-  transform: scale(1.2);
+.nav-pills .nav-link.active {
+  color: white;
+  background-color: var(--bs-primary);
 }
 
 /* Responsive adjustments */
@@ -1055,12 +1139,15 @@ export default defineComponent({
     margin-bottom: 0.25rem;
   }
 
-  .rating-container {
-    gap: 0.25rem;
+  .nav-pills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
   }
 
-  .rating-star {
-    font-size: 1.25rem;
+  .nav-pills .nav-link {
+    white-space: nowrap;
+    font-size: 0.875rem;
   }
 }
 </style>

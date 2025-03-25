@@ -13,7 +13,7 @@
 </template>
 
 <script>
-import ActivityLogs from '@/components/profile/ActivityLogs.vue';
+import ActivityLogs from '@/components/profile/ActivityLogs.vue'
 import ProfileInfo from '@/components/profile/ProfileInfo.vue'
 
 export default {

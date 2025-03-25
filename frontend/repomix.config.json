@@ -35,14 +35,12 @@
       "src/components/profile/ActivityLogs.vue",
 
       "src/views/customer/Dashboard.vue",
-      "src/views/customer/Requests.vue",
       "src/views/customer/Profile.vue",
       "src/views/customer/Professionals.vue",
+      "src/views/customer/Services.vue",
 
       "src/views/professional/Dashboard.vue",
-      "src/views/professional/Reviews.vue",
       "src/views/professional/Schedule.vue",
-      "src/views/professional/ServiceRequests.vue",
       "src/views/professional/Profile.vue",
 
       "src/views/public",
@@ -51,7 +49,6 @@
       "src/views/admin/Services.vue",
       "src/views/admin/Customers.vue",
       "src/views/admin/Dashboard.vue",
-      "src/views/admin/Requests.vue",
       "src/views/admin/Professionals.vue"
     ]
   }

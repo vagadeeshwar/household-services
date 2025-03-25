@@ -179,6 +179,10 @@ class ReviewOutputSchema(Schema):
     report_reason = fields.Str(allow_none=True)
     service_request = fields.Nested(ServiceOutputSchema)
 
+class ReportReviewSchema(Schema):
+    """Schema for reporting a review"""
+
+    report_reason = fields.Str(required=True, validate=validate.Length(min=10, max=500))
 
 # Schema instances
 service_request_input_schema = ServiceRequestInputSchema()
@@ -194,3 +198,5 @@ review_output_schema = ReviewOutputSchema()
 reviews_output_schema = ReviewOutputSchema(many=True)
 
 calendar_view_schema = CalendarViewSchema()
+
+report_review_schema = ReportReviewSchema()

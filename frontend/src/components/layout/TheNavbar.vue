@@ -79,9 +79,7 @@ import { useRouter } from 'vue-router'
 
 // Navigation Components
 const AdminNavigation = defineAsyncComponent(() => import('./navigation/Admin.vue'))
-const ProfessionalNavigation = defineAsyncComponent(
-  () => import('./navigation/Professionals.vue'),
-)
+const ProfessionalNavigation = defineAsyncComponent(() => import('./navigation/Professionals.vue'))
 const CustomerNavigation = defineAsyncComponent(() => import('./navigation/Customers.vue'))
 const GuestNavigation = defineAsyncComponent(() => import('./navigation/Guest.vue'))
 

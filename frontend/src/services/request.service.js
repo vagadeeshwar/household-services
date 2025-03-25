@@ -32,6 +32,11 @@ class Request {
     const response = await api.post(`requests/${id}/complete`, data)
     return response.data
   }
+  
+  async report(id, data) {
+    const response = await api.post(`reviews/${id}/report`, data)
+    return response.data
+  }
 
   async cancel(id) {
     const response = await api.post(`requests/${id}/cancel`)
