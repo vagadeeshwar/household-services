@@ -131,7 +131,7 @@
                 <th scope="col">#</th>
                 <th scope="col">Service</th>
                 <th scope="col">Customer</th>
-                <th scope="col">Scheduled Date</th>
+                <th scope="col">Request Date</th>
                 <th scope="col">Status</th>
                 <th scope="col">Actions</th>
               </tr>
@@ -157,10 +157,8 @@
                   </div>
                   <span v-else class="text-muted">Unknown Customer</span>
                 </td>
-                <td>
-                  <div>{{ formatDate(request.preferred_time) }}</div>
-                  <small class="text-muted">{{ formatTime(request.preferred_time) }}</small>
-                </td>
+                <td>{{ formatDate(request.date_of_request) }}</td>
+
                 <td>
                   <span class="badge" :class="getStatusBadgeClass(request.status)">
                     {{ getStatusLabel(request.status) }}
@@ -337,9 +335,9 @@
                   </div>
                   <div class="card-body">
                     <div class="mb-3">
-                      <label class="form-label text-muted small">Scheduled Date & Time</label>
+                      <label class="form-label text-muted small">Preferred Time</label>
                       <div class="fw-medium">
-                        {{ formatDateTime(selectedRequest.preferred_time) }}
+                        {{ formatTime(selectedRequest.preferred_time) }}
                       </div>
                     </div>
                     <div class="mb-3" v-if="selectedRequest.description">
@@ -935,7 +933,7 @@ export default defineComponent({
     const changeRequestType = (type) => {
       filters.value.type = type
       filters.value.page = 1
-      fetchRequests()
+      fetchRequests(true)
     }
 
     const validateDateRange = () => {

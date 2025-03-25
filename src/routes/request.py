@@ -375,26 +375,26 @@ def complete_service(current_user, request_id):
                 "InvalidStatus",
             )
 
-        preferred_time = service_request.preferred_time
-        if preferred_time.tzinfo is None:
-            # Add UTC timezone information
-            preferred_time = preferred_time.replace(tzinfo=timezone.utc)
+        # preferred_time = service_request.preferred_time
+        # if preferred_time.tzinfo is None:
+        #     # Add UTC timezone information
+        #     preferred_time = preferred_time.replace(tzinfo=timezone.utc)
 
-        # Calculate estimated completion time using the timezone-aware preferred_time
-        estimated_completion_time = preferred_time + timedelta(
-            minutes=service_request.service.estimated_time
-        )
+        # # Calculate estimated completion time using the timezone-aware preferred_time
+        # estimated_completion_time = preferred_time + timedelta(
+        #     minutes=service_request.service.estimated_time
+        # )
         current_time = datetime.now(timezone.utc)
 
-        if current_time < estimated_completion_time:
-            remaining_minutes = int(
-                (estimated_completion_time - current_time).total_seconds() / 60
-            )
-            return APIResponse.error(
-                f"Service cannot be completed yet. {remaining_minutes} minutes remaining based on estimated duration.",
-                HTTPStatus.BAD_REQUEST,
-                "EarlyCompletion",
-            )
+        # if current_time < estimated_completion_time:
+        #     remaining_minutes = int(
+        #         (estimated_completion_time - current_time).total_seconds() / 60
+        #     )
+        #     return APIResponse.error(
+        #         f"Service cannot be completed yet. {remaining_minutes} minutes remaining based on estimated duration.",
+        #         HTTPStatus.BAD_REQUEST,
+        #         "EarlyCompletion",
+        #     )
         # Validate request body
         data = request.get_json()
         if not data or not data.get("remarks"):
