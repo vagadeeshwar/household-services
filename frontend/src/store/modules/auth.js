@@ -160,6 +160,19 @@ const actions = {
     commit('CLEAR_AUTH')
     dispatch('apiCache/clearAllCache', null, { root: true })
   },
+
+  async getDashboard({ commit }, { params = {}, forceRefresh = false } = {}) {
+    try {
+      commit('SET_LOADING', true)
+      const response = await auth.getDashboard(params, forceRefresh)
+      return response
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
 }
 
 const mutations = {

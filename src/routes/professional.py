@@ -1,5 +1,6 @@
 import base64
 import os
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 
 from flask import Blueprint, current_app, request, send_from_directory
@@ -9,7 +10,7 @@ from sqlalchemy import func
 from src import db
 from src.constants import (
     REQUEST_STATUS_ASSIGNED,
-    REQUEST_STATUS_CREATED,
+    REQUEST_STATUS_COMPLETED,
     USER_ROLE_PROFESSIONAL,
     ActivityLogActions,
 )
@@ -576,58 +577,6 @@ def update_service_type(current_user):
         )
 
 
-@professional_bp.route("/professionals/dashboard", methods=["GET"])
-@token_required
-@role_required("professional")
-@cache_(timeout=120)
-def get_professional_dashboard(current_user):
-    """Get professional's dashboard statistics"""
-    try:
-        professional_id = current_user.professional_profile.id
-
-        stats = {
-            "total_requests": ServiceRequest.query.filter_by(
-                professional_id=professional_id
-            ).count(),
-            "completed_requests": ServiceRequest.query.filter_by(
-                professional_id=professional_id, status=REQUEST_STATUS_CREATED
-            ).count(),
-            "active_requests": ServiceRequest.query.filter(
-                ServiceRequest.professional_id == professional_id,
-                ServiceRequest.status.in_([REQUEST_STATUS_ASSIGNED]),
-            ).count(),
-            "average_rating": db.session.query(func.avg(Review.rating))
-            .join(ServiceRequest)
-            .filter(ServiceRequest.professional_id == professional_id)
-            .scalar()
-            or 0.0,
-            "total_reviews": Review.query.join(ServiceRequest)
-            .filter(ServiceRequest.professional_id == professional_id)
-            .count(),
-            "reported_reviews": Review.query.join(ServiceRequest)
-            .filter(
-                ServiceRequest.professional_id == professional_id,
-                Review.is_reported == True,  # noqa: E712
-            )
-            .count(),
-            # Additional useful statistics
-            "service_type": current_user.professional_profile.service_type.name,
-            "verification_status": "Verified"
-            if current_user.professional_profile.is_verified
-            else "Pending Verification",
-        }
-
-        return APIResponse.success(
-            data=stats, message="Dashboard statistics retrieved successfully"
-        )
-    except Exception as e:
-        return APIResponse.error(
-            f"Error retrieving dashboard stats: {str(e)}",
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            "DatabaseError",
-        )
-
-
 @professional_bp.route("/professionals/reviews", methods=["GET"])
 @token_required
 @role_required("professional")
@@ -849,4 +798,412 @@ def download_own_verification_document(current_user):
             f"Error downloading document: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DownloadError",
+        )
+
+
+@professional_bp.route("/professionals/dashboard", methods=["GET"])
+@token_required
+@role_required("professional")
+@cache_(timeout=120)
+def get_professional_dashboard(current_user):
+    """Get professional's dashboard statistics with trend data"""
+    try:
+        professional_id = current_user.professional_profile.id
+
+        # Get time period from query params (default: last 30 days)
+        period = request.args.get("period", "30d")  # Options: 7d, 30d, 90d, all
+
+        # Calculate date range based on period
+        today = datetime.now(timezone.utc)
+        if period == "7d":
+            start_date = today - timedelta(days=7)
+        elif period == "30d":
+            start_date = today - timedelta(days=30)
+        elif period == "90d":
+            start_date = today - timedelta(days=90)
+        else:  # "all" - no date filtering
+            start_date = None
+
+        # Base query with optional date filtering
+        completed_requests_query = ServiceRequest.query.filter(
+            ServiceRequest.professional_id == professional_id,
+            ServiceRequest.status == REQUEST_STATUS_COMPLETED,
+        )
+
+        if start_date:
+            completed_requests_query = completed_requests_query.filter(
+                ServiceRequest.date_of_completion >= start_date
+            )
+
+        # Core statistics
+        stats = {
+            "total_requests": ServiceRequest.query.filter_by(
+                professional_id=professional_id
+            ).count(),
+            "completed_requests": completed_requests_query.count(),
+            "active_requests": ServiceRequest.query.filter(
+                ServiceRequest.professional_id == professional_id,
+                ServiceRequest.status == REQUEST_STATUS_ASSIGNED,
+            ).count(),
+            "average_rating": db.session.query(func.avg(Review.rating))
+            .join(ServiceRequest)
+            .filter(ServiceRequest.professional_id == professional_id)
+            .scalar()
+            or 0.0,
+            "total_reviews": Review.query.join(ServiceRequest)
+            .filter(ServiceRequest.professional_id == professional_id)
+            .count(),
+            "reported_reviews": Review.query.join(ServiceRequest)
+            .filter(
+                ServiceRequest.professional_id == professional_id,
+                Review.is_reported == True,  # noqa: E712
+            )
+            .count(),
+            # Profile information
+            "service_type": current_user.professional_profile.service_type.name,
+            "verification_status": "Verified"
+            if current_user.professional_profile.is_verified
+            else "Pending Verification",
+        }
+
+        # Add upcoming services (next 7 days)
+        upcoming_services = (
+            ServiceRequest.query.filter(
+                ServiceRequest.professional_id == professional_id,
+                ServiceRequest.status == REQUEST_STATUS_ASSIGNED,
+                ServiceRequest.preferred_time >= today,
+                ServiceRequest.preferred_time <= today + timedelta(days=7),
+            )
+            .order_by(ServiceRequest.preferred_time)
+            .limit(5)
+            .all()
+        )
+
+        stats["upcoming_services"] = [
+            {
+                "id": req.id,
+                "service_name": req.service.name,
+                "customer_name": req.customer.user.full_name,
+                "preferred_time": req.preferred_time.strftime("%Y-%m-%d %H:%M"),
+                "address": req.customer.user.address,
+            }
+            for req in upcoming_services
+        ]
+
+        # Add weekly trend data - requests completed per week
+        weekly_trend = []
+        if period == "all" or period == "90d":
+            # For longer periods, show weekly data for past 12 weeks
+            num_weeks = 12
+        else:
+            # For shorter periods, show daily data
+            num_weeks = int(period[:-1]) // 7 or 1
+
+        for i in range(num_weeks):
+            end_date = today - timedelta(days=i * 7)
+            start_date = end_date - timedelta(days=7)
+
+            completed_count = ServiceRequest.query.filter(
+                ServiceRequest.professional_id == professional_id,
+                ServiceRequest.status == REQUEST_STATUS_COMPLETED,
+                ServiceRequest.date_of_completion >= start_date,
+                ServiceRequest.date_of_completion < end_date,
+            ).count()
+
+            weekly_trend.insert(
+                0,
+                {
+                    "period": start_date.strftime("%Y-%m-%d"),
+                    "completed": completed_count,
+                },
+            )
+
+        stats["weekly_trend"] = weekly_trend
+
+        # Add monthly rating trend
+        monthly_ratings = []
+        for i in range(3):  # Last 3 months
+            end_date = today.replace(day=1) - timedelta(days=i * 30)
+            start_date = end_date - timedelta(days=30)
+
+            avg_rating = (
+                db.session.query(func.avg(Review.rating))
+                .join(ServiceRequest)
+                .filter(
+                    ServiceRequest.professional_id == professional_id,
+                    Review.created_at >= start_date,
+                    Review.created_at < end_date,
+                )
+                .scalar()
+                or 0
+            )
+
+            monthly_ratings.insert(
+                0,
+                {
+                    "month": start_date.strftime("%Y-%m"),
+                    "rating": round(float(avg_rating), 1),
+                },
+            )
+
+        stats["monthly_ratings"] = monthly_ratings
+
+        # Add month-over-month comparison
+        current_month_start = today.replace(day=1)
+        prev_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
+
+        current_month_requests = ServiceRequest.query.filter(
+            ServiceRequest.professional_id == professional_id,
+            ServiceRequest.status == REQUEST_STATUS_COMPLETED,
+            ServiceRequest.date_of_completion >= current_month_start,
+        ).count()
+
+        prev_month_requests = ServiceRequest.query.filter(
+            ServiceRequest.professional_id == professional_id,
+            ServiceRequest.status == REQUEST_STATUS_COMPLETED,
+            ServiceRequest.date_of_completion >= prev_month_start,
+            ServiceRequest.date_of_completion < current_month_start,
+        ).count()
+
+        # Calculate month-over-month changes
+        if prev_month_requests > 0:
+            requests_change_percent = round(
+                ((current_month_requests - prev_month_requests) / prev_month_requests)
+                * 100,
+                1,
+            )
+        else:
+            requests_change_percent = 100 if current_month_requests > 0 else 0
+
+        stats["monthly_comparison"] = {
+            "current_month": current_month_start.strftime("%B %Y"),
+            "current_month_requests": current_month_requests,
+            "prev_month_requests": prev_month_requests,
+            "change_percent": requests_change_percent,
+        }
+
+        # Get top 5 services by count
+        if period != "all" and start_date:
+            top_services_query = (
+                db.session.query(
+                    ServiceRequest.service_id,
+                    Service.name.label("service_name"),
+                    func.count().label("count"),
+                )
+                .join(Service, ServiceRequest.service_id == Service.id)
+                .filter(
+                    ServiceRequest.professional_id == professional_id,
+                    ServiceRequest.status == REQUEST_STATUS_COMPLETED,
+                    ServiceRequest.date_of_completion >= start_date,
+                )
+                .group_by(ServiceRequest.service_id, Service.name)
+                .order_by(func.count().desc())
+                .limit(5)
+            )
+
+            stats["top_services"] = [
+                {"service_name": row.service_name, "count": row.count}
+                for row in top_services_query.all()
+            ]
+
+        # Add busiest days analysis
+        if period != "all" and start_date:
+            # Analyze busiest days of the week
+            busiest_days_query = (
+                db.session.query(
+                    func.extract("dow", ServiceRequest.date_of_completion).label(
+                        "day_of_week"
+                    ),
+                    func.count().label("count"),
+                )
+                .filter(
+                    ServiceRequest.professional_id == professional_id,
+                    ServiceRequest.status == REQUEST_STATUS_COMPLETED,
+                    ServiceRequest.date_of_completion >= start_date,
+                )
+                .group_by("day_of_week")
+                .order_by(func.count().desc())
+            )
+
+            day_names = [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday",
+            ]
+            busiest_days = []
+            for row in busiest_days_query.all():
+                # Adjust based on database's day numbering (some start at 0, some at 1)
+                day_index = int(row.day_of_week)
+                # Adjust for PostgreSQL's Sunday=0 or MySQL's Sunday=1
+                day_name = day_names[6] if day_index == 0 else day_names[day_index - 1]  # If Sunday is 0
+
+                busiest_days.append(
+                    {
+                        "day": day_name,
+                        "count": row.count,
+                        "percentage": round(
+                            (row.count / stats["completed_requests"]) * 100
+                            if stats["completed_requests"] > 0
+                            else 0,
+                            1,
+                        ),
+                    }
+                )
+
+            # Analyze busiest hours
+            busiest_hours_query = (
+                db.session.query(
+                    func.extract("hour", ServiceRequest.date_of_completion).label(
+                        "hour"
+                    ),
+                    func.count().label("count"),
+                )
+                .filter(
+                    ServiceRequest.professional_id == professional_id,
+                    ServiceRequest.status == REQUEST_STATUS_COMPLETED,
+                    ServiceRequest.date_of_completion >= start_date,
+                )
+                .group_by("hour")
+                .order_by(func.count().desc())
+            )
+
+            busiest_hours = [
+                {
+                    "hour": f"{int(row.hour)}:00 - {int(row.hour)}:59",
+                    "count": row.count,
+                    "percentage": round(
+                        (row.count / stats["completed_requests"]) * 100
+                        if stats["completed_requests"] > 0
+                        else 0,
+                        1,
+                    ),
+                }
+                for row in busiest_hours_query.all()
+            ]
+
+            stats["activity_patterns"] = {
+                "busiest_days": busiest_days,
+                "busiest_hours": busiest_hours,
+            }
+
+        # Add customer satisfaction trends
+        if period != "all" and start_date:
+            # Get rating trends over time (grouped by week)
+            rating_trends_query = (
+                db.session.query(
+                    func.date_trunc("week", Review.created_at).label("week"),
+                    func.avg(Review.rating).label("avg_rating"),
+                    func.count().label("review_count"),
+                )
+                .join(ServiceRequest)
+                .filter(
+                    ServiceRequest.professional_id == professional_id,
+                    Review.created_at >= start_date,
+                )
+                .group_by("week")
+                .order_by("week")
+            )
+
+            rating_trends = [
+                {
+                    "period": row.week.strftime("%Y-%m-%d"),
+                    "average_rating": round(float(row.avg_rating), 1),
+                    "review_count": row.review_count,
+                }
+                for row in rating_trends_query.all()
+            ]
+
+            # Get rating distribution (1-5 stars)
+            rating_distribution_query = (
+                db.session.query(Review.rating, func.count().label("count"))
+                .join(ServiceRequest)
+                .filter(
+                    ServiceRequest.professional_id == professional_id,
+                    Review.created_at >= start_date,
+                )
+                .group_by(Review.rating)
+                .order_by(Review.rating)
+            )
+
+            rating_distribution = [
+                {
+                    "rating": row.rating,
+                    "count": row.count,
+                    "percentage": round(
+                        (row.count / stats["total_reviews"]) * 100
+                        if stats["total_reviews"] > 0
+                        else 0,
+                        1,
+                    ),
+                }
+                for row in rating_distribution_query.all()
+            ]
+
+            # Ensure all ratings 1-5 are represented
+            existing_ratings = {item["rating"] for item in rating_distribution}
+            for rating in range(1, 6):
+                if rating not in existing_ratings:
+                    rating_distribution.append(
+                        {"rating": rating, "count": 0, "percentage": 0}
+                    )
+
+            # Sort by rating
+            rating_distribution.sort(key=lambda x: x["rating"])
+
+            # Count positive vs negative reviews
+            positive_reviews_count = (
+                db.session.query(func.count())
+                .join(ServiceRequest)
+                .filter(
+                    ServiceRequest.professional_id == professional_id,
+                    Review.created_at >= start_date,
+                    Review.rating >= 4,
+                )
+                .scalar()
+                or 0
+            )
+
+            negative_reviews_count = (
+                db.session.query(func.count())
+                .join(ServiceRequest)
+                .filter(
+                    ServiceRequest.professional_id == professional_id,
+                    Review.created_at >= start_date,
+                    Review.rating <= 2,
+                )
+                .scalar()
+                or 0
+            )
+
+            stats["satisfaction_analysis"] = {
+                "rating_trends": rating_trends,
+                "rating_distribution": rating_distribution,
+                "positive_reviews_count": positive_reviews_count,
+                "negative_reviews_count": negative_reviews_count,
+                "positive_percentage": round(
+                    (positive_reviews_count / stats["total_reviews"]) * 100
+                    if stats["total_reviews"] > 0
+                    else 0,
+                    1,
+                ),
+                "negative_percentage": round(
+                    (negative_reviews_count / stats["total_reviews"]) * 100
+                    if stats["total_reviews"] > 0
+                    else 0,
+                    1,
+                ),
+            }
+
+        return APIResponse.success(
+            data=stats, message="Dashboard statistics retrieved successfully"
+        )
+    except Exception as e:
+        return APIResponse.error(
+            f"Error retrieving dashboard stats: {str(e)}",
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            "DatabaseError",
         )

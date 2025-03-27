@@ -19,6 +19,10 @@ class Customer {
     const response = await api.post(`customers/${id}/unblock`)
     return response.data
   }
+
+  async getDashboard(params = {}, forceRefresh = false) {
+    return cachedApi.getPaginated('customers/dashboard', params, { forceRefresh })
+  }
 }
 
 export const customer = new Customer()

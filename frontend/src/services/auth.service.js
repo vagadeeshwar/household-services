@@ -38,6 +38,10 @@ class AuthService {
     const response = await api.delete('/delete-account', { data: data })
     return response.data
   }
+
+  async getDashboard(params = {}, forceRefresh = false) {
+    return cachedApi.getPaginated('admin/dashboard', params, { forceRefresh })
+  }
 }
 
 export const auth = new AuthService()

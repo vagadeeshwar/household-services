@@ -48,6 +48,10 @@ class Professional {
     const response = await api.put('professionals/service', data)
     return response.data
   }
+
+  async getDashboard(params = {}, forceRefresh = false) {
+    return cachedApi.getPaginated('professionals/dashboard', params, { forceRefresh })
+  }
 }
 
 export const professional = new Professional()
