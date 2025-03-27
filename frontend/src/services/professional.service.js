@@ -44,10 +44,8 @@ class Professional {
     return response
   }
 
-  async updateService(params = {}) {
-    const response = await api.put('professionals/service', {
-      params,
-    })
+  async updateService(data) {
+    const response = await api.put('professionals/service', data)
     return response.data
   }
 }

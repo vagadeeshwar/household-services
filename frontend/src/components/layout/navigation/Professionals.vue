@@ -14,17 +14,6 @@
         </router-link>
       </li>
 
-      <!-- Schedule -->
-      <li class="nav-item">
-        <router-link
-          class="nav-link px-3 py-2 rounded-3 d-flex align-items-center"
-          to="/professional/schedule"
-        >
-          <i class="bi bi-calendar-week me-2"></i>
-          <span>Schedule</span>
-        </router-link>
-      </li>
-
     </ul>
   </div>
 </template>

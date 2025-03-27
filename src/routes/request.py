@@ -21,7 +21,6 @@ from src.models import (
     ServiceRequest,
 )
 from src.schemas.request import (
-    calendar_view_schema,
     customer_requests_output_schema,
     professional_requests_output_schema,
     report_review_schema,
@@ -34,7 +33,6 @@ from src.utils.api import APIResponse
 from src.utils.auth import role_required, token_required
 from src.utils.cache import cache_, cache_invalidate
 from src.utils.notification import EmailTemplate, NotificationService
-from src.utils.request import check_booking_availability, get_professional_schedule
 
 request_bp = Blueprint("request", __name__)
 
@@ -289,16 +287,7 @@ def accept_request(current_user, request_id):
                 HTTPStatus.INTERNAL_SERVER_ERROR,
                 "ServiceError",
             )
-        # Check for booking availability using the integer value of estimated_time
-        is_available, error_message = check_booking_availability(
-            professional.id,
-            service_request.preferred_time,
-            estimated_time,  # Now passing the integer value
-        )
-        if not is_available:
-            return APIResponse.error(
-                error_message, HTTPStatus.CONFLICT, "BookingOverlap"
-            )
+
         service_request.professional_id = professional.id
         service_request.status = REQUEST_STATUS_ASSIGNED
         service_request.date_of_assignment = datetime.now(timezone.utc)
@@ -1119,66 +1108,6 @@ def admin_list_professional_requests(current_user, professional_id):
     except Exception as e:
         return APIResponse.error(
             f"Error retrieving professional requests: {str(e)}",
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            "DatabaseError",
-        )
-
-
-@request_bp.route("/professionals/<int:professional_id>/schedule", methods=["GET"])
-@token_required
-def get_schedule(current_user, professional_id):
-    """Get professional's availability schedule"""
-    try:
-        # Verify professional exists
-        professional_profile = ProfessionalProfile.query.get(professional_id)
-
-        if not professional_profile:
-            return APIResponse.error(
-                "Professional not found", HTTPStatus.NOT_FOUND, "ProfessionalNotFound"
-            )
-
-        # Get query parameters
-        start_date_str = request.args.get(
-            "start_date", datetime.now().strftime("%Y-%m-%d")
-        )
-        end_date_str = request.args.get(
-            "end_date", (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-        )
-        service_id = request.args.get("service_id", type=int)
-        try:
-            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
-            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
-        except ValueError:
-            return APIResponse.error(
-                "Invalid date format. Use YYYY-MM-DD",
-                HTTPStatus.BAD_REQUEST,
-                "InvalidDateFormat",
-            )
-        # Check date range validity
-        if start_date > end_date:
-            return APIResponse.error(
-                "Start date must be before end date",
-                HTTPStatus.BAD_REQUEST,
-                "InvalidDateRange",
-            )
-        # Limit date range to 30 days maximum
-        if (end_date - start_date).days > 30:
-            return APIResponse.error(
-                "Date range cannot exceed 30 days",
-                HTTPStatus.BAD_REQUEST,
-                "DateRangeTooLarge",
-            )
-        # Get schedule from utility function
-        schedule = get_professional_schedule(
-            professional_id, start_date, end_date, service_id
-        )
-        return APIResponse.success(
-            data=calendar_view_schema.dump(schedule),
-            message="Professional schedule retrieved successfully",
-        )
-    except Exception as e:
-        return APIResponse.error(
-            f"Error retrieving professional schedule: {str(e)}",
             HTTPStatus.INTERNAL_SERVER_ERROR,
             "DatabaseError",
         )

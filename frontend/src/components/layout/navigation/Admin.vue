@@ -3,17 +3,6 @@
     <ul
       class="navbar-nav d-flex flex-row flex-lg-row align-items-center justify-content-start gap-1 gap-lg-3"
     >
-      <!-- Dashboard -->
-      <li class="nav-item">
-        <router-link
-          class="nav-link px-3 py-2 rounded-3 d-flex align-items-center"
-          to="/admin/dashboard"
-        >
-          <i class="bi bi-speedometer2 me-2"></i>
-          <span>Dashboard</span>
-        </router-link>
-      </li>
-
       <!-- Services -->
       <li class="nav-item">
         <router-link

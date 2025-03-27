@@ -138,35 +138,6 @@ class ReviewInputSchema(BaseSchema):
     comment = fields.Str(validate=validate.Length(max=1000))
 
 
-class TimeSlotSchema(Schema):
-    """Schema for time slot information"""
-
-    start_time = fields.DateTime(required=True)
-    end_time = fields.DateTime(required=True)
-    status = fields.Str(required=True)  # 'available', 'booked', 'completed'
-    service_request = fields.Nested("ServiceRequestOutputSchema", allow_none=True)
-
-
-class DayScheduleSchema(Schema):
-    """Schema for daily schedule"""
-
-    date = fields.Date(required=True)
-    time_slots = fields.List(fields.Nested(TimeSlotSchema), required=True)
-    total_slots = fields.Int(required=True)
-    available_slots = fields.Int(required=True)
-    booked_slots = fields.Int(required=True)
-
-
-class CalendarViewSchema(Schema):
-    """Schema for calendar view response"""
-
-    start_date = fields.Date(required=True)
-    end_date = fields.Date(required=True)
-    days = fields.List(fields.Nested(DayScheduleSchema), required=True)
-    total_bookings = fields.Int(required=True)
-    available_days = fields.Int(required=True)
-
-
 # For standalone review output - used when fetching reviews separately
 class ReviewOutputSchema(Schema):
     """Schema for review output data with service request details"""
@@ -199,6 +170,5 @@ review_input_schema = ReviewInputSchema()
 review_output_schema = ReviewOutputSchema()
 reviews_output_schema = ReviewOutputSchema(many=True)
 
-calendar_view_schema = CalendarViewSchema()
 
 report_review_schema = ReportReviewSchema()

@@ -250,6 +250,24 @@
             </div>
             <div class="form-text">Describe your expertise and services you provide.</div>
           </div>
+
+          <!-- Service Type Dropdown (for professionals only) -->
+          <div class="col-md-6" v-if="isUserProfessional && services.length > 0">
+            <label for="serviceType" class="form-label">Service Type</label>
+            <select
+              id="serviceType"
+              class="form-select"
+              v-model="v$.service_type_id.$model"
+              :class="{ 'is-invalid': v$.service_type_id.$error }"
+            >
+              <option v-for="service in services" :key="service.id" :value="service.id">
+                {{ service.name }}
+              </option>
+            </select>
+            <div v-if="v$.service_type_id.$error" class="invalid-feedback">
+              <span v-if="v$.service_type_id.required.$invalid">Service type is required</span>
+            </div>
+          </div>
         </div>
 
         <div class="d-flex justify-content-end gap-2 mt-4">
@@ -278,6 +296,7 @@ import { useStore } from 'vuex'
 import { useVuelidate } from '@vuelidate/core'
 import { required, email, minLength, helpers, maxLength } from '@vuelidate/validators'
 import { formatDateTime } from '@/utils/date'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'UnifiedProfileComponent',
@@ -291,6 +310,8 @@ export default {
     const hasUnsavedChanges = ref(false)
     const showSuccessMessage = ref(false)
 
+    const services = ref([])
+    const router = useRouter()
     // Get user data and loading state from Vuex store
     const userData = computed(() => store.getters['auth/currentUser'])
     const isLoading = computed(() => store.getters['auth/isLoading'])
@@ -328,6 +349,7 @@ export default {
             forceRefresh: true, // Force refresh to ensure we have latest data
           })
         }
+        services.value = store.getters['services/allServices'] || []
       } catch (error) {
         console.error('Error fetching services:', error)
         window.showToast({
@@ -345,6 +367,7 @@ export default {
       address: '',
       pin_code: '',
       description: '',
+      service_type_id: '',
     })
 
     // Original form data for change detection
@@ -355,6 +378,7 @@ export default {
       address: '',
       pin_code: '',
       description: '',
+      service_type_id: '',
     })
 
     // Custom validators
@@ -374,6 +398,7 @@ export default {
       // Add professional-specific rules if needed
       if (isUserProfessional.value && userData.value?.description !== undefined) {
         baseRules.description = { required, minLength: minLength(10), maxLength: maxLength(1000) }
+        baseRules.service_type_id = { required } // Add this line
       }
 
       return baseRules
@@ -434,6 +459,7 @@ export default {
       // Professional fields
       if (isUserProfessional.value) {
         formData.description = userData.value?.description || ''
+        formData.service_type_id = userData.value?.service_type_id || '' // Add this line
       }
 
       // Store original form data for change detection
@@ -460,8 +486,20 @@ export default {
         if (isUserProfessional.value && formData.description !== undefined) {
           updateData.description = formData.description
         }
-        // Update profile via Vuex
-        await store.dispatch('auth/updateProfile', { data: updateData })
+
+        if (
+          isUserProfessional.value &&
+          formData.service_type_id !== userData.value?.service_type_id
+        ) {
+          await store.dispatch('professionals/updateService', {
+            data: { service_type_id: formData.service_type_id },
+          })
+          await store.dispatch('auth/logout')
+          router.push('/login')
+        } else {
+          // Update profile via Vuex
+          await store.dispatch('auth/updateProfile', { data: updateData })
+        }
 
         // Show success message
         showSuccessMessage.value = true
@@ -543,6 +581,7 @@ export default {
       formattedLastLogin,
       formattedCreatedAt,
       serviceName,
+      services,
 
       // Form validation
       formData,

@@ -32,22 +32,16 @@ def send_daily_reminders():
                 )
                 .all()
             )
-
             for professional in professionals:
                 # Get pending and assigned requests
                 pending_requests = ServiceRequest.query.filter(
                     ServiceRequest.professional_id == professional.id,
                     ServiceRequest.status == REQUEST_STATUS_ASSIGNED,
-                    ServiceRequest.preferred_time >= datetime.now(timezone.utc),
-                    ServiceRequest.preferred_time
-                    <= datetime.now(timezone.utc) + timedelta(days=1),
                 ).all()
-
                 if pending_requests:
                     NotificationService.send_daily_reminder(
                         professional, pending_requests
                     )
-
             return {
                 "status": "success",
                 "message": f"Sent reminders to {len(professionals)} professionals",

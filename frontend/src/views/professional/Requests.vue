@@ -486,7 +486,7 @@
 
             <div class="alert alert-info">
               <i class="bi bi-info-circle-fill me-2"></i>
-              By accepting this request, you commit to providing service at the scheduled time.
+              By accepting this request, you commit to providing service with your full effort.
               Please check your availability before confirming.
             </div>
 
@@ -497,7 +497,7 @@
                   <strong>Customer:</strong> {{ getCustomerName(selectedRequest) }}
                 </div>
                 <div class="mb-2">
-                  <strong>Scheduled Time:</strong>
+                  <strong>Preferred Time:</strong>
                   {{ formatDateTime(selectedRequest.preferred_time) }}
                 </div>
                 <div v-if="selectedRequest.description">

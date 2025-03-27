@@ -259,18 +259,7 @@
                     </div>
                   </router-link>
                 </div>
-                <div class="col-md-3 col-sm-6">
-                  <router-link
-                    to="/professional/schedule"
-                    class="card h-100 bg-light text-center text-decoration-none"
-                  >
-                    <div class="card-body py-4">
-                      <i class="bi bi-calendar-week text-success fs-3 mb-3"></i>
-                      <h6 class="card-title mb-0">My Schedule</h6>
-                      <p class="small text-muted mb-0">Manage your availability</p>
-                    </div>
-                  </router-link>
-                </div>
+                
                 <div class="col-md-3 col-sm-6">
                   <router-link
                     to="/professional/reviews"

@@ -13,12 +13,6 @@ export default [
     meta: { title: 'Service Requests' },
   },
   {
-    path: 'schedule',
-    name: 'ProfessionalSchedule',
-    component: () => import('@/views/professional/Schedule.vue'),
-    meta: { title: 'My Schedule' },
-  },
-  {
     path: 'profile',
     name: 'ProfessionalProfile',
     component: () => import('@/views/professional/Profile.vue'),
