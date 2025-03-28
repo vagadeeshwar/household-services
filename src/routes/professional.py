@@ -809,10 +809,8 @@ def get_professional_dashboard(current_user):
     """Get professional's dashboard statistics with trend data"""
     try:
         professional_id = current_user.professional_profile.id
-
         # Get time period from query params (default: last 30 days)
         period = request.args.get("period", "30d")  # Options: 7d, 30d, 90d, all
-
         # Calculate date range based on period
         today = datetime.now(timezone.utc)
         if period == "7d":
@@ -823,18 +821,15 @@ def get_professional_dashboard(current_user):
             start_date = today - timedelta(days=90)
         else:  # "all" - no date filtering
             start_date = None
-
         # Base query with optional date filtering
         completed_requests_query = ServiceRequest.query.filter(
             ServiceRequest.professional_id == professional_id,
             ServiceRequest.status == REQUEST_STATUS_COMPLETED,
         )
-
         if start_date:
             completed_requests_query = completed_requests_query.filter(
                 ServiceRequest.date_of_completion >= start_date
             )
-
         # Core statistics
         stats = {
             "total_requests": ServiceRequest.query.filter_by(
@@ -846,14 +841,21 @@ def get_professional_dashboard(current_user):
                 ServiceRequest.status == REQUEST_STATUS_ASSIGNED,
             ).count(),
             "average_rating": db.session.query(func.avg(Review.rating))
-            .join(ServiceRequest)
+            .select_from(Review)  # Explicitly define the starting point
+            .join(
+                ServiceRequest, ServiceRequest.id == Review.service_request_id
+            )  # Explicit ON clause
             .filter(ServiceRequest.professional_id == professional_id)
             .scalar()
             or 0.0,
-            "total_reviews": Review.query.join(ServiceRequest)
+            "total_reviews": Review.query.join(
+                ServiceRequest, ServiceRequest.id == Review.service_request_id
+            )  # Explicit ON clause
             .filter(ServiceRequest.professional_id == professional_id)
             .count(),
-            "reported_reviews": Review.query.join(ServiceRequest)
+            "reported_reviews": Review.query.join(
+                ServiceRequest, ServiceRequest.id == Review.service_request_id
+            )  # Explicit ON clause
             .filter(
                 ServiceRequest.professional_id == professional_id,
                 Review.is_reported == True,  # noqa: E712
@@ -865,7 +867,6 @@ def get_professional_dashboard(current_user):
             if current_user.professional_profile.is_verified
             else "Pending Verification",
         }
-
         # Add upcoming services (next 7 days)
         upcoming_services = (
             ServiceRequest.query.filter(
@@ -878,7 +879,6 @@ def get_professional_dashboard(current_user):
             .limit(5)
             .all()
         )
-
         stats["upcoming_services"] = [
             {
                 "id": req.id,
@@ -889,7 +889,6 @@ def get_professional_dashboard(current_user):
             }
             for req in upcoming_services
         ]
-
         # Add weekly trend data - requests completed per week
         weekly_trend = []
         if period == "all" or period == "90d":
@@ -898,73 +897,64 @@ def get_professional_dashboard(current_user):
         else:
             # For shorter periods, show daily data
             num_weeks = int(period[:-1]) // 7 or 1
-
         for i in range(num_weeks):
             end_date = today - timedelta(days=i * 7)
-            start_date = end_date - timedelta(days=7)
-
+            start_date_week = end_date - timedelta(days=7)
             completed_count = ServiceRequest.query.filter(
                 ServiceRequest.professional_id == professional_id,
                 ServiceRequest.status == REQUEST_STATUS_COMPLETED,
-                ServiceRequest.date_of_completion >= start_date,
+                ServiceRequest.date_of_completion >= start_date_week,
                 ServiceRequest.date_of_completion < end_date,
             ).count()
-
             weekly_trend.insert(
                 0,
                 {
-                    "period": start_date.strftime("%Y-%m-%d"),
+                    "period": start_date_week.strftime("%Y-%m-%d"),
                     "completed": completed_count,
                 },
             )
-
         stats["weekly_trend"] = weekly_trend
-
         # Add monthly rating trend
         monthly_ratings = []
         for i in range(3):  # Last 3 months
             end_date = today.replace(day=1) - timedelta(days=i * 30)
-            start_date = end_date - timedelta(days=30)
-
+            start_date_month = end_date - timedelta(days=30)
             avg_rating = (
                 db.session.query(func.avg(Review.rating))
-                .join(ServiceRequest)
+                .select_from(Review)  # Explicitly define the starting point
+                .join(
+                    ServiceRequest, ServiceRequest.id == Review.service_request_id
+                )  # Explicit ON clause
                 .filter(
                     ServiceRequest.professional_id == professional_id,
-                    Review.created_at >= start_date,
+                    Review.created_at >= start_date_month,
                     Review.created_at < end_date,
                 )
                 .scalar()
                 or 0
             )
-
             monthly_ratings.insert(
                 0,
                 {
-                    "month": start_date.strftime("%Y-%m"),
+                    "month": start_date_month.strftime("%Y-%m"),
                     "rating": round(float(avg_rating), 1),
                 },
             )
-
         stats["monthly_ratings"] = monthly_ratings
-
         # Add month-over-month comparison
         current_month_start = today.replace(day=1)
         prev_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
-
         current_month_requests = ServiceRequest.query.filter(
             ServiceRequest.professional_id == professional_id,
             ServiceRequest.status == REQUEST_STATUS_COMPLETED,
             ServiceRequest.date_of_completion >= current_month_start,
         ).count()
-
         prev_month_requests = ServiceRequest.query.filter(
             ServiceRequest.professional_id == professional_id,
             ServiceRequest.status == REQUEST_STATUS_COMPLETED,
             ServiceRequest.date_of_completion >= prev_month_start,
             ServiceRequest.date_of_completion < current_month_start,
         ).count()
-
         # Calculate month-over-month changes
         if prev_month_requests > 0:
             requests_change_percent = round(
@@ -974,14 +964,12 @@ def get_professional_dashboard(current_user):
             )
         else:
             requests_change_percent = 100 if current_month_requests > 0 else 0
-
         stats["monthly_comparison"] = {
             "current_month": current_month_start.strftime("%B %Y"),
             "current_month_requests": current_month_requests,
             "prev_month_requests": prev_month_requests,
             "change_percent": requests_change_percent,
         }
-
         # Get top 5 services by count
         if period != "all" and start_date:
             top_services_query = (
@@ -990,7 +978,10 @@ def get_professional_dashboard(current_user):
                     Service.name.label("service_name"),
                     func.count().label("count"),
                 )
-                .join(Service, ServiceRequest.service_id == Service.id)
+                .select_from(ServiceRequest)  # Explicitly define starting point
+                .join(
+                    Service, ServiceRequest.service_id == Service.id
+                )  # Explicit ON clause
                 .filter(
                     ServiceRequest.professional_id == professional_id,
                     ServiceRequest.status == REQUEST_STATUS_COMPLETED,
@@ -1000,12 +991,10 @@ def get_professional_dashboard(current_user):
                 .order_by(func.count().desc())
                 .limit(5)
             )
-
             stats["top_services"] = [
                 {"service_name": row.service_name, "count": row.count}
                 for row in top_services_query.all()
             ]
-
         # Add busiest days analysis
         if period != "all" and start_date:
             # Analyze busiest days of the week
@@ -1016,6 +1005,7 @@ def get_professional_dashboard(current_user):
                     ),
                     func.count().label("count"),
                 )
+                .select_from(ServiceRequest)  # Explicitly define starting point
                 .filter(
                     ServiceRequest.professional_id == professional_id,
                     ServiceRequest.status == REQUEST_STATUS_COMPLETED,
@@ -1024,7 +1014,6 @@ def get_professional_dashboard(current_user):
                 .group_by("day_of_week")
                 .order_by(func.count().desc())
             )
-
             day_names = [
                 "Monday",
                 "Tuesday",
@@ -1039,8 +1028,9 @@ def get_professional_dashboard(current_user):
                 # Adjust based on database's day numbering (some start at 0, some at 1)
                 day_index = int(row.day_of_week)
                 # Adjust for PostgreSQL's Sunday=0 or MySQL's Sunday=1
-                day_name = day_names[6] if day_index == 0 else day_names[day_index - 1]  # If Sunday is 0
-
+                day_name = (
+                    day_names[6] if day_index == 0 else day_names[day_index - 1]
+                )  # If Sunday is 0
                 busiest_days.append(
                     {
                         "day": day_name,
@@ -1053,7 +1043,6 @@ def get_professional_dashboard(current_user):
                         ),
                     }
                 )
-
             # Analyze busiest hours
             busiest_hours_query = (
                 db.session.query(
@@ -1062,6 +1051,7 @@ def get_professional_dashboard(current_user):
                     ),
                     func.count().label("count"),
                 )
+                .select_from(ServiceRequest)  # Explicitly define starting point
                 .filter(
                     ServiceRequest.professional_id == professional_id,
                     ServiceRequest.status == REQUEST_STATUS_COMPLETED,
@@ -1070,7 +1060,6 @@ def get_professional_dashboard(current_user):
                 .group_by("hour")
                 .order_by(func.count().desc())
             )
-
             busiest_hours = [
                 {
                     "hour": f"{int(row.hour)}:00 - {int(row.hour)}:59",
@@ -1084,43 +1073,58 @@ def get_professional_dashboard(current_user):
                 }
                 for row in busiest_hours_query.all()
             ]
-
             stats["activity_patterns"] = {
                 "busiest_days": busiest_days,
                 "busiest_hours": busiest_hours,
             }
-
         # Add customer satisfaction trends
         if period != "all" and start_date:
             # Get rating trends over time (grouped by week)
             rating_trends_query = (
                 db.session.query(
-                    func.date_trunc("week", Review.created_at).label("week"),
+                    func.strftime("%Y-%W", Review.created_at).label("week_str"),
                     func.avg(Review.rating).label("avg_rating"),
                     func.count().label("review_count"),
                 )
-                .join(ServiceRequest)
+                .select_from(Review)  # Explicitly define the starting point
+                .join(
+                    ServiceRequest, ServiceRequest.id == Review.service_request_id
+                )  # Explicit ON clause
                 .filter(
                     ServiceRequest.professional_id == professional_id,
                     Review.created_at >= start_date,
                 )
-                .group_by("week")
-                .order_by("week")
+                .group_by("week_str")
+                .order_by("week_str")
             )
-
-            rating_trends = [
-                {
-                    "period": row.week.strftime("%Y-%m-%d"),
-                    "average_rating": round(float(row.avg_rating), 1),
-                    "review_count": row.review_count,
-                }
-                for row in rating_trends_query.all()
-            ]
-
+            rating_trends = []
+            for row in rating_trends_query.all():
+                # Parse year and week from the string
+                try:
+                    year, week = map(int, row.week_str.split("-"))
+                    # Create a date object for the first day of the week
+                    # This is a simple approximation - Jan 1 + week_number*7
+                    date_obj = datetime.strptime(f"{year}-01-01", "%Y-%m-%d")
+                    delta_days = (week) * 7
+                    week_date = date_obj + timedelta(days=delta_days)
+                    period = week_date.strftime("%Y-%m-%d")
+                except (ValueError, AttributeError):
+                    # Fallback if parsing fails
+                    period = f"{row.week_str}"
+                rating_trends.append(
+                    {
+                        "period": period,
+                        "average_rating": round(float(row.avg_rating or 0), 1),
+                        "review_count": row.review_count,
+                    }
+                )
             # Get rating distribution (1-5 stars)
             rating_distribution_query = (
                 db.session.query(Review.rating, func.count().label("count"))
-                .join(ServiceRequest)
+                .select_from(Review)  # Explicitly define the starting point
+                .join(
+                    ServiceRequest, ServiceRequest.id == Review.service_request_id
+                )  # Explicit ON clause
                 .filter(
                     ServiceRequest.professional_id == professional_id,
                     Review.created_at >= start_date,
@@ -1128,7 +1132,6 @@ def get_professional_dashboard(current_user):
                 .group_by(Review.rating)
                 .order_by(Review.rating)
             )
-
             rating_distribution = [
                 {
                     "rating": row.rating,
@@ -1142,7 +1145,6 @@ def get_professional_dashboard(current_user):
                 }
                 for row in rating_distribution_query.all()
             ]
-
             # Ensure all ratings 1-5 are represented
             existing_ratings = {item["rating"] for item in rating_distribution}
             for rating in range(1, 6):
@@ -1150,14 +1152,15 @@ def get_professional_dashboard(current_user):
                     rating_distribution.append(
                         {"rating": rating, "count": 0, "percentage": 0}
                     )
-
             # Sort by rating
             rating_distribution.sort(key=lambda x: x["rating"])
-
             # Count positive vs negative reviews
             positive_reviews_count = (
                 db.session.query(func.count())
-                .join(ServiceRequest)
+                .select_from(Review)  # Explicitly define the starting point
+                .join(
+                    ServiceRequest, ServiceRequest.id == Review.service_request_id
+                )  # Explicit ON clause
                 .filter(
                     ServiceRequest.professional_id == professional_id,
                     Review.created_at >= start_date,
@@ -1166,10 +1169,12 @@ def get_professional_dashboard(current_user):
                 .scalar()
                 or 0
             )
-
             negative_reviews_count = (
                 db.session.query(func.count())
-                .join(ServiceRequest)
+                .select_from(Review)  # Explicitly define the starting point
+                .join(
+                    ServiceRequest, ServiceRequest.id == Review.service_request_id
+                )  # Explicit ON clause
                 .filter(
                     ServiceRequest.professional_id == professional_id,
                     Review.created_at >= start_date,
@@ -1178,7 +1183,6 @@ def get_professional_dashboard(current_user):
                 .scalar()
                 or 0
             )
-
             stats["satisfaction_analysis"] = {
                 "rating_trends": rating_trends,
                 "rating_distribution": rating_distribution,
@@ -1197,7 +1201,6 @@ def get_professional_dashboard(current_user):
                     1,
                 ),
             }
-
         return APIResponse.success(
             data=stats, message="Dashboard statistics retrieved successfully"
         )

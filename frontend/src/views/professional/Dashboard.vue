@@ -22,7 +22,6 @@
         </div>
       </div>
     </div>
-
     <!-- Loading State -->
     <div v-if="isLoading" class="row">
       <div class="col-12 text-center py-5">
@@ -32,7 +31,6 @@
         <p class="mt-3 text-muted">Loading dashboard data...</p>
       </div>
     </div>
-
     <template v-else>
       <!-- Key Metrics -->
       <div class="row g-4 mb-4">
@@ -46,11 +44,11 @@
                   <i class="bi bi-briefcase"></i>
                 </div>
               </div>
-              <h2 class="card-title mb-0">{{ dashboardData.total_requests || 0 }}</h2>
-              <div v-if="dashboardData.monthly_comparison" class="mt-2 small">
+              <h2 class="card-title mb-0">{{ localDashboardData.total_requests || 0 }}</h2>
+              <div v-if="localDashboardData.monthly_comparison" class="mt-2 small">
                 <span
                   :class="
-                    dashboardData.monthly_comparison.change_percent > 0
+                    localDashboardData.monthly_comparison.change_percent > 0
                       ? 'text-success'
                       : 'text-danger'
                   "
@@ -58,22 +56,21 @@
                   <i
                     class="bi"
                     :class="
-                      dashboardData.monthly_comparison.change_percent > 0
+                      localDashboardData.monthly_comparison.change_percent > 0
                         ? 'bi-arrow-up-right'
                         : 'bi-arrow-down-right'
                     "
                   >
                   </i>
-                  {{ Math.abs(dashboardData.monthly_comparison.change_percent).toFixed(1) }}%
+                  {{ Math.abs(localDashboardData.monthly_comparison.change_percent).toFixed(1) }}%
                 </span>
                 <span class="text-muted ms-1"
-                  >vs previous {{ dashboardData.monthly_comparison.current_month }}</span
+                  >vs previous {{ localDashboardData.monthly_comparison.current_month }}</span
                 >
               </div>
             </div>
           </div>
         </div>
-
         <!-- Completed Requests -->
         <div class="col-md-6 col-lg-3">
           <div class="card h-100 border-0 shadow-sm">
@@ -84,7 +81,7 @@
                   <i class="bi bi-check2-all"></i>
                 </div>
               </div>
-              <h2 class="card-title mb-0">{{ dashboardData.completed_requests || 0 }}</h2>
+              <h2 class="card-title mb-0">{{ localDashboardData.completed_requests || 0 }}</h2>
               <div class="mt-2 small">
                 <span class="badge bg-success-subtle text-success">
                   {{ getCompletionRate() }}% Completion Rate
@@ -93,7 +90,6 @@
             </div>
           </div>
         </div>
-
         <!-- Active Requests -->
         <div class="col-md-6 col-lg-3">
           <div class="card h-100 border-0 shadow-sm">
@@ -104,11 +100,11 @@
                   <i class="bi bi-hourglass-split"></i>
                 </div>
               </div>
-              <h2 class="card-title mb-0">{{ dashboardData.active_requests || 0 }}</h2>
+              <h2 class="card-title mb-0">{{ localDashboardData.active_requests || 0 }}</h2>
               <div class="mt-2 small">
                 <span
                   class="badge bg-warning-subtle text-warning"
-                  v-if="dashboardData.active_requests > 0"
+                  v-if="localDashboardData.active_requests > 0"
                 >
                   Ongoing Services
                 </span>
@@ -117,7 +113,6 @@
             </div>
           </div>
         </div>
-
         <!-- Average Rating -->
         <div class="col-md-6 col-lg-3">
           <div class="card h-100 border-0 shadow-sm">
@@ -129,24 +124,26 @@
                 </div>
               </div>
               <h2 class="card-title mb-0">
-                {{ dashboardData.average_rating?.toFixed(1) || 'N/A' }}
+                {{ localDashboardData.average_rating?.toFixed(1) || 'N/A' }}
               </h2>
               <div class="mt-2 small d-flex align-items-center">
-                <template v-if="dashboardData.average_rating">
+                <template v-if="localDashboardData.average_rating">
                   <div class="stars-container me-2">
                     <i
                       v-for="i in 5"
                       :key="i"
                       class="bi"
                       :class="
-                        i <= Math.round(dashboardData.average_rating)
+                        i <= Math.round(localDashboardData.average_rating)
                           ? 'bi-star-fill text-warning'
                           : 'bi-star text-muted'
                       "
                     >
                     </i>
                   </div>
-                  <span class="text-muted">{{ dashboardData.total_reviews || 0 }} reviews</span>
+                  <span class="text-muted"
+                    >{{ localDashboardData.total_reviews || 0 }} reviews</span
+                  >
                 </template>
                 <span v-else class="text-muted">No reviews yet</span>
               </div>
@@ -154,7 +151,6 @@
           </div>
         </div>
       </div>
-
       <!-- Charts and Tables Section -->
       <div class="row g-4 mb-4">
         <!-- Weekly Trend Chart -->
@@ -169,7 +165,6 @@
             </div>
           </div>
         </div>
-
         <!-- Monthly Ratings Chart -->
         <div class="col-lg-4">
           <div class="card border-0 shadow-sm h-100">
@@ -183,7 +178,6 @@
           </div>
         </div>
       </div>
-
       <!-- Activity Patterns and Satisfaction Analysis -->
       <div class="row g-4 mb-4">
         <!-- Activity Patterns -->
@@ -214,7 +208,6 @@
             </div>
           </div>
         </div>
-
         <!-- Rating Distribution -->
         <div class="col-lg-6">
           <div class="card border-0 shadow-sm h-100">
@@ -228,7 +221,6 @@
           </div>
         </div>
       </div>
-
       <!-- Upcoming Services -->
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-transparent border-0">
@@ -237,7 +229,10 @@
         </div>
         <div class="card-body p-0">
           <div
-            v-if="!dashboardData.upcoming_services || dashboardData.upcoming_services.length === 0"
+            v-if="
+              !localDashboardData.upcoming_services ||
+              localDashboardData.upcoming_services.length === 0
+            "
             class="text-center py-5"
           >
             <i class="bi bi-calendar2-check text-muted" style="font-size: 2rem"></i>
@@ -256,7 +251,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="service in dashboardData.upcoming_services" :key="service.id">
+                <tr v-for="service in localDashboardData.upcoming_services" :key="service.id">
                   <td>
                     <div class="d-flex align-items-center">
                       <div class="service-icon me-2">
@@ -277,7 +272,6 @@
           </div>
         </div>
       </div>
-
       <!-- Service Type Info and Verification Status -->
       <div class="row g-4">
         <div class="col-md-6">
@@ -291,7 +285,7 @@
                   </div>
                 </div>
                 <div class="flex-grow-1 ms-3">
-                  <h6 class="mb-0">{{ dashboardData.service_type || 'Not specified' }}</h6>
+                  <h6 class="mb-0">{{ localDashboardData.service_type || 'Not specified' }}</h6>
                   <p class="text-muted mb-0 small">Your service specialization</p>
                 </div>
               </div>
@@ -301,21 +295,21 @@
                   <span class="d-block fw-medium">Monthly Comparison</span>
                   <span class="text-muted small">vs Previous Month</span>
                 </div>
-                <div v-if="dashboardData.monthly_comparison" class="text-end">
+                <div v-if="localDashboardData.monthly_comparison" class="text-end">
                   <span
                     class="d-block fw-medium"
                     :class="
-                      dashboardData.monthly_comparison.change_percent > 0
+                      localDashboardData.monthly_comparison.change_percent > 0
                         ? 'text-success'
                         : 'text-danger'
                     "
                   >
-                    {{ dashboardData.monthly_comparison.change_percent > 0 ? '+' : ''
-                    }}{{ dashboardData.monthly_comparison.change_percent.toFixed(1) }}%
+                    {{ localDashboardData.monthly_comparison.change_percent > 0 ? '+' : ''
+                    }}{{ localDashboardData.monthly_comparison.change_percent.toFixed(1) }}%
                   </span>
                   <span class="text-muted small">
-                    {{ dashboardData.monthly_comparison.current_month_requests }} vs
-                    {{ dashboardData.monthly_comparison.prev_month_requests }}
+                    {{ localDashboardData.monthly_comparison.current_month_requests }} vs
+                    {{ localDashboardData.monthly_comparison.prev_month_requests }}
                   </span>
                 </div>
                 <div v-else class="text-end">
@@ -325,7 +319,6 @@
             </div>
           </div>
         </div>
-
         <div class="col-md-6">
           <div class="card border-0 shadow-sm">
             <div class="card-body">
@@ -338,28 +331,25 @@
                     </div>
                   </div>
                   <div class="flex-grow-1 ms-3">
-                    <h6 class="mb-0">{{ dashboardData.verification_status || 'Pending' }}</h6>
+                    <h6 class="mb-0">{{ localDashboardData.verification_status || 'Pending' }}</h6>
                     <p class="text-muted mb-0 small">{{ getVerificationMessage() }}</p>
                   </div>
                 </div>
-
                 <div
                   class="alert alert-info mt-3"
-                  v-if="dashboardData.verification_status === 'Pending'"
+                  v-if="localDashboardData.verification_status === 'Pending'"
                 >
                   <i class="bi bi-info-circle-fill me-2"></i>
                   Your verification is pending review. You'll receive a notification once it's
                   approved.
                 </div>
-
                 <div
                   class="alert alert-success mt-3"
-                  v-else-if="dashboardData.verification_status === 'Verified'"
+                  v-else-if="localDashboardData.verification_status === 'Verified'"
                 >
                   <i class="bi bi-check-circle-fill me-2"></i>
                   Your account is verified. You're all set to accept service requests.
                 </div>
-
                 <div class="alert alert-warning mt-3" v-else>
                   <i class="bi bi-exclamation-triangle-fill me-2"></i>
                   Please update your verification documents from your profile page.
@@ -372,7 +362,6 @@
     </template>
   </div>
 </template>
-
 <script>
 import { defineComponent, ref, reactive, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
@@ -391,7 +380,6 @@ import {
   Filler,
 } from 'chart.js'
 import { formatDateTime } from '@/utils/date'
-
 // Register the Chart.js components we need
 Chart.register(
   CategoryScale,
@@ -406,18 +394,15 @@ Chart.register(
   Legend,
   Filler,
 )
-
 export default defineComponent({
   name: 'ProfessionalDashboard',
   setup() {
     const store = useStore()
-
     // State
-    const dashboardData = ref({})
+    const localDashboardData = ref({})
     const isLoading = ref(true)
     const selectedPeriod = ref('30d')
     const showHourlyPattern = ref(false)
-
     // Chart instances
     const charts = reactive({
       weeklyTrend: null,
@@ -425,7 +410,6 @@ export default defineComponent({
       activityPatterns: null,
       ratingDistribution: null,
     })
-
     // Available time periods
     const periods = [
       { value: '7d', label: '7 Days' },
@@ -433,15 +417,18 @@ export default defineComponent({
       { value: '90d', label: '90 Days' },
       { value: 'all', label: 'All Time' },
     ]
-
     // Methods
     const fetchDashboardData = async () => {
       isLoading.value = true
-
       try {
         const params = { period: selectedPeriod.value }
         const response = await store.dispatch('professionals/getDashboard', { params })
-        dashboardData.value = response.data || {}
+        // Create a deep clone of the data to avoid Vuex state mutations
+        if (response && response.data) {
+          localDashboardData.value = JSON.parse(JSON.stringify(response.data || {}))
+        } else {
+          localDashboardData.value = {}
+        }
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
         window.showToast({
@@ -453,56 +440,48 @@ export default defineComponent({
         isLoading.value = false
       }
     }
-
     const changePeriod = (period) => {
       selectedPeriod.value = period
       fetchDashboardData()
     }
-
     const getCompletionRate = () => {
-      if (!dashboardData.value || !dashboardData.value.total_requests) return 0
+      if (!localDashboardData.value || !localDashboardData.value.total_requests) return 0
       return Math.round(
-        (dashboardData.value.completed_requests / dashboardData.value.total_requests) * 100,
+        (localDashboardData.value.completed_requests / localDashboardData.value.total_requests) *
+          100,
       )
     }
-
     const getVerificationStatusClass = () => {
-      const status = dashboardData.value?.verification_status
+      const status = localDashboardData.value?.verification_status
       if (status === 'Verified') return 'bg-success text-white'
       if (status === 'Pending') return 'bg-warning text-dark'
       return 'bg-danger text-white'
     }
-
     const getVerificationStatusIcon = () => {
-      const status = dashboardData.value?.verification_status
+      const status = localDashboardData.value?.verification_status
       if (status === 'Verified') return 'bi-check-lg'
       if (status === 'Pending') return 'bi-hourglass-split'
       return 'bi-x-lg'
     }
-
     const getVerificationMessage = () => {
-      const status = dashboardData.value?.verification_status
+      const status = localDashboardData.value?.verification_status
       if (status === 'Verified') return 'Your account is fully verified'
       if (status === 'Pending') return 'Awaiting admin verification'
       return 'Verification required'
     }
-
     const truncateText = (text, maxLength) => {
       if (!text) return ''
       return text.length > maxLength ? text.substring(0, maxLength) + '...' : text
     }
-
     // Chart rendering functions
     const renderWeeklyTrendChart = () => {
       const ctx = document.getElementById('weeklyTrendChart')
       if (!ctx) return
-
-      const weeklyData = dashboardData.value.weekly_trend || []
-
+      // Clone the data to avoid Vuex state mutations
+      const weeklyData = JSON.parse(JSON.stringify(localDashboardData.value.weekly_trend || []))
       if (charts.weeklyTrend) {
         charts.weeklyTrend.destroy()
       }
-
       charts.weeklyTrend = new Chart(ctx, {
         type: 'line',
         data: {
@@ -549,17 +528,14 @@ export default defineComponent({
         },
       })
     }
-
     const renderMonthlyRatingsChart = () => {
       const ctx = document.getElementById('monthlyRatingsChart')
       if (!ctx) return
-
-      const monthlyData = dashboardData.value.monthly_ratings || []
-
+      // Clone the data to avoid Vuex state mutations
+      const monthlyData = JSON.parse(JSON.stringify(localDashboardData.value.monthly_ratings || []))
       if (charts.monthlyRatings) {
         charts.monthlyRatings.destroy()
       }
-
       charts.monthlyRatings = new Chart(ctx, {
         type: 'line',
         data: {
@@ -608,21 +584,17 @@ export default defineComponent({
         },
       })
     }
-
     const renderActivityPatternsChart = () => {
       const ctx = document.getElementById('activityPatternsChart')
       if (!ctx) return
-
-      // Get either hourly or daily data based on user selection
-      const patterns = dashboardData.value.activity_patterns || {}
+      // Clone the data to avoid Vuex state mutations
+      const patterns = JSON.parse(JSON.stringify(localDashboardData.value.activity_patterns || {}))
       const data = showHourlyPattern.value
         ? patterns.busiest_hours || []
         : patterns.busiest_days || []
-
       if (charts.activityPatterns) {
         charts.activityPatterns.destroy()
       }
-
       charts.activityPatterns = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -671,13 +643,13 @@ export default defineComponent({
         },
       })
     }
-
     const renderRatingDistributionChart = () => {
       const ctx = document.getElementById('ratingDistributionChart')
       if (!ctx) return
-
-      // Prepare data - if no satisfaction_analysis, create dummy data
-      const satisfaction = dashboardData.value.satisfaction_analysis || {}
+      // Clone the data to avoid Vuex state mutations
+      const satisfaction = JSON.parse(
+        JSON.stringify(localDashboardData.value.satisfaction_analysis || {}),
+      )
       const distributionData = satisfaction.rating_distribution || [
         { rating: 5, count: 0, percentage: 0 },
         { rating: 4, count: 0, percentage: 0 },
@@ -685,14 +657,11 @@ export default defineComponent({
         { rating: 2, count: 0, percentage: 0 },
         { rating: 1, count: 0, percentage: 0 },
       ]
-
       // Sort by rating for consistent display
       distributionData.sort((a, b) => b.rating - a.rating)
-
       if (charts.ratingDistribution) {
         charts.ratingDistribution.destroy()
       }
-
       const colors = [
         'rgba(25, 135, 84, 0.7)', // 5 stars - green
         'rgba(13, 202, 240, 0.7)', // 4 stars - info
@@ -700,7 +669,6 @@ export default defineComponent({
         'rgba(255, 153, 0, 0.7)', // 2 stars - orange
         'rgba(220, 53, 69, 0.7)', // 1 star - red
       ]
-
       charts.ratingDistribution = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -752,7 +720,6 @@ export default defineComponent({
         },
       })
     }
-
     // Set up watchers
     watch(
       () => showHourlyPattern.value,
@@ -760,11 +727,9 @@ export default defineComponent({
         renderActivityPatternsChart()
       },
     )
-
     // Lifecycle hooks
     onMounted(async () => {
       await fetchDashboardData()
-
       // Give the DOM time to update before rendering charts
       setTimeout(() => {
         renderWeeklyTrendChart()
@@ -773,9 +738,8 @@ export default defineComponent({
         renderRatingDistributionChart()
       }, 100)
     })
-
     return {
-      dashboardData,
+      localDashboardData,
       isLoading,
       selectedPeriod,
       periods,
@@ -791,7 +755,6 @@ export default defineComponent({
   },
 })
 </script>
-
 <style scoped>
 .icon-box {
   width: 40px;
@@ -801,7 +764,6 @@ export default defineComponent({
   justify-content: center;
   font-size: 1.25rem;
 }
-
 .service-icon {
   width: 32px;
   height: 32px;
@@ -812,7 +774,6 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
 }
-
 .service-type-icon {
   width: 50px;
   height: 50px;
@@ -821,7 +782,6 @@ export default defineComponent({
   justify-content: center;
   font-size: 1.5rem;
 }
-
 .status-indicator {
   width: 40px;
   height: 40px;
@@ -830,23 +790,19 @@ export default defineComponent({
   justify-content: center;
   font-size: 1.25rem;
 }
-
 .stars-container {
   display: inline-flex;
   align-items: center;
 }
-
 .card {
   transition:
     transform 0.2s,
     box-shadow 0.2s;
 }
-
 .card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
 }
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .btn-group {
@@ -854,12 +810,10 @@ export default defineComponent({
     width: 100%;
     margin-top: 1rem;
   }
-
   .card-header {
     flex-direction: column;
     align-items: flex-start !important;
   }
-
   .form-switch {
     margin-top: 0.5rem;
   }
