@@ -388,9 +388,7 @@ def get_admin_dashboard(current_user):
             reported_reviews_query = (
                 db.session.query(Review)
                 .select_from(Review)
-                .filter(
-                    Review.is_reported == True  # noqa: E712
-                )
+                .filter(Review.is_reported == True)
             )
 
             if service_type_id or pin_code:
@@ -425,19 +423,15 @@ def get_admin_dashboard(current_user):
         today = datetime.now(timezone.utc)
         if period == "7d":
             start_date = today - timedelta(days=7)
-            period_name = "Last 7 days"
             prev_start_date = start_date - timedelta(days=7)  # Previous 7 days
         elif period == "30d":
             start_date = today - timedelta(days=30)
-            period_name = "Last 30 days"
             prev_start_date = start_date - timedelta(days=30)  # Previous 30 days
         elif period == "90d":
             start_date = today - timedelta(days=90)
-            period_name = "Last 90 days"
             prev_start_date = start_date - timedelta(days=90)  # Previous 90 days
         else:  # "all" - no date filtering
             start_date = None
-            period_name = "All time"
             prev_start_date = None
 
         # Base query filters for service requests
@@ -449,29 +443,24 @@ def get_admin_dashboard(current_user):
         user_filters = []
         if pin_code:
             user_filters.append(User.pin_code == pin_code)
-
-        # Core statistics
         stats = {
-            "period": period_name,
             # User statistics
             "total_users": User.query.filter(*user_filters).count(),
             "active_users": User.query.filter(
-                User.is_active is True,
-                *user_filters,  # noqa: E712
+                User.is_active == True,
+                *user_filters,
             ).count(),
             "customer_count": User.query.filter(
                 User.role == "customer",
-                User.is_active is True,
-                *user_filters,  # noqa: E712
+                User.is_active == True,
+                *user_filters,
             ).count(),
             "professional_count": User.query.filter(
                 User.role == "professional",
-                User.is_active is True,
-                *user_filters,  # noqa: E712
+                User.is_active == True,
+                *user_filters,
             ).count(),
-            # Service statistics
-            "total_services": Service.query.count(),
-            "active_services": Service.query.filter_by(is_active=True).count(),
+            # ...
         }
 
         # Request statistics with filters
@@ -520,7 +509,7 @@ def get_admin_dashboard(current_user):
         if pin_code:
             prof_query = prof_query.join(User).filter(User.pin_code == pin_code)
         stats["pending_verifications"] = prof_query.filter(
-            ProfessionalProfile.is_verified == False  # noqa: E712
+            ProfessionalProfile.is_verified == False
         ).count()
 
         # Review statistics - Fixed query with explicit joins
@@ -553,8 +542,8 @@ def get_admin_dashboard(current_user):
 
         # Count reported reviews - create a new query with the same filters
         reported_reviews_count = review_base_query.filter(
-            Review.is_reported is True
-        ).count()  # noqa: E712
+            Review.is_reported == True
+        ).count()
 
         # Get average rating - need to create a new query to get average
         avg_rating_query = db.session.query(func.avg(Review.rating)).select_from(
@@ -809,8 +798,8 @@ def get_admin_dashboard(current_user):
         pending_verifications_query = (
             ProfessionalProfile.query.join(User)
             .filter(
-                ProfessionalProfile.is_verified == False,  # noqa: E712
-                User.is_active == True,  # noqa: E712
+                ProfessionalProfile.is_verified == False,
+                User.is_active == True,
             )
             .order_by(ProfessionalProfile.created_at.asc())
         )

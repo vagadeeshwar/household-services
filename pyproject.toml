@@ -46,6 +46,7 @@ ignore = [
     "SIM102", # Use a single if statement instead of nested if statements
     "SIM117", # Use multiple context managers in a single with statement
     "SIM118", # Use 'key in dict' instead of 'key in dict.keys()'
+    "E712", # Comparison to True should be 'if cond is True:' or 'if cond:'
 ]
 
 # Exclude a variety of commonly ignored directories.

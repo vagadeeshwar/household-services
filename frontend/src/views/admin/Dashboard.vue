@@ -77,39 +77,6 @@
           </div>
         </div>
 
-        <!-- Service Stats Card -->
-        <div class="col-xl-3 col-md-6">
-          <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body">
-              <div class="d-flex align-items-center justify-content-between mb-3">
-                <h6 class="text-muted fw-normal mb-0">Services</h6>
-                <div class="icon-box bg-info-subtle text-info rounded-3">
-                  <i class="bi bi-tools"></i>
-                </div>
-              </div>
-              <h2 class="mb-0">{{ dashboardData.total_services || 0 }}</h2>
-              <div class="d-flex align-items-center mt-2">
-                <div class="flex-fill">
-                  <span class="badge bg-info-subtle text-info me-1">
-                    {{ dashboardData.active_services || 0 }} Active
-                  </span>
-                  <span class="badge bg-secondary-subtle text-secondary">
-                    {{ (dashboardData.total_services || 0) - (dashboardData.active_services || 0) }}
-                    Inactive
-                  </span>
-                </div>
-                <div class="rate-indicator text-info">
-                  <i class="bi bi-graph-up me-1 small"></i>
-                  <span class="small"
-                    >{{ dashboardData.service_fulfillment_rate?.toFixed(1) || 0 }}%
-                    Fulfillment</span
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Request Stats Card -->
         <div class="col-xl-3 col-md-6">
           <div class="card h-100 border-0 shadow-sm">
@@ -222,35 +189,6 @@
         </div>
       </div>
 
-      <!-- Second Charts Row -->
-      <div class="row g-4 mb-4">
-        <!-- Weekly Registration Trend -->
-        <div class="col-lg-6">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0">
-              <h5 class="card-title mb-0">New Registrations</h5>
-              <p class="text-muted small mb-0">Weekly trend of new user registrations</p>
-            </div>
-            <div class="card-body">
-              <canvas id="registrationTrendChart" height="260"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <!-- Service Utilization by Day -->
-        <div class="col-lg-6">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0">
-              <h5 class="card-title mb-0">Daily Service Utilization</h5>
-              <p class="text-muted small mb-0">Service requests by day of week</p>
-            </div>
-            <div class="card-body">
-              <canvas id="serviceUtilizationChart" height="260"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Data Tables Row -->
       <div class="row g-4 mb-4">
         <!-- Recent Requests Table -->
@@ -309,75 +247,7 @@
                           {{ getStatusLabel(request.status) }}
                         </span>
                       </td>
-                      <td>{{ formatDate(request.request_date) }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Most Active Professionals Table -->
-        <div class="col-xl-6">
-          <div class="card border-0 shadow-sm h-100">
-            <div
-              class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center"
-            >
-              <div>
-                <h5 class="card-title mb-0">Top Professionals</h5>
-                <p class="text-muted small mb-0">Most active service providers</p>
-              </div>
-              <router-link to="/admin/professionals" class="btn btn-sm btn-outline-primary">
-                View All
-              </router-link>
-            </div>
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                  <thead class="table-light">
-                    <tr>
-                      <th scope="col">Professional</th>
-                      <th scope="col">Service</th>
-                      <th scope="col">Completed</th>
-                      <th scope="col">Rating</th>
-                      <th scope="col">Earnings</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-if="
-                        !dashboardData.most_active_professionals ||
-                        dashboardData.most_active_professionals.length === 0
-                      "
-                    >
-                      <td colspan="5" class="text-center py-3">No data available</td>
-                    </tr>
-                    <tr
-                      v-for="pro in dashboardData.most_active_professionals?.slice(0, 5)"
-                      :key="pro.id"
-                      class="align-middle"
-                    >
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="avatar me-2 bg-light rounded-circle">
-                            <i class="bi bi-person-fill"></i>
-                          </div>
-                          <div>
-                            <div class="fw-medium">{{ pro.name }}</div>
-                            <small class="text-muted">ID: {{ pro.id }}</small>
-                          </div>
-                        </div>
-                      </td>
-                      <td>{{ pro.service_type }}</td>
-                      <td>{{ pro.completed_count }}</td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <i class="bi bi-star-fill text-warning me-1"></i>
-                          <span>{{ pro.average_rating?.toFixed(1) || 'N/A' }}</span>
-                        </div>
-                      </td>
-                      <td>₹{{ formatCurrency(pro.earnings) }}</td>
+                      <td>{{ formatDate(request.date_of_request) }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -416,10 +286,6 @@
                     <div class="service-rank me-3">{{ index + 1 }}</div>
                     <div class="flex-grow-1">
                       <h6 class="mb-0">{{ service.name }}</h6>
-                      <small class="text-muted"
-                        >₹{{ formatCurrency(service.base_price) }} •
-                        {{ service.estimated_time }} min</small
-                      >
                     </div>
                     <div class="text-end">
                       <div class="fw-bold">{{ service.request_count }}</div>
@@ -465,30 +331,6 @@
                     </div>
                     <router-link
                       to="/admin/professionals?verified=false"
-                      class="btn btn-sm btn-outline-primary"
-                    >
-                      Review
-                    </router-link>
-                  </div>
-                </div>
-
-                <!-- Reported Reviews -->
-                <div class="list-group-item d-flex justify-content-between align-items-center p-3">
-                  <div class="d-flex align-items-center">
-                    <div class="task-icon bg-danger-subtle text-danger me-3">
-                      <i class="bi bi-flag"></i>
-                    </div>
-                    <div>
-                      <h6 class="mb-0">Reported Reviews</h6>
-                      <p class="text-muted small mb-0">Reviews flagged by professionals</p>
-                    </div>
-                  </div>
-                  <div class="d-flex align-items-center">
-                    <div class="badge bg-danger text-white me-3">
-                      {{ dashboardData.reported_reviews || 0 }}
-                    </div>
-                    <router-link
-                      to="/admin/reviews?reported=true"
                       class="btn btn-sm btn-outline-primary"
                     >
                       Review
