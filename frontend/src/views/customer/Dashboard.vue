@@ -140,9 +140,7 @@
                   "
                 >
                   <i class="bi bi-bar-chart-line"></i>
-                  {{
-                    Math.abs(dashboardData.monthly_comparison.current_month_spending).toFixed(0)
-                  }}
+                  {{ Math.abs(dashboardData.monthly_comparison.current_month_spending).toFixed(0) }}
                   this month
                 </span>
               </div>
@@ -413,7 +411,7 @@ import {
   Tooltip,
   Legend,
   Filler,
-  DoughnutController
+  DoughnutController,
 } from 'chart.js'
 import { formatDate, formatDateTime } from '@/utils/date'
 import { requestStatusBadges, statusLabels } from '@/assets/requestStatuses'
