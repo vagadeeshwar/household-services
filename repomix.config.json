@@ -24,8 +24,7 @@
 
       "requirements.txt",
       "frontend",
-      ".flaskenv",
-      "src/setup_db.py"
+      ".flaskenv"
     ]
   }
 }

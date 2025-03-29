@@ -29,4 +29,10 @@ export default [
     component: () => import('@/views/customer/Profile.vue'),
     meta: { title: 'My Profile' },
   },
+  {
+    path: 'payment',
+    name: 'Payment',
+    component: () => import('@/views/customer/Payment.vue'),
+    meta: { title: 'Payment' },
+  },
 ]

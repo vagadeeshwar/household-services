@@ -221,57 +221,7 @@
           </div>
         </div>
       </div>
-      <!-- Upcoming Services -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-transparent border-0">
-          <h5 class="card-title mb-0">Upcoming Services</h5>
-          <p class="card-text text-muted small">Your schedule for the next few days</p>
-        </div>
-        <div class="card-body p-0">
-          <div
-            v-if="
-              !localDashboardData.upcoming_services ||
-              localDashboardData.upcoming_services.length === 0
-            "
-            class="text-center py-5"
-          >
-            <i class="bi bi-calendar2-check text-muted" style="font-size: 2rem"></i>
-            <p class="mt-3 mb-0">No upcoming services scheduled</p>
-            <p class="text-muted small">Check the request page to accept new service requests</p>
-          </div>
-          <div v-else class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th>Service</th>
-                  <th>Customer</th>
-                  <th>Time</th>
-                  <th>Address</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="service in localDashboardData.upcoming_services" :key="service.id">
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <div class="service-icon me-2">
-                        <i class="bi bi-tools"></i>
-                      </div>
-                      <div>{{ service.service_name }}</div>
-                    </div>
-                  </td>
-                  <td>{{ service.customer_name }}</td>
-                  <td>{{ formatDateTime(service.preferred_time) }}</td>
-                  <td>{{ truncateText(service.address, 30) }}</td>
-                  <td>
-                    <span class="badge bg-primary">Scheduled</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+
       <!-- Service Type Info and Verification Status -->
       <div class="row g-4">
         <div class="col-md-6">

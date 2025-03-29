@@ -623,7 +623,7 @@ import * as bootstrap from 'bootstrap'
 import { requestStatusBadges, statusLabels } from '@/assets/requestStatuses'
 import { formatDate, formatDateTime, formatTime } from '@/utils/date'
 import { useLoading } from '@/composables/useLoading'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 export default defineComponent({
   name: 'CustomerRequests',
@@ -651,6 +651,8 @@ export default defineComponent({
     const selectedRequest = ref(null)
     const isProcessing = ref(false)
     const isSubmittingReview = ref(false)
+
+    const router = useRouter()
 
     // Form data
     const review = ref({
@@ -780,11 +782,9 @@ export default defineComponent({
       completionRemarks.value = ''
       bsCompleteModal.show()
     }
-
     const completeRequest = async () => {
       try {
         isProcessing.value = true
-
         await store.dispatch('requests/completeRequest', {
           id: selectedRequest.value.id,
           data: {
@@ -804,8 +804,17 @@ export default defineComponent({
           title: 'Request marked as completed',
         })
 
-        // Refresh requests
-        await fetchRequests(true)
+        // Redirect to payment page with request details
+        router.push({
+          path: '/customer/payment',
+          query: {
+            request_id: selectedRequest.value.id,
+            service_name: selectedRequest.value.service_name,
+            service_price: selectedRequest.value.service_price,
+            professional_name: selectedRequest.value.professional?.full_name || '',
+            date_completed: new Date().toISOString(),
+          },
+        })
       } catch (error) {
         console.error('Error completing request:', error)
         window.showToast({

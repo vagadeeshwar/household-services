@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 
+from dateutil.relativedelta import relativedelta
 from flask import Blueprint, current_app, request, send_from_directory
 from marshmallow import ValidationError
 from sqlalchemy import func
@@ -867,28 +868,7 @@ def get_professional_dashboard(current_user):
             if current_user.professional_profile.is_verified
             else "Pending Verification",
         }
-        # Add upcoming services (next 7 days)
-        upcoming_services = (
-            ServiceRequest.query.filter(
-                ServiceRequest.professional_id == professional_id,
-                ServiceRequest.status == REQUEST_STATUS_ASSIGNED,
-                ServiceRequest.preferred_time >= today,
-                ServiceRequest.preferred_time <= today + timedelta(days=7),
-            )
-            .order_by(ServiceRequest.preferred_time)
-            .limit(5)
-            .all()
-        )
-        stats["upcoming_services"] = [
-            {
-                "id": req.id,
-                "service_name": req.service.name,
-                "customer_name": req.customer.user.full_name,
-                "preferred_time": req.preferred_time.strftime("%Y-%m-%d %H:%M"),
-                "address": req.customer.user.address,
-            }
-            for req in upcoming_services
-        ]
+
         # Add weekly trend data - requests completed per week
         weekly_trend = []
         if period == "all" or period == "90d":
@@ -914,11 +894,13 @@ def get_professional_dashboard(current_user):
                 },
             )
         stats["weekly_trend"] = weekly_trend
+
         # Add monthly rating trend
         monthly_ratings = []
         for i in range(3):  # Last 3 months
-            end_date = today.replace(day=1) - timedelta(days=i * 30)
-            start_date_month = end_date - timedelta(days=30)
+            end_date = today.replace(day=1) - relativedelta(months=i - 1)
+            start_date_month = end_date - relativedelta(months=1)
+
             avg_rating = (
                 db.session.query(func.avg(Review.rating))
                 .select_from(Review)  # Explicitly define the starting point
@@ -933,14 +915,18 @@ def get_professional_dashboard(current_user):
                 .scalar()
                 or 0
             )
+
+            month_label = start_date_month.strftime("%B %Y")  # e.g., "February 2025"
+
             monthly_ratings.insert(
                 0,
                 {
-                    "month": start_date_month.strftime("%Y-%m"),
+                    "month": month_label,
                     "rating": round(float(avg_rating), 1),
                 },
             )
         stats["monthly_ratings"] = monthly_ratings
+
         # Add month-over-month comparison
         current_month_start = today.replace(day=1)
         prev_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
