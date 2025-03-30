@@ -145,6 +145,16 @@
                       <i class="bi bi-x-circle"></i>
                     </button>
 
+                    <!-- Edit Request (only for "created" status) -->
+                    <button
+                      v-if="request.status === 'created'"
+                      class="btn btn-sm btn-outline-primary"
+                      @click="openEditModal(request)"
+                      title="Edit request"
+                    >
+                      <i class="bi bi-pencil"></i>
+                    </button>
+
                     <!-- Complete Request (only for "assigned" status) -->
                     <button
                       v-if="request.status === 'assigned'"
@@ -314,7 +324,7 @@
                     <div class="mb-3">
                       <label class="form-label text-muted small">Preferred Time</label>
                       <div class="fw-medium">
-                        {{ formatTime(selectedRequest.preferred_time) }}
+                        {{ formatLocalDateTime(selectedRequest.preferred_time) }}
                       </div>
                     </div>
 
@@ -610,6 +620,101 @@
               {{ isProcessing ? 'Processing...' : 'Yes, Cancel Request' }}
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Request Modal -->
+  <div
+    class="modal fade"
+    id="editRequestModal"
+    tabindex="-1"
+    aria-labelledby="editRequestModalLabel"
+    aria-hidden="true"
+    ref="editModal"
+  >
+    <div class="modal-dialog">
+      <div class="modal-content" v-if="selectedRequest">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editRequestModalLabel">
+            <i class="bi bi-pencil-square me-2"></i>Edit Service Request
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <form @submit.prevent="submitEditRequest" id="editForm">
+            <div class="mb-4">
+              <div class="card bg-light border-0">
+                <div class="card-body py-2">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                      <i class="bi bi-tools fs-4 text-primary"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="mb-0">{{ selectedRequest.service_name }}</h6>
+                      <div class="small text-muted d-flex align-items-center mt-1">
+                        <span class="me-3">
+                          <i class="bi bi-currency-rupee me-1"></i
+                          >{{ selectedRequest.service_price }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="editServiceDate" class="form-label">
+                Preferred Date & Time<span class="text-danger">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                id="editServiceDate"
+                class="form-control"
+                v-model="editForm.preferred_time"
+                :class="{ 'is-invalid': editErrors.preferred_time }"
+                required
+                :min="minDateTime"
+                :max="maxDateTime"
+              />
+              <div class="invalid-feedback">
+                {{ editErrors.preferred_time }}
+              </div>
+              <div class="form-text">
+                Select a date and time within the next 7 days (9 AM to 6 PM)
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="editServiceDescription" class="form-label">
+                Description<span class="text-danger">*</span>
+              </label>
+              <textarea
+                id="editServiceDescription"
+                class="form-control"
+                rows="3"
+                placeholder="Please describe your specific requirements"
+                v-model="editForm.description"
+                :class="{ 'is-invalid': editErrors.description }"
+                required
+              ></textarea>
+              <div class="invalid-feedback">
+                {{ editErrors.description }}
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" form="editForm" class="btn btn-primary" :disabled="isProcessing">
+            <span v-if="isProcessing" class="spinner-border spinner-border-sm me-2"></span>
+            {{ isProcessing ? 'Updating...' : 'Update Request' }}
+          </button>
         </div>
       </div>
     </div>
@@ -912,6 +1017,177 @@ export default defineComponent({
       fetchRequests(true)
     }
 
+    const editModal = ref(null)
+    let bsEditModal = null
+
+    // Add to your state variables
+    const editForm = ref({
+      preferred_time: '',
+      description: '',
+      service_id: null,
+    })
+
+    const editErrors = ref({
+      preferred_time: '',
+      description: '',
+    })
+
+    // Add these computed properties
+    const minDateTime = computed(() => {
+      const now = new Date()
+      // Set to next working hour (9AM - 6PM)
+      const hour = now.getHours()
+      if (hour < 9) {
+        now.setHours(9, 0, 0, 0)
+      } else if (hour >= 18) {
+        // If it's after 6PM, set to 9AM the next day
+        now.setDate(now.getDate() + 1)
+        now.setHours(9, 0, 0, 0)
+      } else {
+        // Round to next hour
+        now.setHours(hour + 1, 0, 0, 0)
+      }
+      return now.toISOString().slice(0, 16)
+    })
+
+    const formatLocalDateTime = (dateString) => {
+      if (!dateString) return 'N/A'
+
+      // Creates a date object directly interpreting the string in local timezone
+      // This matches how the edit modal handles it
+      const date = new Date(dateString)
+
+      // Format options for a nice readable date and time
+      const options = {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }
+
+      return new Intl.DateTimeFormat('en-US', options).format(date)
+    }
+
+    const maxDateTime = computed(() => {
+      const max = new Date()
+      max.setDate(max.getDate() + 7)
+      max.setHours(18, 0, 0, 0)
+      return max.toISOString().slice(0, 16)
+    })
+    const openEditModal = (request) => {
+      selectedRequest.value = request
+
+      // Fix for preferred_time
+      let preferredTimeValue = ''
+      if (request.preferred_time) {
+        // Parse the date in local timezone and format it for datetime-local input
+        const date = new Date(request.preferred_time)
+        // Format to YYYY-MM-DDThh:mm (format required by datetime-local input)
+        preferredTimeValue = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+      }
+
+      // Reset form and pre-fill with current values
+      editForm.value = {
+        preferred_time: preferredTimeValue,
+        description: request.description || '',
+        service_id: request.service_id,
+      }
+
+      // Clear validation errors
+      editErrors.value = {
+        preferred_time: '',
+        description: '',
+      }
+      bsEditModal.show()
+    }
+
+    const validateEditForm = () => {
+      let isValid = true
+      // Reset validation errors
+      editErrors.value = {
+        preferred_time: '',
+        description: '',
+      }
+
+      // Preferred time validation
+      if (!editForm.value.preferred_time) {
+        editErrors.value.preferred_time = 'Please select a preferred date and time'
+        isValid = false
+      } else {
+        const selectedTime = new Date(editForm.value.preferred_time)
+        const now = new Date()
+        const maxDate = new Date()
+        maxDate.setDate(now.getDate() + 7)
+
+        if (selectedTime < now) {
+          editErrors.value.preferred_time = 'Please select a future date and time'
+          isValid = false
+        } else if (selectedTime > maxDate) {
+          editErrors.value.preferred_time = 'Please select a date within the next 7 days'
+          isValid = false
+        }
+
+        // Check if within business hours (9 AM to 6 PM)
+        const hours = selectedTime.getHours()
+        if (hours < 9 || hours >= 18) {
+          editErrors.value.preferred_time = 'Please select a time between 9 AM and 6 PM'
+          isValid = false
+        }
+      }
+
+      // Description validation
+      if (!editForm.value.description.trim()) {
+        editErrors.value.description = 'Please provide a description'
+        isValid = false
+      } else if (editForm.value.description.length < 10) {
+        editErrors.value.description = 'Description is too short (minimum 10 characters)'
+        isValid = false
+      } else if (editForm.value.description.length > 1000) {
+        editErrors.value.description = 'Description is too long (maximum 1000 characters)'
+        isValid = false
+      }
+
+      return isValid
+    }
+
+    const submitEditRequest = async () => {
+      if (!validateEditForm()) return
+
+      isProcessing.value = true
+      try {
+        await store.dispatch('requests/updateRequest', {
+          id: selectedRequest.value.id,
+          data: {
+            service_id: selectedRequest.value.service_id,
+            preferred_time: editForm.value.preferred_time,
+            description: editForm.value.description,
+          },
+        })
+
+        // Close modal
+        bsEditModal.hide()
+
+        // Show success toast
+        window.showToast({
+          type: 'success',
+          title: 'Request updated successfully',
+        })
+
+        // Refresh requests to show updated data
+        await fetchRequests(true)
+      } catch (error) {
+        console.error('Error updating request:', error)
+        window.showToast({
+          type: 'danger',
+          title: error.response?.data?.detail || 'Failed to update request',
+        })
+      } finally {
+        isProcessing.value = false
+      }
+    }
+
     // Lifecycle hooks
     onMounted(async () => {
       // Initialize Bootstrap modals
@@ -929,6 +1205,10 @@ export default defineComponent({
 
       if (cancelModal.value) {
         bsCancelModal = new bootstrap.Modal(cancelModal.value)
+      }
+
+      if (editModal.value) {
+        bsEditModal = new bootstrap.Modal(editModal.value)
       }
 
       // Fetch initial data
@@ -975,6 +1255,15 @@ export default defineComponent({
       formatDateTime,
       formatTime,
       checkQueryParams,
+      editModal,
+      editForm,
+      editErrors,
+      minDateTime,
+      maxDateTime,
+      openEditModal,
+      validateEditForm,
+      submitEditRequest,
+      formatLocalDateTime,
     }
   },
 })

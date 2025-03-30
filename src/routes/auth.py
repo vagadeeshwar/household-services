@@ -17,6 +17,7 @@ from src.schemas.auth import (
     token_schema,
 )
 from src.utils.auth import APIResponse, generate_token
+from src.utils.cache import cache_invalidate
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -57,6 +58,7 @@ def login():
         )
         db.session.add(log)
         db.session.commit()
+        cache_invalidate()
 
         token = generate_token(user.id, user.role)
         return APIResponse.success(

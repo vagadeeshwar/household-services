@@ -162,10 +162,10 @@ const actions = {
     }
   },
 
-  async updateRequest({ commit }, { id, params }) {
+  async updateRequest({ commit }, { id, data }) {
     try {
       commit('SET_LOADING', true)
-      const response = await request.update(id, params)
+      const response = await request.update(id, data)
       return response
     } catch (error) {
       commit('SET_ERROR', error.message)

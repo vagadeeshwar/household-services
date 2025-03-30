@@ -337,7 +337,7 @@
                     <div class="mb-3">
                       <label class="form-label text-muted small">Preferred Time</label>
                       <div class="fw-medium">
-                        {{ formatTime(selectedRequest.preferred_time) }}
+                        {{ formatLocalDateTime(selectedRequest.preferred_time) }}
                       </div>
                     </div>
                     <div class="mb-3" v-if="selectedRequest.description">
@@ -498,7 +498,7 @@
                 </div>
                 <div class="mb-2">
                   <strong>Preferred Time:</strong>
-                  {{ formatDateTime(selectedRequest.preferred_time) }}
+                  {{ formatLocalDateTime(selectedRequest.preferred_time) }}
                 </div>
                 <div v-if="selectedRequest.description">
                   <strong>Description:</strong> {{ selectedRequest.description }}
@@ -752,6 +752,26 @@ export default defineComponent({
           title: error.response?.data?.detail || 'Failed to load requests',
         })
       }
+    }
+
+    const formatLocalDateTime = (dateString) => {
+      if (!dateString) return 'N/A'
+
+      // Creates a date object directly interpreting the string in local timezone
+      // This matches how the edit modal handles it
+      const date = new Date(dateString)
+
+      // Format options for a nice readable date and time
+      const options = {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }
+
+      return new Intl.DateTimeFormat('en-US', options).format(date)
     }
 
     const updateRequestCounts = (data) => {
@@ -1047,6 +1067,7 @@ export default defineComponent({
       formatDate,
       formatDateTime,
       formatTime,
+      formatLocalDateTime
     }
   },
 })

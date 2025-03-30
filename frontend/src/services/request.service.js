@@ -48,8 +48,8 @@ class Request {
     return response.data
   }
 
-  async update(id, params = {}) {
-    const response = await api.put(`requests/${id}`, params)
+  async update(id, data) {
+    const response = await api.put(`requests/${id}`, data)
     return response.data
   }
 }
