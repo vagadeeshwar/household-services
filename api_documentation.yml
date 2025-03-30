@@ -1,0 +1,2784 @@
+openapi: 3.0.3
+info:
+  title: Household Services API
+  description: API documentation for the Household Services platform. This platform connects customers with service professionals for various household services.
+  version: 1.1.0
+  contact:
+    email: support@householdservices.com
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://api.householdservices.com
+    description: Production server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    # Base schemas
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of items
+        pages:
+          type: integer
+          description: Total number of pages
+        current_page:
+          type: integer
+          description: Current page number
+        per_page:
+          type: integer
+          description: Number of items per page
+        has_next:
+          type: boolean
+          description: Whether there is a next page
+        has_prev:
+          type: boolean
+          description: Whether there is a previous page
+    
+    ApiResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, failure]
+        status_code:
+          type: integer
+        detail:
+          type: string
+        data:
+          type: object
+          description: Response data
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        error_type:
+          type: string
+          description: Type of error
+    
+    # Authentication schemas
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT token
+    
+    # User schemas
+    BaseUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        full_name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        pin_code:
+          type: string
+        role:
+          type: string
+          enum: [admin, professional, customer]
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        last_login:
+          type: string
+          format: date-time
+    
+    CustomerProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseUser'
+        - type: object
+          properties:
+            customer_id:
+              type: integer
+    
+    ProfessionalProfile:
+      allOf:
+        - $ref: '#/components/schemas/BaseUser'
+        - type: object
+          properties:
+            professional_id:
+              type: integer
+            service_type_id:
+              type: integer
+            experience_years:
+              type: integer
+            description:
+              type: string
+            is_verified:
+              type: boolean
+            average_rating:
+              type: number
+              format: float
+            verification_documents:
+              type: string
+    
+    CustomerRegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+        - full_name
+        - phone
+        - address
+        - pin_code
+      properties:
+        username:
+          type: string
+          minLength: 4
+          maxLength: 20
+          pattern: "^[a-zA-Z0-9_.-]+$"
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          description: At least 8 characters with uppercase, lowercase, number and special character
+        full_name:
+          type: string
+          minLength: 4
+          maxLength: 100
+        phone:
+          type: string
+          pattern: "^[1-9]\\d{9}$"
+          description: 10 digits, not starting with 0
+        address:
+          type: string
+          minLength: 5
+          maxLength: 200
+        pin_code:
+          type: string
+          pattern: "^[1-9][0-9]{5}$"
+          description: 6-digit PIN code
+    
+    ProfessionalRegisterRequest:
+      allOf:
+        - $ref: '#/components/schemas/CustomerRegisterRequest'
+        - type: object
+          required:
+            - service_type_id
+            - experience_years
+            - description
+          properties:
+            service_type_id:
+              type: integer
+            experience_years:
+              type: integer
+              minimum: 0
+              maximum: 50
+            description:
+              type: string
+              minLength: 10
+              maxLength: 1000
+    
+    ProfileUpdateRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+          minLength: 4
+          maxLength: 100
+        phone:
+          type: string
+          pattern: "^[1-9]\\d{9}$"
+        address:
+          type: string
+          minLength: 5
+          maxLength: 200
+        pin_code:
+          type: string
+          pattern: "^[1-9][0-9]{5}$"
+        description:
+          type: string
+          minLength: 10
+          maxLength: 1000
+    
+    PasswordUpdateRequest:
+      type: object
+      required:
+        - old_password
+        - new_password
+      properties:
+        old_password:
+          type: string
+        new_password:
+          type: string
+          description: At least 8 characters with uppercase, lowercase, number and special character
+    
+    DeleteAccountRequest:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+    
+    BlockUserRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+    
+    # Service schemas
+    Service:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        base_price:
+          type: number
+          format: float
+        estimated_time:
+          type: integer
+          description: Estimated time in minutes
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    ServiceInputRequest:
+      type: object
+      required:
+        - name
+        - description
+        - base_price
+        - estimated_time
+      properties:
+        name:
+          type: string
+          minLength: 4
+          maxLength: 100
+        description:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        base_price:
+          type: number
+          format: float
+          minimum: 0
+        estimated_time:
+          type: integer
+          minimum: 1
+          description: Estimated time in minutes
+    
+    ServiceUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 4
+          maxLength: 100
+        description:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        base_price:
+          type: number
+          format: float
+          minimum: 0
+        estimated_time:
+          type: integer
+          minimum: 1
+          description: Estimated time in minutes
+    
+    # Request schemas
+    ServiceRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        service_id:
+          type: integer
+        service_name:
+          type: string
+        service_price:
+          type: number
+          format: float
+        preferred_time:
+          type: string
+          format: date-time
+        date_of_request:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [created, assigned, completed]
+        description:
+          type: string
+        date_of_assignment:
+          type: string
+          format: date-time
+        date_of_completion:
+          type: string
+          format: date-time
+        remarks:
+          type: string
+        has_review:
+          type: boolean
+        professional:
+          $ref: '#/components/schemas/CompactProfessional'
+        customer:
+          $ref: '#/components/schemas/CompactCustomer'
+        review:
+          $ref: '#/components/schemas/Review'
+    
+    CompactProfessional:
+      type: object
+      properties:
+        id:
+          type: integer
+        full_name:
+          type: string
+        phone:
+          type: string
+        average_rating:
+          type: number
+          format: float
+    
+    CompactCustomer:
+      type: object
+      properties:
+        id:
+          type: integer
+        full_name:
+          type: string
+        phone:
+          type: string
+    
+    ServiceRequestInputRequest:
+      type: object
+      required:
+        - service_id
+        - preferred_time
+      properties:
+        service_id:
+          type: integer
+        preferred_time:
+          type: string
+          format: date-time
+          description: Must be in the future, within 7 days, and between 9 AM and 6 PM
+        description:
+          type: string
+          maxLength: 1000
+    
+    CompleteRequestRequest:
+      type: object
+      required:
+        - remarks
+      properties:
+        remarks:
+          type: string
+    
+    # Review schemas
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        is_reported:
+          type: boolean
+        report_reason:
+          type: string
+    
+    ReviewInputRequest:
+      type: object
+      required:
+        - rating
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          maxLength: 1000
+    
+    ReportReviewRequest:
+      type: object
+      required:
+        - report_reason
+      properties:
+        report_reason:
+          type: string
+          minLength: 10
+          maxLength: 500
+    
+    # Export schemas
+    ExportRequestRequest:
+      type: object
+      properties:
+        professional_id:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+    
+    ExportStatusResponse:
+      type: object
+      properties:
+        state:
+          type: string
+          enum: [PENDING, SUCCESS, FAILURE, STARTED, PROGRESS]
+        status:
+          type: string
+        result:
+          type: object
+        error:
+          type: string
+    
+    # Contact form schemas
+    ContactFormRequest:
+      type: object
+      required:
+        - name
+        - email
+        - subject
+        - message
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        subject:
+          type: string
+          minLength: 5
+          maxLength: 200
+        message:
+          type: string
+          minLength: 10
+          maxLength: 2000
+    
+    # Activity log schemas
+    ActivityLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        entity_id:
+          type: integer
+        action:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    
+    # Dashboard schemas
+    ProfessionalDashboard:
+      type: object
+      properties:
+        total_requests:
+          type: integer
+        completed_requests:
+          type: integer
+        active_requests:
+          type: integer
+        average_rating:
+          type: number
+          format: float
+        total_reviews:
+          type: integer
+        reported_reviews:
+          type: integer
+        service_type:
+          type: string
+        verification_status:
+          type: string
+        upcoming_services:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              service_name:
+                type: string
+              customer_name:
+                type: string
+              preferred_time:
+                type: string
+              address:
+                type: string
+        weekly_trend:
+          type: array
+          items:
+            type: object
+            properties:
+              period:
+                type: string
+              completed:
+                type: integer
+        monthly_ratings:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+              rating:
+                type: number
+        monthly_comparison:
+          type: object
+          properties:
+            current_month:
+              type: string
+            current_month_requests:
+              type: integer
+            prev_month_requests:
+              type: integer
+            change_percent:
+              type: number
+        activity_patterns:
+          type: object
+          properties:
+            busiest_days:
+              type: array
+              items:
+                type: object
+                properties:
+                  day:
+                    type: string
+                  count:
+                    type: integer
+                  percentage:
+                    type: number
+            busiest_hours:
+              type: array
+              items:
+                type: object
+                properties:
+                  hour:
+                    type: string
+                  count:
+                    type: integer
+                  percentage:
+                    type: number
+        satisfaction_analysis:
+          type: object
+          properties:
+            rating_trends:
+              type: array
+              items:
+                type: object
+            rating_distribution:
+              type: array
+              items:
+                type: object
+            positive_reviews_count:
+              type: integer
+            negative_reviews_count:
+              type: integer
+            positive_percentage:
+              type: number
+            negative_percentage:
+              type: number
+            
+    CustomerDashboard:
+      type: object
+      properties:
+        total_requests:
+          type: integer
+        completed_requests:
+          type: integer
+        active_requests:
+          type: integer
+        total_spent:
+          type: number
+          format: float
+        pending_reviews:
+          type: integer
+        average_rating_given:
+          type: number
+          format: float
+        upcoming_services:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              service_name:
+                type: string
+              professional_name:
+                type: string
+              preferred_time:
+                type: string
+              status:
+                type: string
+              price:
+                type: number
+        recent_services:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              service_name:
+                type: string
+              professional_name:
+                type: string
+              completion_date:
+                type: string
+              price:
+                type: number
+              has_review:
+                type: boolean
+              rating:
+                type: integer
+        weekly_trend:
+          type: array
+          items:
+            type: object
+            properties:
+              period:
+                type: string
+              requested:
+                type: integer
+              completed:
+                type: integer
+        monthly_spending:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+              amount:
+                type: number
+        monthly_comparison:
+          type: object
+          properties:
+            current_month:
+              type: string
+            current_month_spending:
+              type: number
+            prev_month_spending:
+              type: number
+            change_percent:
+              type: number
+        service_distribution:
+          type: array
+          items:
+            type: object
+            properties:
+              service_id:
+                type: integer
+              service_name:
+                type: string
+              request_count:
+                type: integer
+              total_spent:
+                type: number
+              percentage:
+                type: number
+        favorite_services:
+          type: array
+          items:
+            type: object
+            properties:
+              service_id:
+                type: integer
+              service_name:
+                type: string
+              usage_count:
+                type: integer
+              avg_rating:
+                type: number
+              last_used:
+                type: string
+              favorite_score:
+                type: number
+    
+    AdminDashboard:
+      type: object
+      properties:
+        period:
+          type: string
+        total_users:
+          type: integer
+        active_users:
+          type: integer
+        customer_count:
+          type: integer
+        professional_count:
+          type: integer
+        total_services:
+          type: integer
+        active_services:
+          type: integer
+        total_requests:
+          type: integer
+        pending_requests:
+          type: integer
+        active_requests:
+          type: integer
+        completed_requests:
+          type: integer
+        service_fulfillment_rate:
+          type: number
+        pending_verifications:
+          type: integer
+        total_reviews:
+          type: integer
+        reported_reviews:
+          type: integer
+        average_rating:
+          type: number
+        total_revenue:
+          type: number
+        avg_revenue_per_request:
+          type: number
+        customer_retention_rate:
+          type: number
+        avg_completion_time_hours:
+          type: number
+        avg_completed_per_professional:
+          type: number
+        recent_registrations:
+          type: array
+          items:
+            type: object
+        pending_verifications:
+          type: array
+          items:
+            type: object
+        recent_requests:
+          type: array
+          items:
+            type: object
+        popular_services:
+          type: array
+          items:
+            type: object
+        reported_reviews:
+          type: array
+          items:
+            type: object
+        weekly_registration_trend:
+          type: array
+          items:
+            type: object
+        request_status_trend:
+          type: array
+          items:
+            type: object
+        geographic_distribution:
+          type: array
+          items:
+            type: object
+        rating_distribution:
+          type: array
+          items:
+            type: object
+        recent_activities:
+          type: array
+          items:
+            type: object
+        most_active_professionals:
+          type: array
+          items:
+            type: object
+        most_profitable_services:
+          type: array
+          items:
+            type: object
+        service_utilization_by_day:
+          type: array
+          items:
+            type: object
+        monthly_revenue_trend:
+          type: array
+          items:
+            type: object
+        period_comparison:
+          type: object
+          properties:
+            prev_total_requests:
+              type: integer
+            prev_completed_requests:
+              type: integer
+            total_requests_change_pct:
+              type: number
+            completed_requests_change_pct:
+              type: number
+            revenue_change_pct:
+              type: number
+            prev_avg_rating:
+              type: number
+            rating_change_pct:
+              type: number
+
+paths:
+  # Authentication routes
+  /api/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login to the system
+      description: Authenticate and receive a JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid credentials
+        '403':
+          description: Account is deactivated or not verified
+  
+  # User registration routes
+  /api/register/customer:
+    post:
+      tags:
+        - User Management
+      summary: Register a new customer
+      description: Create a new customer account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRegisterRequest'
+      responses:
+        '201':
+          description: Customer registered successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CustomerProfile'
+        '400':
+          description: Validation error
+        '409':
+          description: Username or email already exists
+  
+  /api/register/professional:
+    post:
+      tags:
+        - User Management
+      summary: Register a new professional
+      description: Create a new professional account with verification document
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/ProfessionalRegisterRequest'
+                - type: object
+                  required:
+                    - verification_document
+                  properties:
+                    verification_document:
+                      type: string
+                      format: binary
+                      description: PDF or image file for verification
+      responses:
+        '201':
+          description: Professional registered successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProfessionalProfile'
+        '400':
+          description: Validation error or document upload error
+        '409':
+          description: Username or email already exists
+  
+  # User profile routes
+  /api/profile:
+    get:
+      tags:
+        - User Management
+      summary: Get current user profile
+      description: Get the profile of the currently authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        oneOf:
+                          - $ref: '#/components/schemas/CustomerProfile'
+                          - $ref: '#/components/schemas/ProfessionalProfile'
+                          - $ref: '#/components/schemas/BaseUser'
+        '401':
+          description: Unauthorized
+    
+    put:
+      tags:
+        - User Management
+      summary: Update user profile
+      description: Update profile information for the current user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdateRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        oneOf:
+                          - $ref: '#/components/schemas/CustomerProfile'
+                          - $ref: '#/components/schemas/ProfessionalProfile'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '409':
+          description: Email already in use
+  
+  /api/change-password:
+    post:
+      tags:
+        - User Management
+      summary: Change password
+      description: Change the current user's password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordUpdateRequest'
+      responses:
+        '200':
+          description: Password changed successfully
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '422':
+          description: Current password is incorrect
+  
+  /api/delete-account:
+    delete:
+      tags:
+        - User Management
+      summary: Delete account
+      description: Permanently delete the current user's account
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAccountRequest'
+      responses:
+        '200':
+          description: Account successfully deleted
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '409':
+          description: Cannot delete account with active service requests
+        '422':
+          description: Incorrect password
+  
+  # Customer management routes
+  /api/customers:
+    get:
+      tags:
+        - Customer Management
+      summary: List all customers
+      description: Get a paginated list of all customers (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: active
+          in: query
+          schema:
+            type: boolean
+        - name: pin_code
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Customers retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CustomerProfile'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+  
+  /api/customers/{profile_id}:
+    get:
+      tags:
+        - Customer Management
+      summary: Get a specific customer
+      description: Get details for a specific customer (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CustomerProfile'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '404':
+          description: Customer not found
+  
+  /api/customers/{profile_id}/block:
+    post:
+      tags:
+        - Customer Management
+      summary: Block a customer
+      description: Block a customer's account (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockUserRequest'
+      responses:
+        '200':
+          description: Customer blocked successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '404':
+          description: Customer not found
+        '409':
+          description: Customer is already blocked or has active service requests
+  
+  /api/customers/{profile_id}/unblock:
+    post:
+      tags:
+        - Customer Management
+      summary: Unblock a customer
+      description: Unblock a customer's account (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer unblocked successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '404':
+          description: Customer not found
+        '409':
+          description: Customer is already active
+          
+  /api/customers/dashboard:
+    get:
+      tags:
+        - Customer Management
+      summary: Get customer dashboard statistics
+      description: Get comprehensive statistics and trends for the customer dashboard
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, all]
+            default: 30d
+          description: Time period for statistics calculation
+      responses:
+        '200':
+          description: Dashboard statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CustomerDashboard'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires customer role
+  
+  # Professional management routes
+  /api/professionals:
+    get:
+      tags:
+        - Professional Management
+      summary: List all professionals
+      description: Get a paginated list of professionals (filtered based on user role)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: verified
+          in: query
+          schema:
+            type: boolean
+          description: Filter by verification status (admin only)
+        - name: service_type
+          in: query
+          schema:
+            type: integer
+          description: Filter by service type ID
+      responses:
+        '200':
+          description: Professionals retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProfessionalProfile'
+        '401':
+          description: Unauthorized
+  
+  /api/professionals/{profile_id}:
+    get:
+      tags:
+        - Professional Management
+      summary: Get a specific professional
+      description: Get details for a specific professional
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Professional retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProfessionalProfile'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Professional not found
+  
+  /api/professionals/{profile_id}/verify:
+    post:
+      tags:
+        - Professional Management
+      summary: Verify a professional
+      description: Approve a professional's verification (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Professional verified successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProfessionalProfile'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '404':
+          description: Professional not found
+        '409':
+          description: Professional is already verified
+  
+  /api/professionals/{profile_id}/block:
+    post:
+      tags:
+        - Professional Management
+      summary: Block a professional
+      description: Block a professional's account (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockUserRequest'
+      responses:
+        '200':
+          description: Professional blocked successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '404':
+          description: Professional not found
+        '409':
+          description: Professional is already blocked or has active service requests
+  
+  /api/professionals/{profile_id}/unblock:
+    post:
+      tags:
+        - Professional Management
+      summary: Unblock a professional
+      description: Unblock a professional's account (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Professional unblocked successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '404':
+          description: Professional not found
+        '409':
+          description: Professional is already active
+        '400':
+          description: Cannot unblock unverified professional
+  
+  /api/document:
+    put:
+      tags:
+        - Professional Management
+      summary: Update verification document
+      description: Update the professional's verification document
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - verification_document
+              properties:
+                verification_document:
+                  type: string
+                  format: binary
+                  description: PDF or image file for verification
+      responses:
+        '200':
+          description: Verification document updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProfessionalProfile'
+        '400':
+          description: Validation error or document upload error
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires professional role
+        '409':
+          description: Cannot update with active service requests
+  
+  /api/professionals/service:
+    put:
+      tags:
+        - Professional Management
+      summary: Update service type
+      description: Update the professional's service type
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - service_type_id
+              properties:
+                service_type_id:
+                  type: integer
+      responses:
+        '200':
+          description: Service type updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProfessionalProfile'
+        '400':
+          description: Validation error or invalid service
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires professional role
+        '404':
+          description: Service not found
+        '409':
+          description: Cannot update with active service requests
+  
+  /api/professionals/dashboard:
+    get:
+      tags:
+        - Professional Management
+      summary: Get professional dashboard
+      description: Get comprehensive dashboard statistics for the current professional
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, all]
+            default: 30d
+          description: Time period for statistics calculation
+      responses:
+        '200':
+          description: Dashboard statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProfessionalDashboard'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires professional role
+  
+  /api/professionals/reviews:
+    get:
+      tags:
+        - Professional Management
+      summary: Get professional reviews
+      description: Get reviews for the current professional
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: reported
+          in: query
+          schema:
+            type: boolean
+          description: Filter by reported status
+      responses:
+        '200':
+          description: Reviews retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Review'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires professional role
+  
+  /api/professionals/{profile_id}/document:
+    get:
+      tags:
+        - Professional Management
+      summary: Download verification document
+      description: Download a professional's verification document (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profile_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Document downloaded successfully
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '404':
+          description: Professional or document not found
+  
+  /api/my-document:
+    get:
+      tags:
+        - Professional Management
+      summary: Download own verification document
+      description: Download the current professional's verification document
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Document downloaded successfully
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires professional role
+        '404':
+          description: Document not found
+  
+  # Service management routes
+  /api/services:
+    get:
+      tags:
+        - Service Management
+      summary: List active services
+      description: Get a paginated list of all active services
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Services retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Service'
+        '400':
+          description: Validation error
+    
+    post:
+      tags:
+        - Service Management
+      summary: Create a service
+      description: Create a new service (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceInputRequest'
+      responses:
+        '201':
+          description: Service created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Service'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '409':
+          description: Service with this name already exists
+  
+  /api/services/{service_id}:
+    get:
+      tags:
+        - Service Management
+      summary: Get a specific active service
+      description: Get details for a specific active service
+      parameters:
+        - name: service_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Service retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Service'
+        '404':
+          description: Service not found or not active
+    
+    put:
+      tags:
+        - Service Management
+      summary: Update a service
+      description: Update an existing service (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: service_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceUpdateRequest'
+      responses:
+        '200':
+          description: Service updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Service'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '404':
+          description: Service not found
+        '409':
+          description: Service name already exists or active requests exist
+    
+    delete:
+      tags:
+        - Service Management
+      summary: Delete a service
+      description: Permanently delete a service that has never been used (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: service_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Service permanently deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '404':
+          description: Service not found
+        '409':
+          description: Service is in use, cannot be deleted
+  
+  /api/services/all:
+    get:
+      tags:
+        - Service Management
+      summary: List all services (active and inactive)
+      description: Get a paginated list of all services (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Services retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Service'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+  
+  /api/services/all/{service_id}:
+    get:
+      tags:
+        - Service Management
+      summary: Get a specific service (active or inactive)
+      description: Get details for a specific service, regardless of status (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: service_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Service retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Service'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '404':
+          description: Service not found
+  
+  /api/services/{service_id}/toggle:
+    post:
+      tags:
+        - Service Management
+      summary: Toggle service status
+      description: Toggle service active status (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: service_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Service status toggled successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Service'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '404':
+          description: Service not found
+        '409':
+          description: Cannot deactivate service with active professionals
+  
+  # Service request routes
+  /api/requests:
+    post:
+      tags:
+        - Service Requests
+      summary: Create a service request
+      description: Create a new service request (customer only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceRequestInputRequest'
+      responses:
+        '201':
+          description: Service request created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ServiceRequest'
+        '400':
+          description: Validation error or invalid time slot
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires customer role
+        '404':
+          description: Service not found or not active
+  
+  /api/requests/{request_id}:
+    put:
+      tags:
+        - Service Requests
+      summary: Edit a service request
+      description: Edit an existing service request (customer only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceRequestInputRequest'
+      responses:
+        '200':
+          description: Service request updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ServiceRequest'
+        '400':
+          description: Validation error or invalid time slot
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - customer role or ownership required
+        '404':
+          description: Request not found
+  
+  /api/requests/{request_id}/accept:
+    post:
+      tags:
+        - Service Requests
+      summary: Accept a service request
+      description: Accept a service request (professional only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Service request accepted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ServiceRequest'
+        '400':
+          description: Request is not available or service type mismatch
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires professional role
+        '404':
+          description: Request not found
+  
+  /api/requests/{request_id}/complete:
+    post:
+      tags:
+        - Service Requests
+      summary: Complete a service request
+      description: Mark a service request as completed (customer or professional)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteRequestRequest'
+      responses:
+        '200':
+          description: Service marked as completed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ServiceRequest'
+        '400':
+          description: Cannot complete already completed/unassigned service
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires ownership
+        '404':
+          description: Request not found
+  
+  /api/requests/{request_id}/cancel:
+    post:
+      tags:
+        - Service Requests
+      summary: Cancel a service request
+      description: Cancel a service request by deleting it (customer only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Service request cancelled successfully
+        '400':
+          description: Cannot cancel completed or assigned requests
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires customer role and ownership
+        '404':
+          description: Request not found
+  
+  /api/requests/{request_id}/review:
+    post:
+      tags:
+        - Service Requests
+      summary: Submit a review
+      description: Submit a review for a completed service request (customer only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewInputRequest'
+      responses:
+        '201':
+          description: Review submitted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Review'
+        '400':
+          description: Validation error or can only review completed services
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires customer role and ownership
+        '404':
+          description: Request not found
+        '409':
+          description: Review already exists for this service request
+  
+  /api/customers/requests:
+    get:
+      tags:
+        - Service Requests
+      summary: List customer requests
+      description: List all service requests for the current customer
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [created, assigned, completed]
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: summary
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Requests retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        oneOf:
+                          - type: array
+                            items:
+                              $ref: '#/components/schemas/ServiceRequest'
+                          - type: object
+                            properties:
+                              requests:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/ServiceRequest'
+                              total_requests:
+                                type: integer
+                              active_requests:
+                                type: integer
+                              completed_requests:
+                                type: integer
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires customer role
+        '404':
+          description: Customer profile not found
+  
+  /api/professionals/requests:
+    get:
+      tags:
+        - Service Requests
+      summary: List professional requests
+      description: List service requests for the current professional
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [available, ongoing, completed, all]
+            default: all
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: summary
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Requests retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        oneOf:
+                          - type: array
+                            items:
+                              $ref: '#/components/schemas/ServiceRequest'
+                          - type: object
+                            properties:
+                              requests:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/ServiceRequest'
+                              total_requests:
+                                type: integer
+                              active_requests:
+                                type: integer
+                              completed_requests:
+                                type: integer
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires professional role
+        '404':
+          description: Professional profile not found
+  
+  /api/customers/{customer_id}/requests:
+    get:
+      tags:
+        - Service Requests
+      summary: List customer requests (admin)
+      description: List all service requests for a specific customer (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [created, assigned, completed]
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: summary
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Customer requests retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        oneOf:
+                          - type: array
+                            items:
+                              $ref: '#/components/schemas/ServiceRequest'
+                          - type: object
+                            properties:
+                              requests:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/ServiceRequest'
+                              total_requests:
+                                type: integer
+                              active_requests:
+                                type: integer
+                              completed_requests:
+                                type: integer
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '404':
+          description: Customer not found
+  
+  /api/professionals/{professional_id}/requests:
+    get:
+      tags:
+        - Service Requests
+      summary: List professional requests (admin)
+      description: List all service requests for a specific professional (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: professional_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [created, assigned, completed]
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: summary
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Professional requests retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        oneOf:
+                          - type: array
+                            items:
+                              $ref: '#/components/schemas/ServiceRequest'
+                          - type: object
+                            properties:
+                              requests:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/ServiceRequest'
+                              total_requests:
+                                type: integer
+                              active_requests:
+                                type: integer
+                              completed_requests:
+                                type: integer
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '404':
+          description: Professional not found
+  
+  /api/reviews/{review_id}/report:
+    post:
+      tags:
+        - Service Requests
+      summary: Report a review
+      description: Report a review for a professional's completed service request
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: review_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportReviewRequest'
+      responses:
+        '200':
+          description: Review reported successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Review'
+        '400':
+          description: Validation error or invalid status
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires professional role and ownership
+        '404':
+          description: Review not found
+        '409':
+          description: Review is already reported
+  
+  # Export routes
+  /api/exports/service-requests:
+    post:
+      tags:
+        - Exports
+      summary: Trigger service requests export
+      description: Trigger an export of service requests (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequestRequest'
+      responses:
+        '202':
+          description: Export task started successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          task_id:
+                            type: string
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+  
+  /api/exports/status/{task_id}:
+    get:
+      tags:
+        - Exports
+      summary: Check export status
+      description: Check the status of an export task (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Export status retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ExportStatusResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+  
+  /api/exports/download/{filename}:
+    get:
+      tags:
+        - Exports
+      summary: Download exported file
+      description: Download an exported CSV file (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File downloaded successfully
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+        '404':
+          description: File not found
+  
+  # Contact routes
+  /api/contact:
+    post:
+      tags:
+        - Contact
+      summary: Submit contact form
+      description: Submit a contact form to the admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactFormRequest'
+      responses:
+        '201':
+          description: Contact form submitted successfully
+        '400':
+          description: Validation error
+  
+  # Activity log routes
+  /api/activity-logs:
+    get:
+      tags:
+        - Activity Logs
+      summary: Get user activity logs
+      description: Get activity logs for the current user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Activity logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ActivityLog'
+        '401':
+          description: Unauthorized
+  
+  /api/activity-logs/{user_id}:
+    get:
+      tags:
+        - Activity Logs
+      summary: Get user activity logs (admin)
+      description: Get activity logs for a specific user (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Activity logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ActivityLog'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+          
+  # Admin dashboard endpoint
+  /api/admin/dashboard:
+    get:
+      tags:
+        - Admin Management
+      summary: Get admin dashboard statistics
+      description: Get comprehensive statistics and metrics for the admin dashboard
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, all]
+            default: 30d
+          description: Time period for statistics calculation
+        - name: service_type_id
+          in: query
+          schema:
+            type: integer
+          description: Filter by service type ID
+        - name: pin_code
+          in: query
+          schema:
+            type: string
+          description: Filter by pin code
+        - name: compare_to
+          in: query
+          schema:
+            type: string
+            enum: [prev_period]
+          description: Compare to previous period
+      responses:
+        '200':
+          description: Dashboard statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AdminDashboard'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - requires admin role
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Authentication
+    description: User authentication endpoints
+  - name: User Management
+    description: User registration and profile management
+  - name: Customer Management
+    description: Customer-specific management endpoints
+  - name: Professional Management
+    description: Professional-specific management endpoints
+  - name: Service Management
+    description: Service type management
+  - name: Service Requests
+    description: Service request creation and management
+  - name: Exports
+    description: Data export functionality
+  - name: Contact
+    description: Contact form submission
+  - name: Activity Logs
+    description: User activity logs
+  - name: Admin Management
+    description: Admin-specific management endpoints

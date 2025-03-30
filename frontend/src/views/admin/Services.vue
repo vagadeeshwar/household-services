@@ -937,9 +937,7 @@ export default {
       const serviceId = service.id
 
       try {
-        // Get the response from the API call
-        // eslint-disable-next-line no-unused-vars
-        const response = await store.dispatch('services/toggleService', {
+        await store.dispatch('services/toggleService', {
           id: serviceId,
         })
 

@@ -265,7 +265,6 @@ class ActivityLog(db.Model, TimestampMixin):
     )
     description = db.Column(db.Text, nullable=False)
 
-    # This overrides the created_at from TimestampMixin, but we ensure it's also fixed
     created_at = db.Column(
         db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
     )

@@ -290,7 +290,6 @@ export default defineComponent({
       return range
     })
 
-    // Add computed property for filtered professionals
     const filteredProfessionals = computed(() => {
       if (!searchTerm.value.trim()) {
         return professionals.value
@@ -373,7 +372,6 @@ export default defineComponent({
     }
 
     const handleSearchInput = () => {
-      // Debounce implementation could be added here
       filters.value.page = 1
     }
 

@@ -97,7 +97,6 @@
       </div>
     </div>
 
-    <!-- Add the FormNavigationGuard component -->
     <FormNavigationGuard
       :when="hasUnsavedChanges"
       message="You have unsaved changes to your password. Are you sure you want to leave?"

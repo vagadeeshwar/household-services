@@ -382,9 +382,8 @@ export default defineComponent({
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
         window.showToast({
-          title: 'Error',
           type: 'danger',
-          message: 'Failed to load dashboard data',
+          title: 'Failed to load dashboard data',
         })
       } finally {
         isLoading.value = false
@@ -427,7 +426,7 @@ export default defineComponent({
     const renderWeeklyTrendChart = () => {
       const ctx = document.getElementById('weeklyTrendChart')
       if (!ctx) return
-      // Clone the data to avoid Vuex state mutations
+
       const weeklyData = JSON.parse(JSON.stringify(localDashboardData.value.weekly_trend || []))
       if (charts.weeklyTrend) {
         charts.weeklyTrend.destroy()
@@ -481,7 +480,7 @@ export default defineComponent({
     const renderMonthlyRatingsChart = () => {
       const ctx = document.getElementById('monthlyRatingsChart')
       if (!ctx) return
-      // Clone the data to avoid Vuex state mutations
+
       const monthlyData = JSON.parse(JSON.stringify(localDashboardData.value.monthly_ratings || []))
       if (charts.monthlyRatings) {
         charts.monthlyRatings.destroy()
@@ -537,7 +536,7 @@ export default defineComponent({
     const renderActivityPatternsChart = () => {
       const ctx = document.getElementById('activityPatternsChart')
       if (!ctx) return
-      // Clone the data to avoid Vuex state mutations
+
       const patterns = JSON.parse(JSON.stringify(localDashboardData.value.activity_patterns || {}))
       const data = showHourlyPattern.value
         ? patterns.busiest_hours || []
@@ -596,7 +595,7 @@ export default defineComponent({
     const renderRatingDistributionChart = () => {
       const ctx = document.getElementById('ratingDistributionChart')
       if (!ctx) return
-      // Clone the data to avoid Vuex state mutations
+
       const satisfaction = JSON.parse(
         JSON.stringify(localDashboardData.value.satisfaction_analysis || {}),
       )

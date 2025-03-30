@@ -342,7 +342,6 @@ export default {
           activityFilters.value.page = 1
           activityFilters.value.startDate = null
           activityFilters.value.endDate = null
-          // No need to call fetchActivityLogs here as it's called by @change
         }
       },
     )
@@ -360,7 +359,6 @@ export default {
 
         if (newVal !== oldVal) {
           activityFilters.value.page = 1
-          // No need to call fetchActivityLogs here as it's called by @change
         }
       },
     )
@@ -378,7 +376,6 @@ export default {
 
         if (newVal !== oldVal) {
           activityFilters.value.page = 1
-          // No need to call fetchActivityLogs here as it's called by @change
         }
       },
     )
@@ -391,7 +388,6 @@ export default {
           activityFilters.value.startDate = null
           activityFilters.value.endDate = null
           activityFilters.value.action = 'all'
-          // No need to call fetchActivityLogs here as it's called by @change
         }
       },
     )

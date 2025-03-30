@@ -685,17 +685,14 @@ export default defineComponent({
         customerDetails.value = null
         if (!customerId) return
 
-        // The issue is here - we need to check the response structure
         const response = await store.dispatch('customers/fetchCustomerById', {
           id: customerId,
           forceRefresh: true, // Force fresh data
         })
 
-        // Correctly handle the response based on actual API structure
         if (response && response.data) {
           customerDetails.value = response.data
         } else if (response) {
-          // If data property doesn't exist, the full response might be the customer data
           customerDetails.value = response
         }
 
@@ -714,7 +711,7 @@ export default defineComponent({
         professionalDetails.value = null
         if (!professionalId) return
         console.log('Fetching professional details for ID:', professionalId)
-        // Fix the parameter order to match the store action definition
+
         const response = await store.dispatch('professionals/fetchProfessionalById', {
           id: professionalId,
           params: {}, // Add the missing params object
@@ -805,10 +802,6 @@ export default defineComponent({
     const handleUserChange = () => {
       // Reset filters when user changes
       resetFilters()
-    }
-
-    const handleServiceChange = () => {
-      // No backend request needed since filtering by service happens on the frontend
     }
 
     const validateDateRange = () => {
@@ -971,7 +964,6 @@ export default defineComponent({
       getStatusBadgeClass,
       getStatusLabel,
       handleUserChange,
-      handleServiceChange,
       validateDateRange,
       applyFilters,
       resetFilters,

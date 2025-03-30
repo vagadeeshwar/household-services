@@ -326,10 +326,8 @@ export default {
     const serviceName = computed(() => {
       if (!isUserProfessional.value || !userData.value?.service_type_id) return ''
 
-      // Check if services are already loaded
       const services = store.getters['services/allServices'] || []
       if (services.length === 0) {
-        // If services aren't loaded yet, fetch them
         fetchServices()
         return `Loading service information...`
       }

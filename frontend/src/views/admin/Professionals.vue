@@ -680,7 +680,7 @@ export default defineComponent({
     // Verify date range is valid
     const isValidDateRange = computed(() => {
       if (!exportOptions.value.start_date || !exportOptions.value.end_date) {
-        return true // Both dates are empty, which is allowed
+        return true
       }
 
       const startDate = new Date(exportOptions.value.start_date)
@@ -789,8 +789,7 @@ export default defineComponent({
             // Show success notification
             window.showToast({
               type: 'success',
-              title: 'Export Completed',
-              message: `Successfully exported ${response.data.result.total_records} service requests`,
+              title: `Successfully exported ${response.data.result.total_records} service requests`,
             })
 
             // Close the modal after successful download
@@ -801,8 +800,7 @@ export default defineComponent({
             // Show error notification
             window.showToast({
               type: 'danger',
-              title: 'Export Failed',
-              message: response.data.error || 'Failed to generate the export',
+              title: response.data.error || 'Failed to generate the export',
             })
           }
         }
@@ -810,8 +808,7 @@ export default defineComponent({
         console.error('Error checking export status:', error)
         window.showToast({
           type: 'danger',
-          title: 'Status Check Failed',
-          message: 'Failed to check export status',
+          title: 'Failed to check export status',
         })
         clearExportStatusInterval()
       }
@@ -824,8 +821,7 @@ export default defineComponent({
         console.error('Error downloading export:', error)
         window.showToast({
           type: 'danger',
-          title: 'Download Failed',
-          message: 'Failed to download the export file',
+          title: 'Failed to download the export file',
         })
       }
     }
@@ -834,8 +830,7 @@ export default defineComponent({
       if (!isValidExportOptions.value) {
         window.showToast({
           type: 'warning',
-          title: 'Invalid Options',
-          message: 'Please check your export options',
+          title: 'Please check your export options',
         })
         return
       }
@@ -867,8 +862,7 @@ export default defineComponent({
 
           window.showToast({
             type: 'info',
-            title: 'Export Started',
-            message: 'The export job has been submitted and is being processed',
+            title: 'The export job has been submitted and is being processed',
           })
         } else {
           throw new Error('Invalid response from export service')
@@ -877,8 +871,7 @@ export default defineComponent({
         console.error('Error generating report:', error)
         window.showToast({
           type: 'danger',
-          title: 'Export Failed',
-          message: error.response?.data?.detail || 'Failed to start the export job',
+          title: error.response?.data?.detail || 'Failed to start the export job',
         })
         isExporting.value = false
       }

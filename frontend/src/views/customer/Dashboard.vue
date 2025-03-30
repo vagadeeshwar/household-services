@@ -480,8 +480,7 @@ export default defineComponent({
         console.error('Error fetching dashboard data:', error)
         window.showToast({
           type: 'danger',
-          title: 'Failed to load dashboard data',
-          message: error.response?.data?.detail || 'An unexpected error occurred',
+          title: error.response?.data?.detail || 'An unexpected error occurred',
         })
       } finally {
         isLoading.value = false

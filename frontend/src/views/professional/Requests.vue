@@ -757,8 +757,6 @@ export default defineComponent({
     const formatLocalDateTime = (dateString) => {
       if (!dateString) return 'N/A'
 
-      // Creates a date object directly interpreting the string in local timezone
-      // This matches how the edit modal handles it
       const date = new Date(dateString)
 
       // Format options for a nice readable date and time
@@ -800,7 +798,6 @@ export default defineComponent({
     }
 
     const getCustomerName = (request) => {
-      // Try to get the customer name from various possible properties
       if (request.customer && request.customer.full_name) {
         return request.customer.full_name
       }
@@ -917,7 +914,6 @@ export default defineComponent({
       try {
         isProcessing.value = true
 
-        // Call the API through Vuex action
         await store.dispatch('requests/reportReview', {
           id: selectedReview.value.id,
           data: {
@@ -935,8 +931,6 @@ export default defineComponent({
           title: 'Our team will review your report and take appropriate action.',
         })
 
-        // The store should have already updated the review status
-        // Refresh requests to get the updated data
         await fetchRequests(true)
 
         isProcessing.value = false
@@ -1067,7 +1061,7 @@ export default defineComponent({
       formatDate,
       formatDateTime,
       formatTime,
-      formatLocalDateTime
+      formatLocalDateTime,
     }
   },
 })

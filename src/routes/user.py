@@ -417,7 +417,7 @@ def get_admin_dashboard(current_user):
         period = request.args.get("period", "30d")  # Options: 7d, 30d, 90d, all
         service_type_id = request.args.get("service_type_id", type=int)
         pin_code = request.args.get("pin_code")
-        compare_to = request.args.get("compare_to")  # Options: prev_period
+        compare_to = request.args.get("compare_to")
 
         # Calculate date ranges
         today = datetime.now(timezone.utc)
@@ -460,7 +460,6 @@ def get_admin_dashboard(current_user):
                 User.is_active == True,
                 *user_filters,
             ).count(),
-            # ...
         }
 
         # Request statistics with filters
@@ -512,7 +511,6 @@ def get_admin_dashboard(current_user):
             ProfessionalProfile.is_verified == False
         ).count()
 
-        # Review statistics - Fixed query with explicit joins
         review_base_query = db.session.query(Review).select_from(Review)
 
         if service_type_id or pin_code:
@@ -540,12 +538,10 @@ def get_admin_dashboard(current_user):
         # Count total reviews
         total_reviews = review_base_query.count()
 
-        # Count reported reviews - create a new query with the same filters
         reported_reviews_count = review_base_query.filter(
             Review.is_reported == True
         ).count()
 
-        # Get average rating - need to create a new query to get average
         avg_rating_query = db.session.query(func.avg(Review.rating)).select_from(
             review_base_query.subquery()
         )
@@ -595,7 +591,6 @@ def get_admin_dashboard(current_user):
         # Customer retention rate - percentage of customers who have made more than 1 request
         from sqlalchemy import distinct
 
-        # Fixed query with explicit join
         customer_query = (
             db.session.query(
                 CustomerProfile.id, func.count(ServiceRequest.id).label("request_count")
@@ -637,7 +632,7 @@ def get_admin_dashboard(current_user):
         else:
             stats["customer_retention_rate"] = 0.0
 
-        # PERIOD COMPARISONS #
+        # PERIOD COMPARISONS
         if compare_to == "prev_period" and prev_start_date:
             # Previous period request stats
             prev_request_query = ServiceRequest.query.filter(
@@ -858,7 +853,6 @@ def get_admin_dashboard(current_user):
         ]
         stats["recent_requests"] = recent_requests
 
-        # Popular services (most requested) with filters - Fixed with proper joins
         popular_services_query = (
             db.session.query(
                 Service.id,
@@ -887,7 +881,6 @@ def get_admin_dashboard(current_user):
                 .filter(User.pin_code == pin_code)
             )
 
-        # Apply group by and order by before limit
         popular_services_query = popular_services_query.group_by(
             Service.id, Service.name
         ).order_by(func.count(ServiceRequest.id).desc())
@@ -1104,7 +1097,6 @@ def get_admin_dashboard(current_user):
         ]
         stats["recent_activities"] = recent_activities
 
-        # NEW: Monthly revenue trend
         if period != "7d":  # Only show for 30d, 90d, all
             num_months = 12 if period == "all" or period == "90d" else 6
             monthly_revenue_trend = []

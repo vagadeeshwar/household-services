@@ -274,12 +274,10 @@ export default {
       try {
         isUploading.value = true
 
-        // Create FormData with the correct field name expected by the backend
         const formData = new FormData()
         formData.append('verification_document', selectedFile.value)
 
         // Pass FormData directly to the action
-        // The correct implementation would have the action accept FormData directly
         await store.dispatch('professionals/updateDocument', { data: formData })
 
         // Show success message

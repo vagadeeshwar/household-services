@@ -1,6 +1,5 @@
 <template>
   <div class="admin-dashboard">
-    <!-- Header with Period Selector -->
     <div class="row mb-4 align-items-center">
       <div class="col-md-6">
         <h1 class="h3 mb-0">Admin Dashboard</h1>
@@ -298,85 +297,6 @@
                       :style="{ width: `${service.percentage}%` }"
                       role="progressbar"
                     ></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Pending Tasks -->
-        <div class="col-xl-6">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0">
-              <h5 class="card-title mb-0">Action Items</h5>
-              <p class="text-muted small mb-0">Tasks that need your attention</p>
-            </div>
-            <div class="card-body p-0">
-              <div class="list-group list-group-flush">
-                <!-- Professional Verifications -->
-                <div class="list-group-item d-flex justify-content-between align-items-center p-3">
-                  <div class="d-flex align-items-center">
-                    <div class="task-icon bg-warning-subtle text-warning me-3">
-                      <i class="bi bi-person-badge"></i>
-                    </div>
-                    <div>
-                      <h6 class="mb-0">Professional Verifications</h6>
-                      <p class="text-muted small mb-0">Pending approval requests</p>
-                    </div>
-                  </div>
-                  <div class="d-flex align-items-center">
-                    <div class="badge bg-warning text-dark me-3">
-                      {{ dashboardData.pending_verifications || 0 }}
-                    </div>
-                    <router-link
-                      to="/admin/professionals?verified=false"
-                      class="btn btn-sm btn-outline-primary"
-                    >
-                      Review
-                    </router-link>
-                  </div>
-                </div>
-
-                <!-- Inactive Services -->
-                <div class="list-group-item d-flex justify-content-between align-items-center p-3">
-                  <div class="d-flex align-items-center">
-                    <div class="task-icon bg-secondary-subtle text-secondary me-3">
-                      <i class="bi bi-tools"></i>
-                    </div>
-                    <div>
-                      <h6 class="mb-0">Inactive Services</h6>
-                      <p class="text-muted small mb-0">Services currently unavailable</p>
-                    </div>
-                  </div>
-                  <div class="d-flex align-items-center">
-                    <div class="badge bg-secondary text-white me-3">
-                      {{
-                        (dashboardData.total_services || 0) - (dashboardData.active_services || 0)
-                      }}
-                    </div>
-                    <router-link to="/admin/services" class="btn btn-sm btn-outline-primary">
-                      Manage
-                    </router-link>
-                  </div>
-                </div>
-
-                <!-- Rating Overview -->
-                <div class="list-group-item d-flex justify-content-between align-items-center p-3">
-                  <div class="d-flex align-items-center">
-                    <div class="task-icon bg-warning-subtle text-warning me-3">
-                      <i class="bi bi-star"></i>
-                    </div>
-                    <div>
-                      <h6 class="mb-0">Platform Rating</h6>
-                      <p class="text-muted small mb-0">Average rating across all services</p>
-                    </div>
-                  </div>
-                  <div class="d-flex align-items-center">
-                    <div class="rating-badge me-3">
-                      <i class="bi bi-star-fill text-warning me-1"></i>
-                      <span>{{ dashboardData.average_rating?.toFixed(1) || 'N/A' }}</span>
-                    </div>
                   </div>
                 </div>
               </div>

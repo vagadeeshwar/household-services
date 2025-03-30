@@ -7,7 +7,6 @@ import moment from 'moment'
  */
 export const formatRelativeTime = (dateString) => {
   if (!dateString) return 'N/A'
-  // Ensure we're treating the input date as UTC and converting to local time
   return moment.utc(dateString).local().fromNow()
 }
 

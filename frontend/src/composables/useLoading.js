@@ -14,7 +14,6 @@ export function useLoading() {
     loadingMessage.value = ''
   }
 
-  // Helper for async operations
   const withLoading = async (promise, message = '') => {
     showLoading(message)
     try {

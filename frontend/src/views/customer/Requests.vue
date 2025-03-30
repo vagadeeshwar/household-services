@@ -1044,7 +1044,6 @@ export default defineComponent({
         now.setDate(now.getDate() + 1)
         now.setHours(9, 0, 0, 0)
       } else {
-        // Round to next hour
         now.setHours(hour + 1, 0, 0, 0)
       }
       return now.toISOString().slice(0, 16)
@@ -1053,8 +1052,6 @@ export default defineComponent({
     const formatLocalDateTime = (dateString) => {
       if (!dateString) return 'N/A'
 
-      // Creates a date object directly interpreting the string in local timezone
-      // This matches how the edit modal handles it
       const date = new Date(dateString)
 
       // Format options for a nice readable date and time
@@ -1084,7 +1081,7 @@ export default defineComponent({
       if (request.preferred_time) {
         // Parse the date in local timezone and format it for datetime-local input
         const date = new Date(request.preferred_time)
-        // Format to YYYY-MM-DDThh:mm (format required by datetime-local input)
+
         preferredTimeValue = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
       }
 

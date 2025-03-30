@@ -989,11 +989,9 @@ def admin_list_professional_requests(current_user, professional_id):
         per_page = request.args.get("per_page", 10, type=int)
         summary = request.args.get("summary", "false").lower() == "true"
 
-        # Build query - include both assigned and available requests for this professional's service type
         professional = ProfessionalProfile.query.get(professional_id)
         service_type_id = professional.service_type_id
 
-        # This is the key fix: include both assigned requests AND available requests of the professional's service type
         query = ServiceRequest.query.filter(
             (
                 ServiceRequest.professional_id == professional_id

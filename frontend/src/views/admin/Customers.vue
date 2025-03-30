@@ -641,7 +641,6 @@ export default defineComponent({
       try {
         await store.dispatch('customers/unblockCustomer', { id: customer.customer_id })
 
-        // For now, show a message that this feature is coming soon
         window.showToast({
           type: 'info',
           title: 'Customer has been unblocked successfully',

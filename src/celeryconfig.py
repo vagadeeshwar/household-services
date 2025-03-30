@@ -1,4 +1,3 @@
-# src/celeryconfig.py
 from kombu import Exchange, Queue
 
 # Broker settings
@@ -35,7 +34,6 @@ task_always_eager = False
 task_acks_late = True
 worker_prefetch_multiplier = 1
 
-# Task time limits - adjusted for Windows
 task_time_limit = None  # Disable hard timeout on Windows
 task_soft_time_limit = None  # Disable soft timeout on Windows
 

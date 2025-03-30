@@ -1,11 +1,12 @@
-from flask import Blueprint, request, current_app
-from marshmallow import ValidationError
-from http import HTTPStatus
 import os
+from http import HTTPStatus
+
+from flask import Blueprint, current_app, request
+from marshmallow import ValidationError
 
 from src.schemas.contact import contact_form_schema
 from src.utils.api import APIResponse
-from src.utils.notification import NotificationService, EmailTemplate
+from src.utils.notification import EmailTemplate, NotificationService
 
 contact_bp = Blueprint("contact", __name__)
 

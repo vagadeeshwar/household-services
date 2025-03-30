@@ -653,7 +653,6 @@ export default {
 
     // Validation rules
     const rules = computed(() => {
-      // Common rules
       const baseRules = {}
 
       // Payment method specific rules
@@ -750,7 +749,6 @@ export default {
       v$.value.$reset()
     })
 
-    // Apply coupon method
     const applyCoupon = () => {
       // Simulate coupon validation
       if (couponCode.value.toUpperCase() === 'WELCOME10') {
@@ -771,7 +769,6 @@ export default {
       // Validate all fields
       const isFormValid = await v$.value.$validate()
       if (!isFormValid) {
-        // Show toast notification for validation errors
         window.showToast({
           type: 'warning',
           title: 'Some required information is missing or incorrect',
@@ -783,7 +780,6 @@ export default {
         // Simulate payment processing delay
         await new Promise((resolve) => setTimeout(resolve, 2000))
 
-        // Different success message based on flow
         window.showToast({
           type: 'success',
           title: isCompletedRequest
@@ -792,7 +788,6 @@ export default {
         })
 
         router.push('/customer/requests')
-        // Show success modal
         bsSuccessModal.show()
       } catch (error) {
         // Handle payment errors

@@ -128,7 +128,6 @@ export default {
       try {
         await store.dispatch('auth/logout')
         router.push('/login')
-        // The redirect is now handled in the store action
       } catch (error) {
         console.error('Logout error:', error)
       }

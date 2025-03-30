@@ -37,7 +37,6 @@ export const setupGuards = (router) => {
       }
     }
 
-    // If everything is fine, proceed
     next()
   })
 }
