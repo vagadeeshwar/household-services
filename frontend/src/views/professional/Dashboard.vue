@@ -351,7 +351,7 @@ export default defineComponent({
     // State
     const localDashboardData = ref({})
     const isLoading = ref(true)
-    const selectedPeriod = ref('30d')
+    const selectedPeriod = ref('all')
     const showHourlyPattern = ref(false)
     // Chart instances
     const charts = reactive({
@@ -363,7 +363,7 @@ export default defineComponent({
     // Available time periods
     const periods = [
       // { value: '7d', label: '7 Days' },
-      { value: '30d', label: '30 Days' },
+      // { value: '30d', label: '30 Days' },
       // { value: '90d', label: '90 Days' },
       // { value: 'all', label: 'All Time' },
     ]

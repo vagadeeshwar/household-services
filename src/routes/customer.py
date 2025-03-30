@@ -272,8 +272,21 @@ def get_customer_dashboard(current_user):
             start_date = today - timedelta(days=30)
         elif period == "90d":
             start_date = today - timedelta(days=90)
-        else:  # "all" - no date filtering
-            start_date = None
+        else:  # "all" - find earliest date
+            earliest_request = (
+                ServiceRequest.query.filter(
+                    ServiceRequest.customer_id == customer_id,
+                    ServiceRequest.status == REQUEST_STATUS_COMPLETED,
+                )
+                .order_by(ServiceRequest.date_of_completion.asc())
+                .first()
+            )
+
+            if earliest_request and earliest_request.date_of_completion:
+                start_date = earliest_request.date_of_completion
+            else:
+                # Fallback if no completed requests
+                start_date = today - timedelta(days=365)  # Default to 1 year
 
         # Base query with optional date filtering
         completed_requests_query = ServiceRequest.query.filter(
@@ -486,7 +499,7 @@ def get_customer_dashboard(current_user):
         }
 
         # Get top 5 most used services
-        if period != "all" and start_date:
+        if start_date:
             top_services_query = (
                 db.session.query(
                     ServiceRequest.service_id,
@@ -512,7 +525,6 @@ def get_customer_dashboard(current_user):
                 for row in top_services_query.all()
             ]
 
-        # NEW: Add service type distribution
         # This query gets distribution of service requests by service types
         service_distribution_query = (
             db.session.query(

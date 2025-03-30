@@ -820,8 +820,22 @@ def get_professional_dashboard(current_user):
             start_date = today - timedelta(days=30)
         elif period == "90d":
             start_date = today - timedelta(days=90)
-        else:  # "all" - no date filtering
-            start_date = None
+        else:  # "all" - find earliest date
+            earliest_request = (
+                ServiceRequest.query.filter(
+                    ServiceRequest.professional_id == professional_id,
+                    ServiceRequest.status == REQUEST_STATUS_COMPLETED,
+                )
+                .order_by(ServiceRequest.date_of_completion.asc())
+                .first()
+            )
+
+            if earliest_request and earliest_request.date_of_completion:
+                start_date = earliest_request.date_of_completion
+            else:
+                # Fallback if no completed requests
+                start_date = today - timedelta(days=365)  # Default to 1 year
+
         # Base query with optional date filtering
         completed_requests_query = ServiceRequest.query.filter(
             ServiceRequest.professional_id == professional_id,
@@ -957,7 +971,7 @@ def get_professional_dashboard(current_user):
             "change_percent": requests_change_percent,
         }
         # Get top 5 services by count
-        if period != "all" and start_date:
+        if start_date:
             top_services_query = (
                 db.session.query(
                     ServiceRequest.service_id,
@@ -982,7 +996,7 @@ def get_professional_dashboard(current_user):
                 for row in top_services_query.all()
             ]
         # Add busiest days analysis
-        if period != "all" and start_date:
+        if start_date:
             # Analyze busiest days of the week
             busiest_days_query = (
                 db.session.query(
@@ -1064,7 +1078,7 @@ def get_professional_dashboard(current_user):
                 "busiest_hours": busiest_hours,
             }
         # Add customer satisfaction trends
-        if period != "all" and start_date:
+        if start_date:
             # Get rating trends over time (grouped by week)
             rating_trends_query = (
                 db.session.query(

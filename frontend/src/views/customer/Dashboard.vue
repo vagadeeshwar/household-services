@@ -440,7 +440,7 @@ export default defineComponent({
     const router = useRouter()
     const isLoading = ref(true)
     const dashboardData = ref({})
-    const selectedPeriod = ref('30d')
+    const selectedPeriod = ref('all')
 
     // Chart instances
     const charts = {
@@ -451,7 +451,7 @@ export default defineComponent({
 
     // Available time periods
     const periods = [
-      { value: '30d', label: '30 Days' },
+      // { value: '30d', label: '30 Days' },
       // { value: '90d', label: '90 Days' },
       // { value: 'all', label: 'All Time' },
     ]
